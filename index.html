@@ -382,40 +382,54 @@ p:last-child { margin-bottom: 0; }
 }
 
 /* ---------- detail list ---------- */
+#details {
+  --details-panel-h: calc(100svh - var(--header-h) - clamp(9.5rem, 17vh, 12.5rem));
+}
+#details .section-note { margin-bottom: clamp(12px, 2vh, 20px); }
 .details-layout {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(300px, 1.2fr);
-  gap: clamp(24px, 4vw, 44px);
-  align-items: start;
+  grid-template-columns: auto minmax(300px, 1.25fr);
+  gap: clamp(20px, 3vw, 36px);
+  align-items: stretch;
+  height: var(--details-panel-h);
+  max-height: var(--details-panel-h);
 }
 .details-photo {
   margin: 0;
+  height: 100%;
   border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 2px 14px rgba(26, 36, 33, .08);
+  background: var(--stone);
+  line-height: 0;
 }
 .details-photo img {
-  width: 100%;
-  height: 100%;
   display: block;
-  object-fit: cover;
-  aspect-ratio: 3 / 4;
-  max-height: min(72vh, 680px);
+  height: 100%;
+  width: auto;
+  max-width: min(38vw, 380px);
+  object-fit: contain;
+  object-position: center top;
 }
 .details {
   width: 100%;
-  padding: 8px 28px;
+  height: 100%;
+  padding: clamp(6px, 1vh, 10px) clamp(18px, 2.5vw, 24px);
   border: 1px solid #ddd6ce;
   border-radius: 4px;
   background: #fff;
   box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #c8c0b8 inset;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
 }
 .map-links {
   display: inline-block;
-  margin-top: 8px;
-  font-size: .95rem;
+  margin-top: 6px;
+  font-size: .9rem;
   font-weight: 600;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 .map-links a {
   color: var(--accent);
@@ -424,9 +438,23 @@ p:last-child { margin-bottom: 0; }
 }
 .map-links a:hover { color: var(--accent-dark); text-decoration: underline; }
 @media (max-width: 768px) {
-  .details-layout { grid-template-columns: 1fr; }
-  .details-photo { max-width: min(92vw, 420px); margin: 0 auto; }
-  .details-photo img { max-height: min(48vh, 480px); }
+  #details .details-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+  }
+  .details-photo { max-width: min(92vw, 420px); margin: 0 auto; height: auto; }
+  .details-photo img {
+    height: auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: min(48vh, 480px);
+  }
+  .details {
+    height: auto;
+    display: block;
+    padding: 8px 28px;
+  }
 }
 .detail-row {
   display: grid;
@@ -435,6 +463,14 @@ p:last-child { margin-bottom: 0; }
   padding: 22px 0;
   border-bottom: 1px solid var(--line);
 }
+#details .detail-row {
+  padding: clamp(8px, 1.4vh, 16px) 0;
+  gap: clamp(16px, 2vw, 24px);
+  flex: 1 1 0;
+  align-content: center;
+}
+#details .detail-row .val { font-size: clamp(1.05rem, 1.8vw, 1.2rem); }
+#details .detail-row .val .sub { font-size: clamp(.95rem, 1.6vw, 1.05rem); }
 .detail-row:last-child { border-bottom: none; }
 .detail-row .label {
   font-family: var(--sans);
@@ -1253,7 +1289,7 @@ section:not(.hero) h2::after {
       <p class="section-note">where &amp; when</p>
       <div class="details-layout">
         <figure class="details-photo">
-          <img src="images/church.jpg" alt="St. Paul's Church, Port Gamble" width="800" height="1067">
+          <img src="images/church.jpg" alt="St. Paul's Church, Port Gamble" width="600" height="900">
         </figure>
         <div class="details">
           <div class="detail-row">
