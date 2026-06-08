@@ -1578,16 +1578,13 @@ section:not(.hero) h2::after {
     var tasks = [];
 
     if (RSVP_CONFIG.googleScriptUrl) {
+      /* Google Apps Script POST redirects — no-cors avoids false errors */
       tasks.push(
         fetch(RSVP_CONFIG.googleScriptUrl, {
           method: 'POST',
+          mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(payload)
-        }).then(function (res) {
-          if (!res.ok) throw new Error('Sheet save failed');
-          return res.json().catch(function () { return { ok: true }; });
-        }).then(function (data) {
-          if (data && data.ok === false) throw new Error('Sheet save failed');
         })
       );
     }
