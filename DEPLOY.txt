@@ -1,0 +1,49 @@
+Misa & Ray Wedding Site — Deploy guide
+======================================
+
+Live URL (after setup): https://wedding.raynaldorusi.com
+Extra pages: /share-photos.html, /under-construction.html
+
+Folder layout:
+
+  misa-ray-wedding/
+  ├── index.html
+  ├── share-photos.html
+  ├── under-construction.html
+  ├── images/
+  ├── .nojekyll
+  └── DEPLOY.txt
+
+GitHub + Cloudflare Pages (recommended)
+---------------------------------------
+Repo: https://github.com/Raynaldo-R/misa-ray-wedding
+
+1. Push code to GitHub (see git commands below if not done yet)
+
+2. Cloudflare dashboard → Workers & Pages → Create → Pages
+   → Connect to Git → GitHub → authorize → select misa-ray-wedding
+
+3. Build settings:
+   - Framework preset: None
+   - Build command: (empty)
+   - Build output directory: /
+
+4. Deploy, then Custom domains → Add wedding.raynaldorusi.com
+   (DNS is added automatically when raynaldorusi.com is on Cloudflare)
+
+5. Email Routing (if not already): RSVP@raynaldorusi.com → your inbox
+
+6. After live: submit one test RSVP, click FormSubmit activation email,
+   submit again to confirm delivery.
+
+RSVP config: index.html → RSVP_CONFIG (FormSubmit → RSVP@raynaldorusi.com)
+
+Local preview
+-------------
+  cd misa-ray-wedding && python3 -m http.server 8080
+  open http://localhost:8080
+
+Still to configure
+------------------
+- share-photos.html: photo-upload-link href → Google Drive / Dropbox
+- Fund Contribute buttons → real payment URLs

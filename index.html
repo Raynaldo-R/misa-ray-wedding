@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misa &amp; Ray - April 3, 2027</title>
+<meta name="description" content="The wedding of Misa and Ray. April 3, 2027 in Port Gamble, Washington.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Calistoga&family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&display=swap" rel="stylesheet">
+
+<style>
+/* Forest + ivory — bold sans throughout */
+:root {
+  --forest:      #1e3d34;
+  --sage:        #4a6b5f;
+  --sage-light:  #6d8f82;
+  --stone:       #e8e5de;
+  --ivory:       #faf9f6;
+  --ink:         #1a2421;
+  --ink-soft:    #5a6b65;
+  --line:        #d1ccc3;
+
+  --bg:          var(--ivory);
+  --bg-alt:      var(--stone);
+  --accent:      var(--sage);
+  --accent-dark: var(--forest);
+
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --display: 'Calistoga', Georgia, serif;
+  --header-h: 88px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: var(--header-h); }
+
+body {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 21px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- header / nav ---------- */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(250, 249, 246, .94);
+  backdrop-filter: saturate(140%) blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 32px;
+}
+.brand {
+  font-family: var(--display);
+  font-size: clamp(2.25rem, 7vw, 3.75rem);
+  font-weight: 400;
+  letter-spacing: .01em;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.brand .amp { color: var(--ink-soft); }
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  justify-content: flex-end;
+}
+nav a {
+  font-family: var(--sans);
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 6px 0;
+  white-space: nowrap;
+}
+nav a:hover { color: var(--accent); }
+nav a.nav-photos {
+  color: var(--accent-dark);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  padding: 6px 12px;
+  border-radius: 3px;
+}
+nav a.nav-photos:hover {
+  background: var(--accent);
+  color: #fff;
+}
+nav a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+@media (max-width: 620px) {
+  :root { --header-h: 108px; }
+  .nav-inner { flex-direction: column; align-items: center; gap: 8px; padding: 10px 16px; }
+  nav { justify-content: center; }
+  .brand { font-size: clamp(1.85rem, 10vw, 2.5rem); }
+}
+
+/* ---------- layout ---------- */
+section {
+  padding: clamp(24px, 4vh, 48px) clamp(20px, 4vw, 40px);
+}
+.snap-section {
+  min-height: calc(100svh - var(--header-h));
+  scroll-margin-top: var(--header-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: clamp(32px, 6vh, 72px);
+  box-sizing: border-box;
+}
+.snap-section > .wrap {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  flex: 0 1 auto;
+}
+.snap-section h2 {
+  font-size: clamp(1.85rem, 5vw, 2.75rem);
+  margin-bottom: 8px;
+}
+.snap-section .section-note {
+  margin-bottom: clamp(16px, 3vh, 28px);
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+}
+.snap-section .eyebrow { margin-bottom: 8px; }
+#couple.snap-section {
+  padding: clamp(14px, 2.5vh, 24px) clamp(16px, 4vw, 32px);
+}
+#couple .eyebrow { margin-bottom: 4px; }
+#couple h2 { margin-bottom: 4px; }
+#couple h2::after { margin-top: 8px; }
+#couple .section-note {
+  margin-bottom: clamp(12px, 2vh, 18px);
+  font-size: clamp(.95rem, 2vw, 1.1rem);
+}
+#couple .couple p { font-size: clamp(.88rem, 1.8vw, 1.02rem); line-height: 1.5; }
+#couple .together { margin-top: 12px; font-size: .9rem; }
+#funds.snap-section {
+  padding: clamp(14px, 2.5vh, 28px) clamp(16px, 4vw, 32px) clamp(56px, 10vh, 96px);
+}
+#funds .section-note { margin-bottom: clamp(12px, 2vh, 18px); }
+#travel.snap-section,
+#stay.snap-section,
+#rsvp.snap-section {
+  justify-content: flex-start;
+  overflow-y: auto;
+  padding-top: clamp(18px, 3vh, 32px);
+}
+.fund .btn { margin: 0; padding: 12px 20px; font-size: .72rem; }
+.wrap {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+.alt { background: var(--bg-alt); }
+
+/* ---------- type ---------- */
+h1, h2, h3 { font-family: var(--sans); font-weight: 700; line-height: 1.1; color: var(--ink); }
+h2 {
+  font-size: clamp(2.75rem, 7vw, 4.25rem);
+  text-align: center;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+h3 { letter-spacing: .06em; font-size: 1.35rem; }
+.eyebrow {
+  display: block;
+  font-family: var(--sans);
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .22em;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-bottom: 14px;
+}
+.section-note {
+  text-align: center;
+  color: var(--ink-soft);
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 2.8vw, 1.55rem);
+  margin-bottom: 48px;
+  line-height: 1.45;
+}
+a { color: var(--accent); }
+a:hover { color: var(--accent-dark); }
+p { margin-bottom: 1em; }
+p:last-child { margin-bottom: 0; }
+
+/* ---------- wire divider (TOMO-style outline text) ---------- */
+.wire-divider {
+  width: 100%;
+  overflow: hidden;
+  padding: 10px 0;
+  flex-shrink: 0;
+  background: transparent;
+}
+.wire-divider-track {
+  font-family: var(--display);
+  font-size: clamp(1.1rem, 3vw, 1.65rem);
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(74, 107, 95, 0.38);
+  white-space: nowrap;
+  letter-spacing: .06em;
+}
+
+/* ---------- hero — cream, centered CTA ---------- */
+.hero {
+  background: var(--ivory);
+  color: var(--ink);
+  width: 100%;
+  padding: 0;
+  gap: 0;
+}
+.hero-inner {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(20px, 4vh, 32px);
+  padding: clamp(20px, 4vh, 40px) clamp(20px, 4vw, 40px);
+  min-height: 0;
+}
+.hero-meta { text-align: center; }
+.hero .date {
+  font-size: clamp(.9rem, 2.2vw, 1.1rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  margin-bottom: 8px;
+}
+.hero .place {
+  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+.hero-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.hero-action .btn-primary {
+  font-size: .95rem;
+  padding: 18px 48px;
+}
+.hero-action .btn-ghost {
+  font-size: .78rem;
+  padding: 14px 28px;
+}
+.hero .tagline {
+  font-size: clamp(.95rem, 2vw, 1.1rem);
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: .9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  text-decoration: none;
+  padding: 18px 40px;
+  border-radius: 3px;
+  margin: 8px;
+  transition: background .15s, color .15s;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent-dark);
+  outline-offset: 2px;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-dark); color: #fff; }
+.btn-ghost { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.btn-ghost:hover { background: var(--accent); color: #fff; }
+
+/* ---------- couple ---------- */
+.couple {
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) 1fr;
+  gap: clamp(28px, 4vw, 44px);
+  align-items: center;
+}
+.photo {
+  aspect-ratio: 4 / 5;
+  max-height: min(42vh, 360px);
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(26, 36, 33, .08);
+}
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.faq-media {
+  margin: 14px 0 6px;
+  line-height: 0;
+}
+.faq-media img {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  border-radius: 2px;
+  display: block;
+  margin: 0 auto;
+  box-shadow: 0 2px 12px rgba(26, 36, 33, .08);
+}
+.faq-media-split {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 14px;
+  align-items: center;
+  margin: 14px 0 8px;
+}
+.faq-media-split .faq-media { margin: 0; }
+.faq-media-split .faq-media img { max-width: 100%; margin: 0; }
+.faq-links {
+  margin-top: 12px;
+  font-size: .95rem;
+  font-weight: 600;
+}
+.faq-links a { margin-right: 4px; }
+.faq-quicklinks {
+  text-align: center;
+  font-size: .82rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  line-height: 1.8;
+}
+.faq-quicklinks a {
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.faq-quicklinks a:hover { color: var(--accent-dark); }
+.couple p { font-size: clamp(1rem, 2.2vw, 1.15rem); font-weight: 500; line-height: 1.55; }
+.together {
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin-top: 24px;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+@media (max-width: 600px) {
+  .faq-media-split { grid-template-columns: 1fr; }
+  .couple { grid-template-columns: 1fr; }
+  .photo { max-width: 280px; max-height: min(38vh, 300px); }
+}
+
+/* ---------- detail list ---------- */
+.details {
+  width: 100%;
+  padding: 8px 28px;
+  border: 1px solid #ddd6ce;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #c8c0b8 inset;
+}
+.detail-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 28px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row .label {
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--ink-soft);
+  padding-top: 4px;
+}
+.detail-row .val {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.detail-row .val .sub { color: var(--ink-soft); font-size: 1.1rem; font-weight: 500; }
+.detail-row .val a { font-size: 1rem; }
+@media (max-width: 480px) {
+  .detail-row { grid-template-columns: 1fr; gap: 4px; padding: 14px 0; }
+}
+
+/* ---------- FAQ ---------- */
+.faq { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+.faq details {
+  border: 1px solid #d4ccc4;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #b8b0a8 inset;
+  overflow: hidden;
+}
+.faq summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 20px 48px 20px 22px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 1.05rem;
+  position: relative;
+  background: linear-gradient(180deg, #faf6f2 0%, #ece6de 100%);
+  transition: background .12s;
+}
+.faq summary:hover { background: linear-gradient(180deg, var(--ivory) 0%, #e0ddd6 100%); }
+.faq summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: "+";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-soft);
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1;
+}
+.faq details[open] summary {
+  border-bottom: 1px solid #d4ccc4;
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+.faq details[open] summary::after { content: "\2013"; }
+.faq-answer {
+  padding: 24px 24px 28px;
+  background: #fffefb;
+  border-top: 1px solid #ebe4dc;
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.7;
+}
+.faq-answer p { margin-bottom: .9em; color: var(--ink); }
+.faq-answer p:last-child { margin-bottom: 0; }
+
+/* ---------- cards (lodging, things to do, funds) ---------- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-top: 12px;
+}
+.card {
+  padding: 24px 22px 20px;
+  border: 1px solid #ddd6ce;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #c8c0b8 inset;
+}
+.card h3 { font-size: 1.45rem; margin-bottom: 8px; font-weight: 600; }
+.card .meta { color: var(--ink-soft); font-size: 1.05rem; margin-bottom: 12px; }
+.card p { font-size: 1.1rem; margin-bottom: 12px; }
+.card a { font-size: 1.05rem; font-weight: 600; }
+
+.subhead {
+  font-family: var(--sans);
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin: 48px 0 12px;
+  text-align: center;
+}
+.subhead:first-child { margin-top: 0; }
+
+/* ---------- RSVP form ---------- */
+form { width: min(680px, 100%); margin: 0 auto; }
+.field { margin-bottom: 28px; }
+label {
+  display: block;
+  font-family: var(--sans);
+  font-size: .85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+input[type=text], input[type=email], input[type=number], textarea, select {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid #b8b0a8;
+  border-radius: 3px;
+  padding: 14px 16px;
+  box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #d0c8c0 inset;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(74, 107, 95, .22);
+}
+.radio-group { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  font-size: 1.05rem;
+  margin: 0;
+  padding: 14px 18px;
+  border: 1px solid #ddd6ce;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+.radio-group label:has(:checked) {
+  border-color: var(--accent);
+  background: rgba(74, 151, 130, .12);
+}
+.radio-group input { width: auto; }
+button[type=submit] {
+  display: block;
+  margin: 12px auto 0;
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: 3px;
+  padding: 16px 40px;
+  cursor: pointer;
+  box-shadow: 1px 1px 0 rgba(255,255,255,.25) inset;
+}
+button[type=submit]:hover { background: var(--accent-dark); }
+button[type=submit]:focus-visible {
+  outline: 2px solid var(--accent-dark);
+  outline-offset: 2px;
+}
+#rsvp-confirm {
+  display: none;
+  text-align: center;
+  margin-top: 18px;
+  padding: 14px;
+  background: var(--bg-alt);
+  border-radius: 6px;
+  font-weight: 600;
+  color: var(--ink);
+}
+#rsvp-error {
+  display: none;
+  text-align: center;
+  margin-top: 18px;
+  padding: 14px;
+  background: #fdf0ee;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #8b3a34;
+  border: 1px solid #e8c4c0;
+}
+button[type=submit]:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.field-honey {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ---------- funds ---------- */
+.funds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 3vw, 28px);
+  margin-top: 8px;
+}
+@media (max-width: 800px) {
+  .funds-grid { gap: 10px; }
+  .fund h3 { font-size: clamp(.72rem, 2.8vw, .95rem); }
+  .fund .btn { padding: 10px 10px; font-size: .62rem; letter-spacing: .08em; }
+}
+.fund {
+  text-align: center;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+.fund-gif {
+  margin: 0 auto 12px;
+  line-height: 0;
+}
+.fund-gif img {
+  display: block;
+  margin: 0 auto;
+  max-width: min(100%, 140px);
+  max-height: clamp(64px, 12vh, 88px);
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+}
+/* chicken fund interactive widget */
+.chicken-widget {
+  position: relative;
+  width: min(100%, 168px);
+  height: clamp(64px, 12vh, 80px);
+  margin: 0 auto 12px;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+.chicken-widget-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.chicken-widget-ground {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 0;
+  height: 2px;
+  background: rgba(74, 107, 95, 0.28);
+  z-index: 1;
+}
+.chicken-widget-birds {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 4px;
+  z-index: 3;
+  pointer-events: none;
+}
+.chicken-bird {
+  max-width: 44px;
+  max-height: 56px;
+  min-width: 28px;
+  min-height: 36px;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+}
+.chicken-widget-worms {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.chicken-widget-worm {
+  position: absolute;
+  width: 16px;
+  height: auto;
+  pointer-events: none;
+  will-change: transform;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.12));
+}
+.chicken-widget-worm.is-landed {
+  z-index: 2;
+}
+.chicken-widget.is-feasting .chicken-widget-birds {
+  animation: chicken-bounce .45s ease-in-out infinite alternate;
+}
+@keyframes chicken-bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chicken-widget.is-feasting .chicken-widget-birds { animation: none; }
+}
+.fund h3 {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.fund-rule {
+  width: 36px;
+  border: none;
+  border-top: 1px solid var(--ink);
+  margin: 0 auto 10px;
+}
+.fund p {
+  color: var(--ink-soft);
+  font-size: clamp(.78rem, 1.6vw, .92rem);
+  font-weight: 500;
+  margin-bottom: 10px;
+  line-height: 1.55;
+  max-width: 28ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+.btn-outline {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+.btn-outline:hover { background: var(--ink); color: var(--ivory); }
+
+/* ---------- footer ---------- */
+footer {
+  position: relative;
+  text-align: center;
+  padding: 56px 24px min(42vh, 440px);
+  color: var(--ink-soft);
+  border-top: 1px solid var(--line);
+}
+footer .f-names { font-family: var(--display); font-size: 1.75rem; font-weight: 400; color: var(--ink); margin-bottom: 6px; }
+footer .f-meta { font-size: 1.05rem; margin-bottom: 20px; }
+footer a { font-size: 1rem; font-weight: 600; }
+
+/* secret garden radish */
+.secret-mound {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: min(92vw, 860px);
+  height: min(40vh, 480px);
+  z-index: 12;
+  pointer-events: none;
+}
+.secret-soil {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+.secret-radish {
+  position: absolute;
+  left: 27%;
+  bottom: 32%;
+  width: min(52vw, 460px);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: auto;
+}
+.secret-radish:active { cursor: grabbing; }
+.secret-pull-hint {
+  position: absolute;
+  left: 50%;
+  top: 2%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 5;
+}
+.secret-pull-arrow {
+  display: block;
+  font-size: clamp(1.5rem, 4.5vw, 2.5rem);
+  line-height: 1;
+  font-weight: 700;
+  color: var(--sage);
+  text-shadow: 0 1px 0 rgba(255,255,255,.8);
+  animation: pull-hint-fade 2.4s ease-in-out infinite;
+}
+@keyframes pull-hint-fade {
+  0%, 100% { opacity: 0; transform: translateY(12px); }
+  40%, 60% { opacity: 0.9; transform: translateY(-8px); }
+}
+.secret-radish.is-pulled .secret-pull-hint {
+  opacity: 0;
+  animation: none;
+}
+.secret-radish img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: contrast(1.06) saturate(1.08);
+  transform-origin: center bottom;
+  pointer-events: none;
+  user-select: none;
+}
+.secret-radish.is-dithering img {
+  animation: radish-dither 0.1s steps(2) 8;
+}
+@keyframes radish-dither {
+  0%, 100% { filter: contrast(1.12) saturate(1.05); }
+  50% { filter: contrast(1.55) saturate(0.65) brightness(1.08); }
+}
+.secret-radish.is-rumbling {
+  animation: radish-rumble 0.3s steps(4) 2;
+}
+@keyframes radish-rumble {
+  0%, 100% { transform: translateX(-50%) translate(0, 0); }
+  25% { transform: translateX(-50%) translate(-2px, 1px) rotate(-2deg); }
+  50% { transform: translateX(-50%) translate(2px, -1px) rotate(2deg); }
+  75% { transform: translateX(-50%) translate(-1px, -1px) rotate(1deg); }
+}
+.secret-radish.is-pulled img {
+  transition: filter 0.2s ease;
+  filter: contrast(1.2) saturate(1.1) drop-shadow(0 4px 6px rgba(0,0,0,.15));
+}
+
+/* garden secret modal */
+.garden-modal[hidden] { display: none; }
+.garden-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.garden-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 36, 33, 0.55);
+  backdrop-filter: blur(3px);
+}
+.garden-modal-panel {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+  background: var(--ivory);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: clamp(28px, 5vw, 40px) clamp(24px, 4vw, 36px) clamp(32px, 5vw, 40px);
+  box-shadow: 0 12px 40px rgba(26, 36, 33, 0.2);
+}
+.garden-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 3px;
+}
+.garden-modal-close:hover { color: var(--ink); background: var(--stone); }
+.garden-modal-eyebrow {
+  display: block;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-bottom: 8px;
+}
+.garden-modal-panel h2 {
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  text-align: center;
+  margin-bottom: 16px;
+}
+.garden-modal-panel p {
+  font-size: clamp(1rem, 2.2vw, 1.12rem);
+  line-height: 1.6;
+  color: var(--ink);
+  text-align: center;
+  margin-bottom: 1em;
+}
+.garden-modal-photos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+.garden-modal-photos img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+  box-shadow: 0 2px 10px rgba(26, 36, 33, 0.1);
+}
+@media (max-width: 480px) {
+  footer { padding-bottom: min(44vh, 340px); }
+  .secret-mound {
+    width: min(98vw, 520px);
+    height: min(36vh, 300px);
+  }
+  .secret-radish {
+    width: min(78vw, 340px);
+    left: 30%;
+    bottom: 30%;
+  }
+  .garden-modal-photos { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .secret-radish.is-rumbling,
+  .secret-radish.is-dithering img { animation: none; }
+  .secret-pull-arrow { animation: none; opacity: 0.65; transform: translateY(-4px); }
+}
+
+/* --- early-internet accents (remove this block + matching HTML to revert) --- */
+:root {
+  --retro-blush:    var(--ivory);
+  --retro-pink:     var(--stone);
+  --retro-rose:     var(--sage);
+  --retro-lavender: var(--stone);
+  --retro-lilac:    #dfe5e1;
+  --retro-mauve:    var(--forest);
+}
+header { border-bottom-color: var(--line); }
+.alt { background: var(--stone); }
+section:not(.hero):not(.alt) { background: var(--ivory); }
+section:not(.hero) h2::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 1px;
+  margin: 16px auto 0;
+  background: var(--ink);
+}
+.chicken-cam {
+  position: fixed;
+  right: 14px;
+  bottom: 16px;
+  top: auto;
+  width: 140px;
+  z-index: 45;
+  display: none;
+  opacity: 0;
+  font: 700 9px/1.2 Tahoma, Arial, sans-serif;
+  background: linear-gradient(180deg, #ece8ea, #d4d0c8);
+  border: 1px solid #808080;
+  box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #404040 inset;
+  padding: 2px;
+  transition: opacity 1.1s ease;
+}
+.chicken-cam.is-mounted { display: block; }
+.chicken-cam.is-visible { opacity: 1; }
+.chicken-cam-boot {
+  min-height: 118px;
+  background: #0c0c0c;
+  color: #3dff6e;
+  font: 8px/1.55 'Courier New', Courier, monospace;
+  padding: 10px 7px;
+  text-shadow: 0 0 6px rgba(61, 255, 110, .35);
+}
+.chicken-cam-boot-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+.chicken-cam-boot-line.is-shown {
+  opacity: 1;
+  transform: translateY(0);
+}
+.chicken-cam-boot-line.dim { color: #2db34e; }
+.chicken-cam-boot-cursor {
+  display: inline-block;
+  margin-top: 4px;
+  animation: boot-cursor 0.75s step-end infinite;
+}
+@keyframes boot-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.chicken-cam-boot.is-hiding {
+  opacity: 0;
+  transition: opacity .55s ease;
+}
+.chicken-cam-live {
+  opacity: 0;
+  transition: opacity .9s ease .1s;
+}
+.chicken-cam-live.is-visible { opacity: 1; }
+.chicken-cam-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  background: linear-gradient(180deg, var(--retro-mauve) 0%, var(--retro-rose) 45%, var(--retro-pink) 100%);
+  color: #fff;
+  padding: 3px 4px;
+  letter-spacing: .04em;
+  text-shadow: 0 1px 0 rgba(0, 32, 24, .45);
+}
+.chicken-cam-label { font-size: 8px; line-height: 1.1; }
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: #ffe8e8;
+  flex-shrink: 0;
+}
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff2222;
+  box-shadow: 0 0 4px rgba(255, 34, 34, .8);
+  animation: live-blink 1.1s step-end infinite;
+}
+@keyframes live-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: .2; }
+}
+.chicken-cam-viewport {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #1a1020, #2a1830);
+}
+.chicken-cam-feed,
+.chicken-cam-static {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.chicken-cam-static {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+.chicken-cam-static.is-active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+  .chicken-cam-boot-cursor { animation: none; }
+  .chicken-cam, .chicken-cam-live, .chicken-cam-boot { transition: none; }
+}
+.aim-status {
+  display: inline-block;
+  font: 12px/1.4 Tahoma, Arial, sans-serif;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #fff 0%, var(--retro-blush) 100%);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.aim-status em { color: var(--sage); font-style: normal; font-weight: 600; }
+.visitor-counter {
+  margin: 20px auto 16px;
+  font: 11px/1.3 Tahoma, Arial, sans-serif;
+}
+.counter-label {
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .7rem;
+}
+.counter-digits {
+  display: inline-flex;
+  gap: 2px;
+}
+.counter-digit {
+  display: inline-block;
+  min-width: 26px;
+  padding: 5px 3px;
+  background: #141414;
+  color: #e83030;
+  font: bold 20px/1 'Courier New', Courier, monospace;
+  border: 2px outset #5a5a5a;
+  text-align: center;
+  text-shadow: 0 0 6px rgba(232, 48, 48, .45);
+}
+.counter-digit.counter-loading { color: #666; text-shadow: none; }
+#rsvp-confirm {
+  background: linear-gradient(180deg, #fff, var(--retro-blush));
+  box-shadow: inset 0 0 0 1px rgba(74, 151, 130, .25);
+}
+.footer-links { margin-top: 14px; line-height: 2; }
+@media (max-width: 620px) {
+  body { font-size: 18px; }
+  .faq summary { padding-right: 40px; font-size: 1.05rem; }
+  nav a { font-size: .75rem; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ASSET: chicken-cam feeds — add/remove URLs in CHICKEN_FEEDS array in script below -->
+<aside class="chicken-cam" id="chicken-cam" aria-hidden="true">
+  <div class="chicken-cam-boot" id="chicken-cam-boot" hidden>
+    <span class="chicken-cam-boot-line" id="boot-line-1">&gt; init chicken_cam</span>
+    <span class="chicken-cam-boot-line dim" id="boot-line-2">handshake ok</span>
+    <span class="chicken-cam-boot-line dim" id="boot-line-3">acquiring signal...</span>
+    <span class="chicken-cam-boot-line dim" id="boot-line-4">feed locked, going live</span>
+    <span class="chicken-cam-boot-cursor">█</span>
+  </div>
+  <div class="chicken-cam-live" id="chicken-cam-live" hidden>
+    <div class="chicken-cam-title">
+      <span class="chicken-cam-label">CHICKEN WATCH</span>
+      <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+    </div>
+    <div class="chicken-cam-viewport">
+      <img class="chicken-cam-feed" id="chicken-cam-feed" src="https://media2.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3ZmZ3bXFubHQycWtxcnp1YW5scXA1ZjRiNjk1dDFzbnhidnFobDVsNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/H11blOCCqO9NK/giphy.webp" alt="" width="136" height="100">
+      <!-- ASSET: chicken-cam-static — TV static burst between feed cuts -->
+      <img class="chicken-cam-static" id="chicken-cam-static" src="https://media0.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MXBvNWY2OHRocXA0aWVnMHR0bDIyaWY4MjY1cWQ5cTJ1OG02cmszNiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/EHSbimJLYusDkqFd3P/200.webp" alt="" aria-hidden="true">
+    </div>
+  </div>
+</aside>
+
+<header>
+  <div class="nav-inner">
+    <a href="#top" class="brand">Misa <span class="amp">&amp;</span> Ray</a>
+    <nav>
+      <a href="#couple">The Couple</a>
+      <a href="#details">Details</a>
+      <a href="#travel">Getting Here</a>
+      <a href="#stay">Stay &amp; Play</a>
+      <a href="#rsvp">RSVP</a>
+      <a href="#funds">Gifts</a>
+      <a href="share-photos.html" class="nav-photos">Share Photos</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero snap-section" id="top">
+    <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
+    <div class="hero-inner">
+      <div class="hero-meta">
+        <div class="date">Saturday, April 3, 2027</div>
+        <div class="place">Port Gamble, Washington</div>
+      </div>
+      <div class="hero-action">
+        <a href="#rsvp" class="btn btn-primary">RSVP</a>
+        <a href="#travel" class="btn btn-ghost">Getting Here</a>
+      </div>
+      <p class="tagline">Celebrate our day with us</p>
+    </div>
+    <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
+  </section>
+
+  <!-- THE COUPLE -->
+  <section id="couple" class="alt snap-section">
+    <div class="wrap">
+      <span class="eyebrow">About us</span>
+      <h2>The Couple</h2>
+      <p class="section-note">how our garden grew</p>
+      <div class="couple">
+        <figure class="photo">
+          <img src="images/couple.jpg" alt="Misa and Ray" width="800" height="1000">
+        </figure>
+        <div>
+          <p>Misa and Ray met in early 2020 through their mutual friends, they soon realized they loved the same hobbies, like watching horror movies, being creative and most importantly, being in each others company all the time. Now they are inseparable. They got officially married on May 25th 2026, but they want all their families and friends to enjoy a wedding day on them!</p>
+          <p class="together">Together since 2021</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
+
+  <!-- DETAILS -->
+  <section id="details" class="snap-section">
+    <div class="wrap">
+      <span class="eyebrow">When &amp; where</span>
+      <h2>The Details</h2>
+      <p class="section-note">where &amp; when</p>
+      <div class="details">
+        <div class="detail-row">
+          <div class="label">Date</div>
+          <div class="val">Saturday, April 3, 2027</div>
+        </div>
+        <div class="detail-row">
+          <div class="label">Ceremony</div>
+          <div class="val">1:00 PM at St. Paul's Church<br>
+            <span class="sub">31899 NE State Hwy 104, Port Gamble, WA 98364 · <a href="https://www.google.com/maps/place/St.+Paul's+Episcopal+Church,+31899+NE+State+Route+104,+Kingston,+WA+98346" target="_blank" rel="noopener noreferrer">Directions ↗</a></span></div>
+        </div>
+        <div class="detail-row">
+          <div class="label">Reception</div>
+          <div class="val">3:00 PM at Hood Canal Vista Pavilion<br>
+            <span class="sub">4740 View Dr NE, Port Gamble, WA 98364 · <a href="https://www.google.com/maps/place/Hood+Canal+Vista+Pavilion,+4740+View+Dr+NE,+Port+Gamble,+WA+98364" target="_blank" rel="noopener noreferrer">Directions ↗</a></span></div>
+        </div>
+        <div class="detail-row">
+          <div class="label">Attire</div>
+          <div class="val">Formal</div>
+        </div>
+        <div class="detail-row">
+          <div class="label">Parking</div>
+          <div class="val">Plenty of parking: a lot and street parking at both venues.</div>
+        </div>
+        <div class="detail-row">
+          <div class="label">Good to know</div>
+          <div class="val">Both venues are indoors.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
+
+  <!-- GETTING HERE -->
+  <section id="travel" class="alt snap-section">
+    <div class="wrap">
+      <span class="eyebrow">Travel</span>
+      <h2>Getting Here</h2>
+      <p class="section-note">ferries, drives &amp; questions</p>
+      <p class="faq-quicklinks">
+        <a href="https://www.wsdot.com/ferries/schedule/" target="_blank" rel="noopener noreferrer">Ferry schedules ↗</a> ·
+        <a href="https://wsdot.com/ferries/traffic/" target="_blank" rel="noopener noreferrer">Wait times ↗</a> ·
+        <a href="https://www.google.com/maps/place/Port+Gamble,+WA+98370" target="_blank" rel="noopener noreferrer">Google Maps ↗</a>
+      </p>
+      <div class="faq">
+        <details>
+          <summary>Where is Port Gamble?</summary>
+          <div class="faq-answer">
+            <p>Port Gamble is on the Kitsap Peninsula, north of Kingston on WA-104. ZIP 98370.</p>
+            <div class="faq-media-split">
+              <figure class="faq-media">
+                <img src="images/port-gamble-sign.webp" alt="Port Gamble welcome sign" width="480" height="640">
+              </figure>
+              <figure class="faq-media">
+                <a href="https://www.google.com/maps/place/Port+Gamble,+WA+98370" target="_blank" rel="noopener noreferrer">
+                  <img src="images/port-gamble-map.png" alt="Map of Port Gamble, Washington" width="640" height="360">
+                </a>
+              </figure>
+            </div>
+            <p class="faq-links"><a href="https://www.google.com/maps/place/Port+Gamble,+WA+98370" target="_blank" rel="noopener noreferrer">Open in Google Maps ↗</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Which ferry do I take from Seattle?</summary>
+          <div class="faq-answer">
+            <p>Port Gamble has no ferry dock. You cross the Sound and drive a short way in. Two good options:</p>
+            <p><strong>Edmonds → Kingston:</strong> about a 25-minute crossing, then roughly 10 minutes on WA-104 into Port Gamble. Best if you're coming from north Seattle or up I-5.<br>
+            <a href="https://www.wsdot.com/ferries/schedule/scheduledetailbyroute.aspx?route=ed-king" target="_blank" rel="noopener noreferrer">Edmonds–Kingston schedule ↗</a></p>
+            <p><strong>Seattle → Bainbridge Island:</strong> about a 35-minute crossing, then a 35-minute drive via SR-305. Best if you're staying in downtown Seattle.<br>
+            <a href="https://www.wsdot.com/ferries/schedule/scheduledetailbyroute.aspx?route=sea-bi" target="_blank" rel="noopener noreferrer">Seattle–Bainbridge schedule ↗</a></p>
+            <p>Ferries fill up on summer weekends, so give yourself a buffer. Check <a href="https://www.wsdot.com/ferries/schedule/" target="_blank" rel="noopener noreferrer">current schedules ↗</a> and <a href="https://wsdot.com/ferries/traffic/" target="_blank" rel="noopener noreferrer">live wait times ↗</a> closer to the date.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Driving up from Oregon or the south?</summary>
+          <div class="faq-answer">
+            <p>You can skip the ferry entirely. Take I-5 North to Tacoma, then WA-16 West across the Tacoma Narrows Bridge, then WA-3 North through Bremerton, Silverdale, and Poulsbo into Port Gamble.</p>
+            <p>The Narrows Bridge toll is only charged heading <em>east</em> (toward Tacoma, on your way home), so the drive to the wedding is free. <a href="https://wsdot.wa.gov/travel/roads-bridges/toll-roads-bridges-tunnels/tacoma-narrows-bridge-tolling" target="_blank" rel="noopener noreferrer">Narrows toll info ↗</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Do I need a car on the ferry?</summary>
+          <div class="faq-answer">
+            <p>Probably. There is no transit out to the venues. Walking on is cheaper if you can carpool from the other side. Let us know on your RSVP and we'll help connect carpools.</p>
+            <p><a href="https://wsdot.wa.gov/travel/transportation-options/ferry-walk-on" target="_blank" rel="noopener noreferrer">WSDOT walk-on passenger info ↗</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Flying in?</summary>
+          <div class="faq-answer">
+            <p>Fly into <a href="https://www.portseattle.org/sea-tac" target="_blank" rel="noopener noreferrer">Sea-Tac (SEA) ↗</a>. From there, head up I-5 to the Edmonds ferry, or into downtown Seattle for the Bainbridge boat. A rental car is the easiest way to get around once you're on the peninsula.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
+
+  <!-- STAY & PLAY -->
+  <section id="stay" class="snap-section">
+    <div class="wrap">
+      <span class="eyebrow">Visit</span>
+      <h2>Stay &amp; Play</h2>
+      <p class="section-note">where to sleep &amp; what to do</p>
+
+      <div class="subhead">Lodging</div>
+      <div class="cards">
+        <div class="card">
+          <h3>Poulsbo Inn</h3>
+          <div class="meta">15 minutes from the venue</div>
+          <p><a href="https://www.poulsboinn.com/" rel="noopener noreferrer">poulsboinn.com ↗</a></p>
+        </div>
+        <div class="card">
+          <h3>Fairfield by Marriott</h3>
+          <div class="meta">Seattle / Poulsbo, 14 minutes</div>
+          <p><a href="https://www.marriott.com/en-us/hotels/seafo-fairfield-inn-and-suites-seattle-poulsbo/overview/" rel="noopener noreferrer">marriott.com ↗</a></p>
+        </div>
+        <div class="card">
+          <h3>The Resort at Port Ludlow</h3>
+          <div class="meta">18 minutes from the venue</div>
+          <p><a href="https://portludlowresort.com/inn/" rel="noopener noreferrer">portludlowresort.com ↗</a></p>
+        </div>
+      </div>
+
+      <div class="subhead">Things to Do</div>
+      <div class="cards">
+        <div class="card">
+          <h3>Hiking</h3>
+          <div class="meta">Port Gamble Forest Heritage Park</div>
+          <p>Miles of trails right near the venues.
+          <a href="https://www.portgamble.com/things-to-do/recreation-and-nature/port-gamble-trails/" rel="noopener noreferrer">Trail info ↗</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
+
+  <!-- RSVP -->
+  <section id="rsvp" class="alt snap-section">
+    <div class="wrap">
+      <h2>RSVP</h2>
+      <p class="section-note">kindly reply by January 20, 2027</p>
+
+      <!-- CONFIG: RSVP delivery — see RSVP_CONFIG in script (FormSubmit → RSVP@raynaldorusi.com) -->
+      <form id="rsvpForm" novalidate>
+        <div class="field field-honey" aria-hidden="true">
+          <label for="website">Website</label>
+          <input type="text" id="website" name="_honey" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="name">Name(s)</label>
+          <input type="text" id="name" name="name" placeholder="The Smith Family" required>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required>
+        </div>
+        <!-- attending = the actual RSVP answer (yes/no) — not redundant with the form, this IS the response -->
+        <div class="field">
+          <label>Attending?</label>
+          <div class="radio-group">
+            <label><input type="radio" name="attending" value="yes" required> Joyfully accept</label>
+            <label><input type="radio" name="attending" value="no"> Regretfully decline</label>
+          </div>
+        </div>
+        <div class="field" id="party-field">
+          <label for="party">Number in your party</label>
+          <input type="number" id="party" name="party" min="1" max="12" value="1">
+        </div>
+        <div class="field">
+          <label for="diet">Dietary needs or allergies</label>
+          <input type="text" id="diet" name="diet">
+        </div>
+        <div class="field">
+          <label for="rsvp-travel">How are you getting here?</label>
+          <select id="rsvp-travel" name="travel">
+            <option value="">Select…</option>
+            <option>Edmonds → Kingston ferry</option>
+            <option>Seattle → Bainbridge ferry</option>
+            <option>Driving from the south, no ferry</option>
+            <option>Would love a carpool</option>
+            <option>Not sure yet</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="song">A song to get you dancing</label>
+          <input type="text" id="song" name="song">
+        </div>
+        <div class="field">
+          <label for="note">A note for us (optional)</label>
+          <textarea id="note" name="note" rows="3"></textarea>
+        </div>
+        <button type="submit" id="rsvp-submit">Send RSVP</button>
+        <div id="rsvp-confirm">Thank you. We can't wait to celebrate with you.</div>
+        <div id="rsvp-error">Something went wrong. Please try again or email us directly at RSVP@raynaldorusi.com.</div>
+      </form>
+    </div>
+  </section>
+
+  <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
+
+  <!-- FUNDS -->
+  <section id="funds" class="snap-section">
+    <div class="wrap">
+      <span class="eyebrow">Registry</span>
+      <h2>Gifts</h2>
+      <p class="section-note">no registry. pick a fund if you'd like</p>
+      <div class="funds-grid">
+        <!-- CONFIG: fund URLs below -->
+        <div class="fund">
+          <div class="fund-gif">
+            <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
+          </div>
+          <h3>Vacation Fund</h3>
+          <hr class="fund-rule">
+          <p>Somewhere warm, eventually.</p>
+          <a href="under-construction.html" class="btn btn-outline">Contribute</a>
+        </div>
+        <div class="fund">
+          <div class="fund-gif">
+            <img src="https://blob.gifcities.org/gifcities/J6T65FULRGZQSVKG7WS5KDOM65EQIUIJ.gif" alt="" width="120" height="80">
+          </div>
+          <h3>Future Dream Home</h3>
+          <hr class="fund-rule">
+          <p>For the garden, and walls around it.</p>
+          <a href="under-construction.html" class="btn btn-outline">Contribute</a>
+        </div>
+        <div class="fund">
+          <div class="chicken-widget" id="chicken-widget" aria-label="Hover to feed the chickens">
+            <div class="chicken-widget-stage">
+              <div class="chicken-widget-worms" id="chicken-worms"></div>
+              <div class="chicken-widget-ground"></div>
+              <div class="chicken-widget-birds">
+                <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50">
+                <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50">
+                <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50">
+              </div>
+            </div>
+          </div>
+          <h3>The Chickens</h3>
+          <hr class="fund-rule">
+          <p>They need more grubs and snacks!</p>
+          <a href="under-construction.html" class="btn btn-outline">Contribute</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="f-names">Misa &amp; Ray</div>
+  <div class="f-meta">April 3, 2027 · Port Gamble, Washington</div>
+  <p class="aim-status">Misa &amp; Ray: <em>counting down to Port Gamble!</em></p>
+
+  <!-- CONFIG: visitor counter — CountAPI namespace/key in script below; counts once per browser session -->
+  <div class="visitor-counter">
+    <div class="counter-label">you are visitor number</div>
+    <div class="counter-digits" id="visitor-digits" aria-live="polite">
+      <span class="counter-digit counter-loading">·</span>
+      <span class="counter-digit counter-loading">·</span>
+      <span class="counter-digit counter-loading">·</span>
+      <span class="counter-digit counter-loading">·</span>
+      <span class="counter-digit counter-loading">·</span>
+      <span class="counter-digit counter-loading">·</span>
+    </div>
+  </div>
+
+  <div class="footer-links">
+    <a href="#top">↑ Back to top</a>
+  </div>
+
+  <div class="secret-mound" id="secret-mound" aria-hidden="true">
+    <img class="secret-soil" src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngimg.com%2Fuploads%2Fsoil%2Fsoil_PNG44.png&f=1&nofb=1&ipt=7b48aec5fe015df095528b50db202320789d3a767256c0c6e169d7b7fd6a99d5" alt="" width="860" height="480">
+    <button type="button" class="secret-radish" id="secret-radish" aria-label="Pull the radish up">
+      <span class="secret-pull-hint" aria-hidden="true"><span class="secret-pull-arrow">↑</span></span>
+      <img src="images/radish.png" alt="" width="1024" height="990">
+    </button>
+  </div>
+</footer>
+
+<div class="garden-modal" id="garden-modal" role="dialog" aria-labelledby="garden-modal-title" aria-modal="true" hidden>
+  <div class="garden-modal-backdrop" data-garden-close></div>
+  <div class="garden-modal-panel">
+    <button type="button" class="garden-modal-close" data-garden-close aria-label="Close">&times;</button>
+    <span class="garden-modal-eyebrow">Shhh</span>
+    <h2 id="garden-modal-title">Garden Wedding</h2>
+    <p>We decided we're too in love with our garden of veggies, so all the decoration and theming will be vegetables from our garden.</p>
+    <p>We are hard at work now getting all the pumpkins, cabbages, carrots, radishes, leeks and more ready for April 3rd!</p>
+    <div class="garden-modal-photos">
+      <img src="images/garden-cabbage.jpg" alt="Misa with a giant cabbage from the garden" width="400" height="533">
+      <img src="images/garden-ray.jpg" alt="Ray tending the garden" width="400" height="533">
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var wirePhrase = 'Misa & Ray \u00b7 ';
+  document.querySelectorAll('.wire-divider-track').forEach(function (el) {
+    el.textContent = wirePhrase.repeat(40);
+  });
+
+  /* CONFIG: visitor counter key — change COUNTER_KEY if you clone this site (uses countapi.mileshilliard.com) */
+  var COUNTER_KEY = 'misa-ray-wedding-port-gamble-visits';
+  var API = 'https://countapi.mileshilliard.com/api/v1/';
+  var el = document.getElementById('visitor-digits');
+
+  function render(n) {
+    var digits = String(Math.max(0, n)).padStart(6, '0').split('');
+    el.innerHTML = digits.map(function (d) {
+      return '<span class="counter-digit">' + d + '</span>';
+    }).join('');
+  }
+
+  function load(getOnly) {
+    var url = API + (getOnly ? 'get/' : 'hit/') + COUNTER_KEY;
+    return fetch(url).then(function (r) { return r.json(); });
+  }
+
+  if (sessionStorage.getItem('misa-ray-counted')) {
+    load(true).then(function (d) { render(d.value); }).catch(showError);
+  } else {
+    sessionStorage.setItem('misa-ray-counted', '1');
+    load(false).then(function (d) { render(d.value); }).catch(showError);
+  }
+
+  function showError() {
+    el.innerHTML = '<span class="counter-digit counter-loading">?</span>'.repeat(6);
+  }
+
+  /* Hide party size when guest declines */
+  var partyField = document.getElementById('party-field');
+  var partyInput = document.getElementById('party');
+  document.querySelectorAll('input[name="attending"]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      var declining = document.querySelector('input[name="attending"][value="no"]').checked;
+      partyField.hidden = declining;
+      partyInput.required = !declining;
+      if (declining) partyInput.value = '0';
+      else if (partyInput.value === '0') partyInput.value = '1';
+    });
+  });
+
+  /*
+   * CONFIG: RSVP delivery (works on Cloudflare Pages — static site, no server needed)
+   * provider: 'formsubmit' emails RSVP@raynaldorusi.com (activate on first test submit)
+   * provider: 'formspree' uses https://formspree.io — set formspreeId after creating a form
+   */
+  var RSVP_CONFIG = {
+    provider: 'formsubmit',
+    email: 'RSVP@raynaldorusi.com',
+    formspreeId: ''
+  };
+
+  var rsvpForm = document.getElementById('rsvpForm');
+  var rsvpSubmit = document.getElementById('rsvp-submit');
+  var rsvpConfirm = document.getElementById('rsvp-confirm');
+  var rsvpError = document.getElementById('rsvp-error');
+
+  function rsvpEndpoint() {
+    if (RSVP_CONFIG.provider === 'formspree' && RSVP_CONFIG.formspreeId) {
+      return 'https://formspree.io/f/' + RSVP_CONFIG.formspreeId;
+    }
+    return 'https://formsubmit.co/ajax/' + encodeURIComponent(RSVP_CONFIG.email);
+  }
+
+  if (rsvpForm) {
+    rsvpForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (rsvpForm.querySelector('[name="_honey"]').value) return;
+
+      var attending = rsvpForm.querySelector('input[name="attending"]:checked');
+      if (!attending) {
+        rsvpForm.reportValidity();
+        return;
+      }
+
+      var payload = {
+        name: rsvpForm.name.value.trim(),
+        email: rsvpForm.email.value.trim(),
+        attending: attending.value === 'yes' ? 'Joyfully accept' : 'Regretfully decline',
+        party: attending.value === 'yes' ? rsvpForm.party.value : '0',
+        diet: rsvpForm.diet.value.trim(),
+        travel: rsvpForm.travel.value,
+        song: rsvpForm.song.value.trim(),
+        note: rsvpForm.note.value.trim(),
+        _subject: 'Wedding RSVP: ' + rsvpForm.name.value.trim(),
+        _replyto: rsvpForm.email.value.trim(),
+        _template: 'table'
+      };
+
+      rsvpConfirm.style.display = 'none';
+      rsvpError.style.display = 'none';
+      rsvpSubmit.disabled = true;
+      rsvpSubmit.textContent = 'Sending…';
+
+      fetch(rsvpEndpoint(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }).then(function (res) {
+        if (!res.ok) throw new Error('RSVP failed');
+        rsvpConfirm.style.display = 'block';
+        rsvpForm.reset();
+        partyField.hidden = false;
+        partyInput.required = true;
+        partyInput.value = '1';
+        rsvpConfirm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }).catch(function () {
+        rsvpError.style.display = 'block';
+      }).finally(function () {
+        rsvpSubmit.disabled = false;
+        rsvpSubmit.textContent = 'Send RSVP';
+      });
+    });
+  }
+
+  /* CONFIG: chicken cam — delay (ms), boot timing, feeds, static burst */
+  var CAM_DELAY_MIN = 20000;
+  var CAM_DELAY_MAX = 30000;
+  var CAM_MIN_WIDTH = 1100;
+  var CHICKEN_FEEDS = [
+    'https://media2.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3ZmZ3bXFubHQycWtxcnp1YW5scXA1ZjRiNjk1dDFzbnhidnFobDVsNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/H11blOCCqO9NK/giphy.webp',
+    'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHU4Z3Q1OTA4c2xqaW93Zno0azI1NTA0andjenhqbDU2ajVjcDNxeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/JMVzfIzhqOIvu/200.webp',
+    'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHU4Z3Q1OTA4c2xqaW93Zno0azI1NTA0andjenhqbDU2ajVjcDNxeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/0hLOxvKJHArT2OjHba/giphy.webp'
+  ];
+  var STATIC_MS = 450;
+  var cam = document.getElementById('chicken-cam-feed');
+  var staticBurst = document.getElementById('chicken-cam-static');
+  var chickenCam = document.getElementById('chicken-cam');
+  var chickenBoot = document.getElementById('chicken-cam-boot');
+  var chickenLive = document.getElementById('chicken-cam-live');
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var feedTimer = null;
+
+  function showBootLine(id, delay) {
+    setTimeout(function () {
+      var line = document.getElementById(id);
+      if (line) line.classList.add('is-shown');
+    }, delay);
+  }
+
+  function startFeedLoop() {
+    if (!cam || CHICKEN_FEEDS.length < 2 || feedTimer) return;
+    var camIdx = 0;
+    var switching = false;
+
+    feedTimer = setInterval(function () {
+      if (switching) return;
+      switching = true;
+
+      if (reducedMotion || !staticBurst) {
+        camIdx = (camIdx + 1) % CHICKEN_FEEDS.length;
+        cam.src = CHICKEN_FEEDS[camIdx];
+        switching = false;
+        return;
+      }
+
+      staticBurst.classList.add('is-active');
+      setTimeout(function () {
+        camIdx = (camIdx + 1) % CHICKEN_FEEDS.length;
+        cam.onload = function () {
+          staticBurst.classList.remove('is-active');
+          cam.onload = null;
+          switching = false;
+        };
+        cam.onerror = function () {
+          staticBurst.classList.remove('is-active');
+          cam.onerror = null;
+          switching = false;
+        };
+        cam.src = CHICKEN_FEEDS[camIdx];
+      }, STATIC_MS);
+    }, 4500);
+  }
+
+  function goLive() {
+    chickenBoot.classList.add('is-hiding');
+    chickenLive.hidden = false;
+    requestAnimationFrame(function () {
+      chickenLive.classList.add('is-visible');
+    });
+    setTimeout(function () {
+      chickenBoot.hidden = true;
+      startFeedLoop();
+    }, reducedMotion ? 100 : 700);
+  }
+
+  function armChickenCam() {
+    if (!chickenCam || window.innerWidth < CAM_MIN_WIDTH) return;
+
+    chickenCam.classList.add('is-mounted');
+    chickenCam.setAttribute('aria-hidden', 'false');
+    chickenBoot.hidden = false;
+    chickenLive.hidden = true;
+
+    requestAnimationFrame(function () {
+      chickenCam.classList.add('is-visible');
+    });
+
+    if (reducedMotion) {
+      showBootLine('boot-line-1', 0);
+      setTimeout(goLive, 400);
+      return;
+    }
+
+    showBootLine('boot-line-1', 200);
+    showBootLine('boot-line-2', 700);
+    showBootLine('boot-line-3', 1300);
+    showBootLine('boot-line-4', 2100);
+    setTimeout(goLive, 3000);
+  }
+
+  var camDelay = CAM_DELAY_MIN + Math.random() * (CAM_DELAY_MAX - CAM_DELAY_MIN);
+  setTimeout(armChickenCam, camDelay);
+
+  /* chicken fund widget: frozen birds, hover sprays worms, feast activates GIFs */
+  var WORM_IMG = 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngimg.com%2Fuploads%2Fworms%2Fworms_PNG32.png&f=1&nofb=1&ipt=7e59e3a5aa1e5178b2888d11179c23049673dc058a54bfb211a6ce13361a25f8';
+  var chickenWidget = document.getElementById('chicken-widget');
+  var wormsLayer = document.getElementById('chicken-worms');
+  if (chickenWidget && wormsLayer) {
+    var birds = chickenWidget.querySelectorAll('.chicken-bird');
+    var stage = chickenWidget.querySelector('.chicken-widget-stage');
+    var worms = [];
+    var spraying = false;
+    var awake = false;
+    var lastSpawn = 0;
+    var sprayX = null;
+    var sprayY = null;
+    var motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var sleepTimer = null;
+    var eatQueue = [];
+    var eatInterval = null;
+    var EAT_MS = 200;
+
+    function freezeBird(img) {
+      var gifSrc = img.getAttribute('data-gif-src');
+      if (!gifSrc) return;
+      if (img.dataset.stillSrc) {
+        img.src = img.dataset.stillSrc;
+        return;
+      }
+      fetch(gifSrc).then(function (r) { return r.blob(); }).then(function (blob) {
+        var url = URL.createObjectURL(blob);
+        var tmp = new Image();
+        tmp.onload = function () {
+          var c = document.createElement('canvas');
+          c.width = tmp.naturalWidth || tmp.width;
+          c.height = tmp.naturalHeight || tmp.height;
+          c.getContext('2d').drawImage(tmp, 0, 0);
+          img.dataset.stillSrc = c.toDataURL('image/png');
+          if (!awake) img.src = img.dataset.stillSrc;
+          URL.revokeObjectURL(url);
+        };
+        tmp.onerror = function () { URL.revokeObjectURL(url); };
+        tmp.src = url;
+      }).catch(function () {});
+    }
+
+    function wakeBirds() {
+      birds.forEach(function (img) {
+        var gifSrc = img.getAttribute('data-gif-src');
+        if (gifSrc) img.src = gifSrc;
+      });
+    }
+
+    function sleepBirds() {
+      awake = false;
+      chickenWidget.classList.remove('is-feasting');
+      birds.forEach(freezeBird);
+    }
+
+    function maybeSleep() {
+      clearTimeout(sleepTimer);
+      if (spraying || worms.length || eatQueue.length) return;
+      sleepTimer = setTimeout(sleepBirds, 600);
+    }
+
+    function wakeUp() {
+      clearTimeout(sleepTimer);
+      if (awake) return;
+      awake = true;
+      chickenWidget.classList.add('is-feasting');
+      wakeBirds();
+    }
+
+    function enqueueEat(worm) {
+      eatQueue.push(worm);
+      if (eatInterval) return;
+      eatInterval = setInterval(function () {
+        if (!eatQueue.length) {
+          clearInterval(eatInterval);
+          eatInterval = null;
+          maybeSleep();
+          return;
+        }
+        var next = eatQueue.shift();
+        if (next.el.parentNode) next.el.remove();
+        var idx = worms.indexOf(next);
+        if (idx > -1) worms.splice(idx, 1);
+        if (!eatQueue.length) {
+          clearInterval(eatInterval);
+          eatInterval = null;
+          maybeSleep();
+        }
+      }, EAT_MS);
+    }
+
+    function spawnWorm(clientX, clientY) {
+      var rect = stage.getBoundingClientRect();
+      var size = 11 + Math.random() * 9;
+      var x = clientX - rect.left - size * 0.5;
+      var y = clientY - rect.top - size * 0.5;
+      var el = document.createElement('img');
+      el.className = 'chicken-widget-worm';
+      el.src = WORM_IMG;
+      el.alt = '';
+      el.style.width = size + 'px';
+      el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+      wormsLayer.appendChild(el);
+      var worm = {
+        el: el,
+        x: x,
+        y: y,
+        vx: (Math.random() - 0.5) * 4.5,
+        vy: -1 - Math.random() * 3,
+        size: size,
+        landed: false
+      };
+      worms.push(worm);
+      return worm;
+    }
+
+    function sprayBurst() {
+      if (!spraying || sprayX === null || sprayY === null) return;
+      var now = performance.now();
+      if (now - lastSpawn < 40) return;
+      lastSpawn = now;
+      var count = motionOk ? 2 + Math.floor(Math.random() * 2) : 1;
+      for (var i = 0; i < count; i++) {
+        spawnWorm(
+          sprayX + (Math.random() - 0.5) * 20,
+          sprayY + (Math.random() - 0.5) * 20
+        );
+      }
+    }
+
+    function tick() {
+      sprayBurst();
+
+      if (stage) {
+        var groundY = stage.clientHeight - 4;
+        worms.forEach(function (w) {
+          if (w.landed) return;
+          w.vy += 0.4;
+          w.vx *= 0.985;
+          w.x += w.vx;
+          w.y += w.vy;
+          var floor = groundY - w.size;
+          if (w.y >= floor) {
+            w.y = floor + (Math.random() - 0.5) * 2;
+            w.landed = true;
+            w.el.classList.add('is-landed');
+            w.el.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px) rotate(' + ((Math.random() - 0.5) * 40).toFixed(1) + 'deg)';
+            wakeUp();
+            enqueueEat(w);
+          } else {
+            w.el.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px) rotate(' + (w.vx * 4).toFixed(1) + 'deg)';
+          }
+        });
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    birds.forEach(freezeBird);
+
+    chickenWidget.addEventListener('mouseenter', function (e) {
+      spraying = true;
+      sprayX = e.clientX;
+      sprayY = e.clientY;
+    });
+    chickenWidget.addEventListener('mouseleave', function () {
+      spraying = false;
+      sprayX = null;
+      sprayY = null;
+      maybeSleep();
+    });
+    chickenWidget.addEventListener('mousemove', function (e) {
+      sprayX = e.clientX;
+      sprayY = e.clientY;
+    });
+    chickenWidget.addEventListener('touchstart', function (e) {
+      spraying = true;
+      if (e.touches[0]) {
+        sprayX = e.touches[0].clientX;
+        sprayY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+    chickenWidget.addEventListener('touchmove', function (e) {
+      if (e.touches[0]) {
+        sprayX = e.touches[0].clientX;
+        sprayY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+    chickenWidget.addEventListener('touchend', function () {
+      spraying = false;
+      sprayX = null;
+      sprayY = null;
+      maybeSleep();
+    });
+
+    requestAnimationFrame(tick);
+
+    if (!motionOk) {
+      chickenWidget.addEventListener('click', function (e) {
+        spawnWorm(e.clientX, e.clientY);
+      });
+    }
+  }
+
+  /* secret garden radish — pull up to reveal modal */
+  var secretRadish = document.getElementById('secret-radish');
+  var gardenModal = document.getElementById('garden-modal');
+  if (secretRadish && gardenModal) {
+    var PULL_THRESHOLD = 72;
+    var pullActive = false;
+    var pullStartY = 0;
+    var pullOffset = 0;
+    var radishMotionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var rumbleTimer;
+    var ditherTimer;
+
+    function setRadishPull(y) {
+      secretRadish.style.transform = 'translateX(-50%) translateY(' + (-y) + 'px)';
+    }
+
+    function resetRadishPull() {
+      pullOffset = 0;
+      secretRadish.classList.remove('is-pulled');
+      secretRadish.style.transform = '';
+    }
+
+    function openGardenModal() {
+      gardenModal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      var closeBtn = gardenModal.querySelector('.garden-modal-close');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeGardenModal() {
+      gardenModal.hidden = true;
+      document.body.style.overflow = '';
+      resetRadishPull();
+      secretRadish.focus();
+    }
+
+    function scheduleRumble() {
+      clearTimeout(rumbleTimer);
+      rumbleTimer = setTimeout(function () {
+        if (!pullActive && radishMotionOk) secretRadish.classList.add('is-rumbling');
+        setTimeout(function () { secretRadish.classList.remove('is-rumbling'); }, 650);
+        scheduleRumble();
+      }, 3500 + Math.random() * 4500);
+    }
+
+    function scheduleDither() {
+      clearTimeout(ditherTimer);
+      ditherTimer = setTimeout(function () {
+        if (!pullActive && radishMotionOk) secretRadish.classList.add('is-dithering');
+        setTimeout(function () { secretRadish.classList.remove('is-dithering'); }, 900);
+        scheduleDither();
+      }, 5000 + Math.random() * 5000);
+    }
+
+    secretRadish.addEventListener('pointerdown', function (e) {
+      pullActive = true;
+      pullStartY = e.clientY;
+      pullOffset = 0;
+      secretRadish.classList.add('is-pulled');
+      secretRadish.setPointerCapture(e.pointerId);
+      secretRadish.classList.remove('is-rumbling', 'is-dithering');
+    });
+
+    secretRadish.addEventListener('pointermove', function (e) {
+      if (!pullActive) return;
+      var delta = pullStartY - e.clientY;
+      pullOffset = Math.max(0, Math.min(delta, 120));
+      setRadishPull(pullOffset);
+    });
+
+    function endPull() {
+      if (!pullActive) return;
+      pullActive = false;
+      if (pullOffset >= PULL_THRESHOLD) {
+        setRadishPull(130);
+        setTimeout(openGardenModal, 180);
+      } else {
+        resetRadishPull();
+      }
+    }
+
+    secretRadish.addEventListener('pointerup', endPull);
+    secretRadish.addEventListener('pointercancel', endPull);
+
+    if (!radishMotionOk) {
+      secretRadish.addEventListener('click', function () { openGardenModal(); });
+    } else {
+      scheduleRumble();
+      scheduleDither();
+    }
+
+    gardenModal.querySelectorAll('[data-garden-close]').forEach(function (el) {
+      el.addEventListener('click', closeGardenModal);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !gardenModal.hidden) closeGardenModal();
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
