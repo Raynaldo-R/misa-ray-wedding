@@ -305,16 +305,16 @@ p:last-child { margin-bottom: 0; }
 /* ---------- couple ---------- */
 .couple {
   display: grid;
-  grid-template-columns: minmax(220px, 340px) 1fr;
-  gap: clamp(28px, 4vw, 44px);
+  grid-template-columns: minmax(280px, 1.05fr) 1fr;
+  gap: clamp(32px, 5vw, 56px);
   align-items: center;
 }
 .photo {
   aspect-ratio: 4 / 5;
-  max-height: min(42vh, 360px);
+  max-height: min(58vh, 520px);
   width: 100%;
-  max-width: 340px;
-  margin: 0 auto;
+  max-width: 480px;
+  margin: 0;
   border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 2px 14px rgba(26, 36, 33, .08);
@@ -378,10 +378,30 @@ p:last-child { margin-bottom: 0; }
 @media (max-width: 600px) {
   .faq-media-split { grid-template-columns: 1fr; }
   .couple { grid-template-columns: 1fr; }
-  .photo { max-width: 280px; max-height: min(38vh, 300px); }
+  .photo { max-width: min(92vw, 360px); max-height: min(52vh, 440px); margin: 0 auto; }
 }
 
 /* ---------- detail list ---------- */
+.details-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(300px, 1.2fr);
+  gap: clamp(24px, 4vw, 44px);
+  align-items: start;
+}
+.details-photo {
+  margin: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(26, 36, 33, .08);
+}
+.details-photo img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 3 / 4;
+  max-height: min(72vh, 680px);
+}
 .details {
   width: 100%;
   padding: 8px 28px;
@@ -389,6 +409,24 @@ p:last-child { margin-bottom: 0; }
   border-radius: 4px;
   background: #fff;
   box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #c8c0b8 inset;
+}
+.map-links {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: .95rem;
+  font-weight: 600;
+  line-height: 1.7;
+}
+.map-links a {
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.map-links a:hover { color: var(--accent-dark); text-decoration: underline; }
+@media (max-width: 768px) {
+  .details-layout { grid-template-columns: 1fr; }
+  .details-photo { max-width: min(92vw, 420px); margin: 0 auto; }
+  .details-photo img { max-height: min(48vh, 480px); }
 }
 .detail-row {
   display: grid;
@@ -1213,32 +1251,49 @@ section:not(.hero) h2::after {
       <span class="eyebrow">When &amp; where</span>
       <h2>The Details</h2>
       <p class="section-note">where &amp; when</p>
-      <div class="details">
-        <div class="detail-row">
-          <div class="label">Date</div>
-          <div class="val">Saturday, April 3, 2027</div>
-        </div>
-        <div class="detail-row">
-          <div class="label">Ceremony</div>
-          <div class="val">1:00 PM at St. Paul's Church<br>
-            <span class="sub">31899 NE State Hwy 104, Port Gamble, WA 98364 · <a href="https://www.google.com/maps/place/St.+Paul's+Episcopal+Church,+31899+NE+State+Route+104,+Kingston,+WA+98346" target="_blank" rel="noopener noreferrer">Directions ↗</a></span></div>
-        </div>
-        <div class="detail-row">
-          <div class="label">Reception</div>
-          <div class="val">3:00 PM at Hood Canal Vista Pavilion<br>
-            <span class="sub">4740 View Dr NE, Port Gamble, WA 98364 · <a href="https://www.google.com/maps/place/Hood+Canal+Vista+Pavilion,+4740+View+Dr+NE,+Port+Gamble,+WA+98364" target="_blank" rel="noopener noreferrer">Directions ↗</a></span></div>
-        </div>
-        <div class="detail-row">
-          <div class="label">Attire</div>
-          <div class="val">Formal</div>
-        </div>
-        <div class="detail-row">
-          <div class="label">Parking</div>
-          <div class="val">Plenty of parking: a lot and street parking at both venues.</div>
-        </div>
-        <div class="detail-row">
-          <div class="label">Good to know</div>
-          <div class="val">Both venues are indoors.</div>
+      <div class="details-layout">
+        <figure class="details-photo">
+          <img src="images/church.jpg" alt="St. Paul's Church, Port Gamble" width="800" height="1067">
+        </figure>
+        <div class="details">
+          <div class="detail-row">
+            <div class="label">Date</div>
+            <div class="val">Saturday, April 3, 2027</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Ceremony</div>
+            <div class="val">1:00 PM at St. Paul's Church<br>
+              <span class="sub">31899 NE State Hwy 104, Port Gamble, WA 98364</span>
+              <span class="map-links">
+                <a href="https://www.google.com/maps/dir/?api=1&amp;destination=St.+Paul%27s+Episcopal+Church,+31899+NE+State+Route+104,+Kingston,+WA+98346" target="_blank" rel="noopener noreferrer">Get directions ↗</a>
+                ·
+                <a href="https://maps.apple.com/?daddr=St.+Paul%27s+Episcopal+Church,+31899+NE+State+Route+104,+Kingston,+WA+98346" target="_blank" rel="noopener noreferrer">Apple Maps ↗</a>
+              </span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Reception</div>
+            <div class="val">3:00 PM at Hood Canal Vista Pavilion<br>
+              <span class="sub">4740 View Dr NE, Port Gamble, WA 98364</span>
+              <span class="map-links">
+                <a href="https://www.google.com/maps/dir/?api=1&amp;destination=Hood+Canal+Vista+Pavilion,+4740+View+Dr+NE,+Port+Gamble,+WA+98364" target="_blank" rel="noopener noreferrer">Get directions ↗</a>
+                ·
+                <a href="https://maps.apple.com/?daddr=Hood+Canal+Vista+Pavilion,+4740+View+Dr+NE,+Port+Gamble,+WA+98364" target="_blank" rel="noopener noreferrer">Apple Maps ↗</a>
+              </span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Attire</div>
+            <div class="val">Formal</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Parking</div>
+            <div class="val">Plenty of parking: a lot and street parking at both venues.</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Good to know</div>
+            <div class="val">Both venues are indoors.</div>
+          </div>
         </div>
       </div>
     </div>
