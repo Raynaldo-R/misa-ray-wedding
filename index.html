@@ -82,16 +82,41 @@ header {
   transform-origin: left bottom;
 }
 .brand .amp { color: var(--ink-soft); }
-@keyframes brand-rumble {
-  0%, 100% { transform: translate(0, 0) rotate(0); }
-  25% { transform: translate(-3px, 1px) rotate(-2deg); }
-  50% { transform: translate(3px, -1px) rotate(2deg); }
-  75% { transform: translate(-2px, -1px) rotate(1deg); }
+.brand.is-heartbeating {
+  animation: brand-heartbeat 0.85s ease-in-out 1;
 }
-@media (prefers-reduced-motion: no-preference) {
-  .brand:hover,
-  .brand:focus-visible {
-    animation: brand-rumble 0.3s steps(4) 2;
+@keyframes brand-heartbeat {
+  0%, 100% { transform: scale(1); }
+  10% { transform: scale(1.1); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.08); }
+  40% { transform: scale(1); }
+  40.01%, 100% { transform: scale(1); }
+}
+.brand-heart-burst {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 120;
+  overflow: hidden;
+}
+.brand-heart {
+  position: fixed;
+  font-size: clamp(14px, 2vw, 22px);
+  line-height: 1;
+  opacity: 0;
+  animation: brand-heart-fly 1.35s ease-out forwards;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+}
+@keyframes brand-heart-fly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  }
+  12% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--hx)), calc(-50% + var(--hy))) scale(1.15) rotate(var(--spin));
   }
 }
 nav {
@@ -883,13 +908,13 @@ footer a { font-size: 1rem; font-weight: 600; }
   padding: 0;
   border: none;
   background: transparent;
-  cursor: grab;
+  cursor: url('images/spade-cursor.png') 8 28, grab;
   touch-action: none;
   transform: translateX(-50%);
   z-index: 2;
   pointer-events: auto;
 }
-.secret-radish:active { cursor: grabbing; }
+.secret-radish:active { cursor: url('images/spade-cursor.png') 8 28, grabbing; }
 .secret-pull-hint {
   position: absolute;
   left: 50%;
@@ -1274,7 +1299,6 @@ section:not(.hero) h2::after {
 
   <!-- HERO -->
   <section class="hero snap-section" id="top">
-    <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
     <div class="hero-inner">
       <div class="hero-meta">
         <div class="date">Saturday, April 3, 2027</div>
@@ -1637,6 +1661,64 @@ section:not(.hero) h2::after {
   document.querySelectorAll('.wire-divider-track').forEach(function (el) {
     el.textContent = wirePhrase.repeat(40);
   });
+
+  /* brand heartbeat — 3 beats, then heart burst */
+  var brandLink = document.querySelector('.brand');
+  if (brandLink && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var heartbeatCount = 0;
+    var heartColors = ['#4a6b5f', '#1e3d34', '#6d8f82', '#faf9f6', '#e8e5de', '#f5f2ea'];
+    var heartBurstLayer;
+
+    function getHeartBurstLayer() {
+      if (!heartBurstLayer) {
+        heartBurstLayer = document.createElement('div');
+        heartBurstLayer.className = 'brand-heart-burst';
+        heartBurstLayer.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(heartBurstLayer);
+      }
+      return heartBurstLayer;
+    }
+
+    function burstHearts() {
+      var rect = brandLink.getBoundingClientRect();
+      var cx = rect.left + rect.width * 0.5;
+      var cy = rect.top + rect.height * 0.62;
+      var layer = getHeartBurstLayer();
+      var count = 18;
+
+      for (var i = 0; i < count; i++) {
+        var heart = document.createElement('span');
+        heart.className = 'brand-heart';
+        heart.textContent = '\u2665';
+        heart.style.left = cx + 'px';
+        heart.style.top = cy + 'px';
+        heart.style.color = heartColors[i % heartColors.length];
+        var angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.35;
+        var dist = 70 + Math.random() * 110;
+        heart.style.setProperty('--hx', (Math.cos(angle) * dist).toFixed(1) + 'px');
+        heart.style.setProperty('--hy', (Math.sin(angle) * dist - 20).toFixed(1) + 'px');
+        heart.style.setProperty('--spin', ((Math.random() - 0.5) * 40).toFixed(1) + 'deg');
+        layer.appendChild(heart);
+        heart.addEventListener('animationend', function () { heart.remove(); });
+      }
+    }
+
+    brandLink.addEventListener('mouseenter', function () {
+      if (!brandLink.classList.contains('is-heartbeating')) {
+        brandLink.classList.add('is-heartbeating');
+      }
+    });
+
+    brandLink.addEventListener('animationend', function (e) {
+      if (e.animationName !== 'brand-heartbeat') return;
+      brandLink.classList.remove('is-heartbeating');
+      heartbeatCount += 1;
+      if (heartbeatCount >= 3) {
+        burstHearts();
+        heartbeatCount = 0;
+      }
+    });
+  }
 
   /* CONFIG: visitor counter key — change COUNTER_KEY if you clone this site (uses countapi.mileshilliard.com) */
   var COUNTER_KEY = 'misa-ray-wedding-port-gamble-visits';
