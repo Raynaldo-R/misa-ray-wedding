@@ -1010,22 +1010,6 @@ button[type=submit]:disabled {
   background: rgba(232, 229, 222, .55);
   outline: none;
 }
-.maze-preview {
-  width: min(100%, 120px);
-  height: 80px;
-  margin: 0 auto;
-  border-radius: 2px;
-  overflow: hidden;
-  background: #1a1810;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.maze-preview img {
-  width: 48px;
-  height: auto;
-  opacity: .92;
-}
 .fund-maze-hitbox:hover .chicken-expand-hint,
 .fund-maze-hitbox:focus-visible .chicken-expand-hint {
   opacity: 1;
@@ -1085,6 +1069,17 @@ button[type=submit]:disabled {
   align-items: center;
   justify-content: center;
   background: radial-gradient(ellipse at center, #2a2818 0%, #0e0d08 70%);
+}
+.maze-intro[hidden],
+.maze-play[hidden] {
+  display: none !important;
+}
+.maze-modal-panel.is-playing .maze-intro {
+  display: none !important;
+}
+.maze-modal-panel.is-playing .maze-play {
+  display: block !important;
+  height: clamp(360px, 62vh, 520px);
 }
 .maze-door-scene {
   perspective: 900px;
@@ -1886,8 +1881,8 @@ section:not(.hero) h2::after {
         </div>
         <div class="fund">
           <button type="button" class="fund-maze-hitbox" id="maze-fund-hitbox" aria-label="Expand backrooms maze mini game">
-            <div class="maze-preview" aria-hidden="true">
-              <img src="images/maze/door.png" alt="" width="96" height="150">
+            <div class="fund-gif" aria-hidden="true">
+              <img src="https://blob.gifcities.org/gifcities/J6T65FULRGZQSVKG7WS5KDOM65EQIUIJ.gif" alt="" width="120" height="80">
             </div>
             <span class="chicken-expand-hint">Expand mini game</span>
           </button>
@@ -1993,7 +1988,7 @@ section:not(.hero) h2::after {
 
 <div class="maze-modal" id="maze-modal" role="dialog" aria-labelledby="maze-modal-title" aria-modal="true" hidden>
   <div class="maze-modal-backdrop" data-maze-close></div>
-  <div class="maze-modal-panel">
+  <div class="maze-modal-panel" id="maze-modal-panel">
     <button type="button" class="maze-modal-close" data-maze-close aria-label="Close">&times;</button>
     <div class="maze-modal-title" id="maze-modal-title">Future Dream Home — backrooms</div>
     <div class="maze-intro" id="maze-intro">
@@ -2683,6 +2678,7 @@ section:not(.hero) h2::after {
   /* home fund — backrooms maze (door intro → raycaster) */
   var mazeHitbox = document.getElementById('maze-fund-hitbox');
   var mazeModal = document.getElementById('maze-modal');
+  var mazePanel = document.getElementById('maze-modal-panel');
   var mazeIntro = document.getElementById('maze-intro');
   var mazePlay = document.getElementById('maze-play');
   var mazeDoorScene = document.getElementById('maze-door-scene');
@@ -2693,6 +2689,7 @@ section:not(.hero) h2::after {
   function resetMazeIntro() {
     mazeStarted = false;
     if (window.BackroomsMaze) BackroomsMaze.stop();
+    if (mazePanel) mazePanel.classList.remove('is-playing');
     if (mazeIntro) mazeIntro.hidden = false;
     if (mazePlay) mazePlay.hidden = true;
     if (mazeDoorScene) mazeDoorScene.classList.remove('is-open');
@@ -2701,6 +2698,7 @@ section:not(.hero) h2::after {
   function beginMazeGame() {
     if (mazeStarted || !mazeCanvas || !window.BackroomsMaze) return;
     mazeStarted = true;
+    if (mazePanel) mazePanel.classList.add('is-playing');
     if (mazeIntro) mazeIntro.hidden = true;
     if (mazePlay) mazePlay.hidden = false;
     BackroomsMaze.start(mazeCanvas);
