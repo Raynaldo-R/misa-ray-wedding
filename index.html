@@ -122,10 +122,11 @@ header {
 
 /* ---------- party mode ---------- */
 .party-mode-control {
-  position: fixed;
-  left: clamp(10px, 2vw, 18px);
-  bottom: clamp(110px, 20vh, 180px);
-  z-index: 46;
+  position: relative;
+  z-index: 2;
+  margin: 22px auto 8px;
+  text-align: center;
+  pointer-events: auto;
 }
 .party-toggle {
   display: inline-flex;
@@ -197,7 +198,7 @@ header {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 35;
+  z-index: 10000;
   overflow: hidden;
 }
 .party-float-layer[hidden] { display: none; }
@@ -205,33 +206,35 @@ header {
   position: fixed;
   left: 0;
   top: 0;
-  height: auto;
+  width: var(--size, 420px);
   pointer-events: none;
   opacity: 0;
-  filter: drop-shadow(0 10px 24px rgba(26, 36, 33, .12));
   animation: party-drift var(--dur, 60s) linear forwards;
   will-change: transform, opacity;
+}
+.party-float img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 14px 28px rgba(26, 36, 33, .18));
+  animation: party-spin var(--spin-dur, 12s) linear infinite;
+  transform-origin: center center;
 }
 @keyframes party-drift {
   0% {
     opacity: 0;
-    transform: translate3d(var(--sx), var(--sy), 0) rotate(var(--r0)) scale(0.92);
+    transform: translate3d(var(--sx), var(--sy), 0) scale(0.94);
   }
-  8% { opacity: 0.95; }
-  92% { opacity: 0.9; }
+  7% { opacity: 1; }
+  93% { opacity: 0.98; }
   100% {
     opacity: 0;
-    transform: translate3d(var(--ex), var(--ey), 0) rotate(var(--r1)) scale(1);
+    transform: translate3d(var(--ex), var(--ey), 0) scale(1);
   }
 }
-body.party-mode-on main,
-body.party-mode-on header,
-body.party-mode-on footer {
-  position: relative;
-  z-index: 36;
-}
-@media (max-width: 620px) {
-  .party-mode-control { bottom: 96px; }
+@keyframes party-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(var(--spin-to, 360deg)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .party-mode-control { display: none; }
@@ -1398,17 +1401,6 @@ section:not(.hero) h2::after {
   </div>
 </aside>
 
-<div class="party-mode-control">
-  <label class="party-toggle">
-    <input type="checkbox" id="party-mode-toggle" autocomplete="off">
-    <span class="party-toggle-ui">
-      <span class="party-toggle-thumb" aria-hidden="true"></span>
-      <span>Party mode</span>
-    </span>
-  </label>
-</div>
-<div class="party-float-layer" id="party-float-layer" hidden aria-hidden="true"></div>
-
 <header>
   <div class="nav-inner">
     <a href="#top" class="brand">Misa <span class="amp">&amp;</span> Ray</a>
@@ -1760,6 +1752,16 @@ section:not(.hero) h2::after {
     <a href="#top">↑ Back to top</a>
   </div>
 
+  <div class="party-mode-control">
+    <label class="party-toggle">
+      <input type="checkbox" id="party-mode-toggle" autocomplete="off">
+      <span class="party-toggle-ui">
+        <span class="party-toggle-thumb" aria-hidden="true"></span>
+        <span>Party mode</span>
+      </span>
+    </label>
+  </div>
+
   <div class="secret-mound" id="secret-mound" aria-hidden="true">
     <img class="secret-soil" src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngimg.com%2Fuploads%2Fsoil%2Fsoil_PNG44.png&f=1&nofb=1&ipt=7b48aec5fe015df095528b50db202320789d3a767256c0c6e169d7b7fd6a99d5" alt="" width="860" height="480">
     <button type="button" class="secret-radish" id="secret-radish" aria-label="Pull the radish up">
@@ -1783,6 +1785,8 @@ section:not(.hero) h2::after {
     </div>
   </div>
 </div>
+
+<div class="party-float-layer" id="party-float-layer" hidden aria-hidden="true"></div>
 
 <script>
 (function () {
@@ -2413,7 +2417,7 @@ section:not(.hero) h2::after {
   var partyToggle = document.getElementById('party-mode-toggle');
   var partyLayer = document.getElementById('party-float-layer');
   var partySpawnTimer;
-  var partyMaxFloats = 11;
+  var partyMaxFloats = 9;
   var partyMotionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function partyDrift(size) {
@@ -2441,31 +2445,34 @@ section:not(.hero) h2::after {
     if (!partyLayer || partyLayer.hidden) return;
     if (partyLayer.children.length >= partyMaxFloats) return;
 
+    var floater = document.createElement('div');
+    floater.className = 'party-float';
     var img = document.createElement('img');
-    img.className = 'party-float';
     img.src = PARTY_VEGGIES[Math.floor(Math.random() * PARTY_VEGGIES.length)];
     img.alt = '';
     img.decoding = 'async';
     img.loading = 'lazy';
+    floater.appendChild(img);
 
-    var size = 220 + Math.random() * 220;
-    var dur = 55 + Math.random() * 45;
+    var size = 360 + Math.random() * 320;
+    var dur = 50 + Math.random() * 40;
+    var spinDur = 5 + Math.random() * 11;
+    var spinTo = (Math.random() > 0.5 ? 360 : -360) + 'deg';
     var drift = partyDrift(size);
-    var r0 = (Math.random() - 0.5) * 28;
-    var r1 = r0 + (Math.random() - 0.5) * 50;
 
-    img.style.width = size + 'px';
-    img.style.setProperty('--dur', dur + 's');
-    img.style.setProperty('--sx', drift.sx + 'px');
-    img.style.setProperty('--sy', drift.sy + 'px');
-    img.style.setProperty('--ex', drift.ex + 'px');
-    img.style.setProperty('--ey', drift.ey + 'px');
-    img.style.setProperty('--r0', r0 + 'deg');
-    img.style.setProperty('--r1', r1 + 'deg');
+    floater.style.setProperty('--size', size + 'px');
+    floater.style.setProperty('--dur', dur + 's');
+    floater.style.setProperty('--spin-dur', spinDur + 's');
+    floater.style.setProperty('--spin-to', spinTo);
+    floater.style.setProperty('--sx', drift.sx + 'px');
+    floater.style.setProperty('--sy', drift.sy + 'px');
+    floater.style.setProperty('--ex', drift.ex + 'px');
+    floater.style.setProperty('--ey', drift.ey + 'px');
 
-    partyLayer.appendChild(img);
-    img.addEventListener('animationend', function () {
-      img.remove();
+    partyLayer.appendChild(floater);
+    floater.addEventListener('animationend', function (e) {
+      if (e.animationName !== 'party-drift') return;
+      floater.remove();
       if (partyToggle && partyToggle.checked) spawnPartyFloater();
     });
   }
