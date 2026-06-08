@@ -51,30 +51,49 @@ header {
   position: sticky;
   top: 0;
   z-index: 50;
+  overflow: visible;
   background: rgba(250, 249, 246, .94);
   backdrop-filter: saturate(140%) blur(8px);
   border-bottom: 1px solid var(--line);
 }
 .nav-inner {
-  max-width: 1100px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
-  padding: 16px 32px;
+  gap: clamp(12px, 2vw, 24px);
+  padding: 8px clamp(16px, 3vw, 28px) 10px clamp(6px, 1.2vw, 14px);
 }
 .brand {
   font-family: var(--display);
-  font-size: clamp(2.25rem, 7vw, 3.75rem);
+  font-size: clamp(3.25rem, 11vw, 7rem);
   font-weight: 400;
   letter-spacing: .01em;
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
-  line-height: 1;
+  line-height: 0.86;
+  margin: 0 0 -0.44em;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  transform-origin: left bottom;
 }
 .brand .amp { color: var(--ink-soft); }
+@keyframes brand-rumble {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(-3px, 1px) rotate(-2deg); }
+  50% { transform: translate(3px, -1px) rotate(2deg); }
+  75% { transform: translate(-2px, -1px) rotate(1deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .brand:hover,
+  .brand:focus-visible {
+    animation: brand-rumble 0.3s steps(4) 2;
+  }
+}
 nav {
   display: flex;
   flex-wrap: wrap;
@@ -109,10 +128,18 @@ nav a:focus-visible {
   border-radius: 2px;
 }
 @media (max-width: 620px) {
-  :root { --header-h: 108px; }
-  .nav-inner { flex-direction: column; align-items: center; gap: 8px; padding: 10px 16px; }
-  nav { justify-content: center; }
-  .brand { font-size: clamp(1.85rem, 10vw, 2.5rem); }
+  :root { --header-h: 120px; }
+  .nav-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 8px 12px 10px 10px;
+  }
+  nav { justify-content: flex-start; width: 100%; }
+  .brand {
+    font-size: clamp(2.85rem, 15vw, 4rem);
+    margin-bottom: -0.38em;
+  }
 }
 
 /* ---------- layout ---------- */
