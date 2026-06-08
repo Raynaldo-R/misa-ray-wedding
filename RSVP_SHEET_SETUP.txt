@@ -1,0 +1,43 @@
+Google Sheet RSVP setup (~10 minutes)
+======================================
+
+1. CREATE THE SHEET
+   - Go to https://sheets.google.com → Blank spreadsheet
+   - Name it "Misa & Ray Wedding RSVPs"
+
+2. SHARE WITH MISA
+   - Click Share → add her Gmail → Editor (or Viewer if she only needs to read)
+   - You stay Owner
+
+3. ADD THE SCRIPT
+   - In the sheet: Extensions → Apps Script
+   - Delete any default code, paste everything from google-apps-script.gs
+   - Save (name the project "Wedding RSVP")
+
+4. RUN SETUP ONCE
+   - In Apps Script: select setupSheet in the function dropdown → Run
+   - Authorize when Google asks (your account only)
+   - Check the sheet — row 1 should have column headers
+
+5. DEPLOY AS WEB APP
+   - Deploy → New deployment → gear icon → Web app
+   - Execute as: Me
+   - Who has access: Anyone
+   - Deploy → copy the Web app URL (ends in /exec)
+
+6. PASTE URL INTO THE SITE
+   - Open index.html → RSVP_CONFIG → googleScriptUrl
+   - Paste your Web app URL between the quotes
+   - Commit and push to GitHub (Cloudflare redeploys automatically)
+
+7. TEST
+   - Submit a test RSVP on wedding.raynaldorusi.com
+   - A new row should appear in the sheet within seconds
+
+Download as Excel
+-----------------
+File → Download → Microsoft Excel (.xlsx)
+
+Optional: disable email backup
+------------------------------
+In RSVP_CONFIG, set emailBackup: '' if you only want the sheet (no FormSubmit emails).

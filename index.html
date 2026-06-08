@@ -1560,14 +1560,13 @@ section:not(.hero) h2::after {
   });
 
   /*
-   * CONFIG: RSVP delivery (works on Cloudflare Pages — static site, no server needed)
-   * provider: 'formsubmit' emails RSVP@raynaldorusi.com (activate on first test submit)
-   * provider: 'formspree' uses https://formspree.io — set formspreeId after creating a form
+   * CONFIG: RSVP delivery
+   * googleScriptUrl — Google Apps Script web app (see google-apps-script.gs)
+   * emailBackup — optional FormSubmit email to RSVP@raynaldorusi.com
    */
   var RSVP_CONFIG = {
-    provider: 'formsubmit',
-    email: 'RSVP@raynaldorusi.com',
-    formspreeId: ''
+    googleScriptUrl: '',
+    emailBackup: 'RSVP@raynaldorusi.com'
   };
 
   var rsvpForm = document.getElementById('rsvpForm');
@@ -1575,11 +1574,56 @@ section:not(.hero) h2::after {
   var rsvpConfirm = document.getElementById('rsvp-confirm');
   var rsvpError = document.getElementById('rsvp-error');
 
-  function rsvpEndpoint() {
-    if (RSVP_CONFIG.provider === 'formspree' && RSVP_CONFIG.formspreeId) {
-      return 'https://formspree.io/f/' + RSVP_CONFIG.formspreeId;
+  function sendRsvp(payload) {
+    var tasks = [];
+
+    if (RSVP_CONFIG.googleScriptUrl) {
+      tasks.push(
+        fetch(RSVP_CONFIG.googleScriptUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        }).then(function (res) {
+          if (!res.ok) throw new Error('Sheet save failed');
+          return res.json().catch(function () { return { ok: true }; });
+        }).then(function (data) {
+          if (data && data.ok === false) throw new Error('Sheet save failed');
+        })
+      );
     }
-    return 'https://formsubmit.co/ajax/' + encodeURIComponent(RSVP_CONFIG.email);
+
+    if (RSVP_CONFIG.emailBackup) {
+      tasks.push(
+        fetch('https://formsubmit.co/ajax/' + encodeURIComponent(RSVP_CONFIG.emailBackup), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            name: payload.name,
+            email: payload.email,
+            attending: payload.attending,
+            party: payload.party,
+            diet: payload.diet,
+            travel: payload.travel,
+            song: payload.song,
+            note: payload.note,
+            _subject: 'Wedding RSVP: ' + payload.name,
+            _replyto: payload.email,
+            _template: 'table'
+          })
+        }).then(function (res) {
+          if (!res.ok) throw new Error('Email backup failed');
+        })
+      );
+    }
+
+    if (!tasks.length) {
+      return Promise.reject(new Error('RSVP not configured'));
+    }
+
+    return Promise.all(tasks);
   }
 
   if (rsvpForm) {
@@ -1601,10 +1645,7 @@ section:not(.hero) h2::after {
         diet: rsvpForm.diet.value.trim(),
         travel: rsvpForm.travel.value,
         song: rsvpForm.song.value.trim(),
-        note: rsvpForm.note.value.trim(),
-        _subject: 'Wedding RSVP: ' + rsvpForm.name.value.trim(),
-        _replyto: rsvpForm.email.value.trim(),
-        _template: 'table'
+        note: rsvpForm.note.value.trim()
       };
 
       rsvpConfirm.style.display = 'none';
@@ -1612,15 +1653,7 @@ section:not(.hero) h2::after {
       rsvpSubmit.disabled = true;
       rsvpSubmit.textContent = 'Sending…';
 
-      fetch(rsvpEndpoint(), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      }).then(function (res) {
-        if (!res.ok) throw new Error('RSVP failed');
+      sendRsvp(payload).then(function () {
         rsvpConfirm.style.display = 'block';
         rsvpForm.reset();
         partyField.hidden = false;
