@@ -884,6 +884,41 @@ button[type=submit]:disabled {
   width: 22px;
 }
 .chicken-widget-worm.is-landed { z-index: 2; }
+.chicken-widget-feed {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+  will-change: transform, left, top;
+}
+.chicken-feed-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chicken-feed-btn {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--ivory);
+  padding: 6px 14px;
+  font-family: var(--sans);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.chicken-feed-btn:hover { border-color: var(--sage-light); color: var(--ink); }
+.chicken-feed-btn.is-active {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--ivory);
+}
 .chicken-widget.is-feasting .chicken-widget-birds {
   animation: chicken-bounce .45s ease-in-out infinite alternate;
 }
@@ -952,6 +987,160 @@ button[type=submit]:disabled {
 @media (prefers-reduced-motion: reduce) {
   .chicken-widget.is-feasting .chicken-widget-birds { animation: none; }
   .chicken-expand-hint { opacity: 1; transform: none; }
+}
+/* home fund — backrooms maze */
+.fund-maze-hitbox {
+  display: block;
+  width: 100%;
+  position: relative;
+  margin: 0 auto 12px;
+  padding: 8px 10px 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  transition: background .2s ease;
+}
+.fund-maze-hitbox:hover,
+.fund-maze-hitbox:focus-visible {
+  background: rgba(232, 229, 222, .55);
+  outline: none;
+}
+.maze-preview {
+  width: min(100%, 120px);
+  height: 80px;
+  margin: 0 auto;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #1a1810;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.maze-preview img {
+  width: 48px;
+  height: auto;
+  opacity: .92;
+}
+.fund-maze-hitbox:hover .chicken-expand-hint,
+.fund-maze-hitbox:focus-visible .chicken-expand-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+.maze-modal[hidden] { display: none; }
+.maze-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 209;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.maze-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 8, .72);
+}
+.maze-modal-panel {
+  position: relative;
+  width: min(98vw, 720px);
+  padding: 20px 16px 16px;
+  border-radius: 6px;
+  background: #141810;
+  border: 1px solid #3a4030;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .45);
+}
+.maze-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: #9aa88a;
+  cursor: pointer;
+  padding: 4px 8px;
+  z-index: 2;
+}
+.maze-modal-close:hover { color: #e8e5de; }
+.maze-modal-title {
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  text-align: center;
+  margin-bottom: 12px;
+  color: #b8c4a8;
+}
+.maze-intro {
+  min-height: clamp(280px, 52vh, 420px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #2a2818 0%, #0e0d08 70%);
+}
+.maze-door-scene {
+  perspective: 900px;
+  text-align: center;
+}
+.maze-door-frame {
+  position: relative;
+  display: inline-block;
+  padding: 12px 16px 20px;
+}
+.maze-door-leaf-wrap {
+  display: inline-block;
+  transform-style: preserve-3d;
+  transform-origin: 100% 50%;
+  transition: transform .85s cubic-bezier(.25, .8, .25, 1);
+}
+.maze-door-scene.is-open .maze-door-leaf-wrap {
+  transform: rotateY(-74deg);
+}
+.maze-door-leaf {
+  display: block;
+  width: min(42vw, 200px);
+  height: auto;
+  image-rendering: auto;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.55));
+}
+.maze-door-enter {
+  display: block;
+  margin: 18px auto 0;
+  border: 1px solid #6d7a5a;
+  border-radius: 3px;
+  background: rgba(196, 212, 106, .12);
+  padding: 8px 18px;
+  font-family: var(--sans);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #dfe88f;
+  cursor: pointer;
+}
+.maze-door-enter:hover { background: rgba(196, 212, 106, .22); }
+.maze-play {
+  position: relative;
+  width: 100%;
+  height: clamp(300px, 58vh, 480px);
+  overflow: hidden;
+  border-radius: 2px;
+  border: 1px solid #3a4030;
+}
+.maze-play canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  cursor: crosshair;
 }
 .fund h3 {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
@@ -1696,9 +1885,12 @@ section:not(.hero) h2::after {
           <a href="under-construction.html" class="btn btn-outline">Contribute</a>
         </div>
         <div class="fund">
-          <div class="fund-gif">
-            <img src="https://blob.gifcities.org/gifcities/J6T65FULRGZQSVKG7WS5KDOM65EQIUIJ.gif" alt="" width="120" height="80">
-          </div>
+          <button type="button" class="fund-maze-hitbox" id="maze-fund-hitbox" aria-label="Expand backrooms maze mini game">
+            <div class="maze-preview" aria-hidden="true">
+              <img src="images/maze/door.png" alt="" width="96" height="150">
+            </div>
+            <span class="chicken-expand-hint">Expand mini game</span>
+          </button>
           <h3>Future Dream Home</h3>
           <hr class="fund-rule">
           <p>For the garden, and walls around it.</p>
@@ -1780,7 +1972,11 @@ section:not(.hero) h2::after {
   <div class="chicken-modal-panel">
     <button type="button" class="chicken-modal-close" data-chicken-close aria-label="Close">&times;</button>
     <div class="chicken-modal-title" id="chicken-modal-title">Feed the chickens</div>
-    <div class="chicken-widget chicken-widget--expanded" id="chicken-widget" aria-label="Spray worms to feed the chickens">
+    <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
+      <button type="button" class="chicken-feed-btn is-active" data-feed-mode="worms">Worms</button>
+      <button type="button" class="chicken-feed-btn" data-feed-mode="feed">Chicken feed</button>
+    </div>
+    <div class="chicken-widget chicken-widget--expanded" id="chicken-widget" aria-label="Spray food to feed the chickens">
       <div class="chicken-widget-stage">
         <div class="chicken-widget-worms" id="chicken-worms"></div>
         <div class="chicken-widget-ground"></div>
@@ -1791,10 +1987,32 @@ section:not(.hero) h2::after {
         </div>
       </div>
     </div>
-    <p class="chicken-widget-status" id="chicken-widget-status" aria-live="polite">Spray up to 20 worms</p>
+    <p class="chicken-widget-status" id="chicken-widget-status" aria-live="polite">Spray up to 100 worms</p>
   </div>
 </div>
 
+<div class="maze-modal" id="maze-modal" role="dialog" aria-labelledby="maze-modal-title" aria-modal="true" hidden>
+  <div class="maze-modal-backdrop" data-maze-close></div>
+  <div class="maze-modal-panel">
+    <button type="button" class="maze-modal-close" data-maze-close aria-label="Close">&times;</button>
+    <div class="maze-modal-title" id="maze-modal-title">Future Dream Home — backrooms</div>
+    <div class="maze-intro" id="maze-intro">
+      <div class="maze-door-scene" id="maze-door-scene">
+        <div class="maze-door-frame">
+          <div class="maze-door-leaf-wrap">
+            <img class="maze-door-leaf" src="images/maze/door.png" alt="Front door" width="256" height="400">
+          </div>
+          <button type="button" class="maze-door-enter" id="maze-door-enter">Open door &amp; enter</button>
+        </div>
+      </div>
+    </div>
+    <div class="maze-play" id="maze-play" hidden>
+      <canvas id="maze-canvas" tabindex="0" aria-label="Backrooms maze — use arrow keys"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="js/maze-raycaster.js"></script>
 <script>
 (function () {
   var wirePhrase = 'Misa & Ray \u00b7 ';
@@ -2107,13 +2325,15 @@ section:not(.hero) h2::after {
   var camDelay = CAM_DELAY_MIN + Math.random() * (CAM_DELAY_MAX - CAM_DELAY_MIN);
   setTimeout(armChickenCam, camDelay);
 
-  /* chicken fund widget — expand modal, line spray, 20 worm cap / 15 eaten reset */
+  /* chicken fund widget — expand modal, dense spray, 100 cap / 50 eaten reload */
   var WORM_IMG = 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngimg.com%2Fuploads%2Fworms%2Fworms_PNG32.png&f=1&nofb=1&ipt=7e59e3a5aa1e5178b2888d11179c23049673dc058a54bfb211a6ce13361a25f8';
+  var FEED_COLORS = ['#1a1410', '#2b2018', '#3d2e22', '#4a3828', '#0d0b09'];
   var chickenHitbox = document.getElementById('chicken-fund-hitbox');
   var chickenModal = document.getElementById('chicken-modal');
   var chickenWidget = document.getElementById('chicken-widget');
   var wormsLayer = document.getElementById('chicken-worms');
   var chickenStatus = document.getElementById('chicken-widget-status');
+  var feedModeBtns = document.querySelectorAll('[data-feed-mode]');
   var previewWidget = document.querySelector('.chicken-widget--preview');
 
   function freezeBird(img, forceStill) {
@@ -2158,20 +2378,30 @@ section:not(.hero) h2::after {
     var sleepTimer = null;
     var eatQueue = [];
     var eatInterval = null;
-    var EAT_MS = 200;
-    var MAX_SPAWN = 20;
-    var EATEN_RESET = 15;
+    var EAT_MS = 90;
+    var MAX_SPAWN = 100;
+    var EATEN_RESET = 50;
     var spawnedCount = 0;
     var eatenCount = 0;
     var sprayLocked = false;
+    var feedMode = 'worms';
 
     function updateStatus() {
       if (!chickenStatus) return;
+      var label = feedMode === 'feed' ? 'feed' : 'worms';
       if (sprayLocked) {
-        chickenStatus.textContent = 'Chickens eating… ' + eatenCount + ' / ' + EATEN_RESET;
+        chickenStatus.textContent = 'Chickens eating… ' + eatenCount + ' / ' + EATEN_RESET + ' (' + label + ')';
       } else {
-        chickenStatus.textContent = 'Spray worms: ' + spawnedCount + ' / ' + MAX_SPAWN;
+        chickenStatus.textContent = 'Spray ' + label + ': ' + spawnedCount + ' / ' + MAX_SPAWN;
       }
+    }
+
+    function setFeedMode(mode) {
+      feedMode = mode === 'feed' ? 'feed' : 'worms';
+      feedModeBtns.forEach(function (btn) {
+        btn.classList.toggle('is-active', btn.getAttribute('data-feed-mode') === feedMode);
+      });
+      updateStatus();
     }
 
     function canSprayMore() {
@@ -2257,18 +2487,30 @@ section:not(.hero) h2::after {
       };
     }
 
-    function spawnWormAt(stageX, stageY) {
+    function spawnParticleAt(stageX, stageY) {
       if (!canSprayMore()) return false;
-      var size = chickenWidget.classList.contains('chicken-widget--expanded')
-        ? 14 + Math.random() * 10
-        : 11 + Math.random() * 9;
+      var isFeed = feedMode === 'feed';
+      var size = isFeed
+        ? 3 + Math.random() * 3
+        : (chickenWidget.classList.contains('chicken-widget--expanded')
+          ? 10 + Math.random() * 8
+          : 11 + Math.random() * 9);
       var x = stageX - size * 0.52;
       var y = stageY - size * 0.48;
-      var el = document.createElement('img');
-      el.className = 'chicken-widget-worm';
-      el.src = WORM_IMG;
-      el.alt = '';
-      el.style.width = size + 'px';
+      var el;
+      if (isFeed) {
+        el = document.createElement('span');
+        el.className = 'chicken-widget-feed';
+        el.style.width = size + 'px';
+        el.style.height = size + 'px';
+        el.style.background = FEED_COLORS[Math.floor(Math.random() * FEED_COLORS.length)];
+      } else {
+        el = document.createElement('img');
+        el.className = 'chicken-widget-worm';
+        el.src = WORM_IMG;
+        el.alt = '';
+        el.style.width = size + 'px';
+      }
       el.style.left = x + 'px';
       el.style.top = y + 'px';
       wormsLayer.appendChild(el);
@@ -2276,8 +2518,8 @@ section:not(.hero) h2::after {
         el: el,
         x: x,
         y: y,
-        vx: (Math.random() - 0.5) * 3,
-        vy: -0.5 - Math.random() * 2,
+        vx: (Math.random() - 0.5) * (isFeed ? 4.5 : 3),
+        vy: -0.5 - Math.random() * (isFeed ? 2.5 : 2),
         size: size,
         landed: false
       };
@@ -2294,7 +2536,7 @@ section:not(.hero) h2::after {
     function sprayLine(x0, y0, x1, y1) {
       if (!canSprayMore()) return;
       var dist = Math.hypot(x1 - x0, y1 - y0);
-      var step = 10;
+      var step = 3;
       var steps = Math.max(1, Math.ceil(dist / step));
       var spawned = 0;
       var i;
@@ -2303,7 +2545,7 @@ section:not(.hero) h2::after {
         var t = i / steps;
         var px = x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3;
         var py = y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3;
-        if (spawnWormAt(px, py)) spawned += 1;
+        if (spawnParticleAt(px, py)) spawned += 1;
       }
       return spawned;
     }
@@ -2312,7 +2554,7 @@ section:not(.hero) h2::after {
       if (!spraying || !gameActive || !canSprayMore()) return;
       var pt = stagePoint(clientX, clientY);
       if (!lastSprayPoint) {
-        spawnWormAt(pt.x, pt.y);
+        spawnParticleAt(pt.x, pt.y);
         lastSprayPoint = pt;
         return;
       }
@@ -2386,6 +2628,12 @@ section:not(.hero) h2::after {
       if (chickenHitbox) chickenHitbox.focus();
     }
 
+    feedModeBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setFeedMode(btn.getAttribute('data-feed-mode'));
+      });
+    });
+
     chickenHitbox.addEventListener('click', openChickenModal);
 
     chickenModal.querySelectorAll('[data-chicken-close]').forEach(function (el) {
@@ -2400,7 +2648,7 @@ section:not(.hero) h2::after {
       if (!gameActive || !canSprayMore()) return;
       spraying = true;
       lastSprayPoint = stagePoint(e.clientX, e.clientY);
-      spawnWormAt(lastSprayPoint.x, lastSprayPoint.y);
+      spawnParticleAt(lastSprayPoint.x, lastSprayPoint.y);
     });
     chickenWidget.addEventListener('mouseleave', function () {
       spraying = false;
@@ -2415,7 +2663,7 @@ section:not(.hero) h2::after {
       spraying = true;
       if (e.touches[0]) {
         lastSprayPoint = stagePoint(e.touches[0].clientX, e.touches[0].clientY);
-        spawnWormAt(lastSprayPoint.x, lastSprayPoint.y);
+        spawnParticleAt(lastSprayPoint.x, lastSprayPoint.y);
       }
     }, { passive: true });
     chickenWidget.addEventListener('touchmove', function (e) {
@@ -2430,6 +2678,73 @@ section:not(.hero) h2::after {
     birds.forEach(function (img) { freezeBird(img, true); });
     updateStatus();
     requestAnimationFrame(tick);
+  }
+
+  /* home fund — backrooms maze (door intro → raycaster) */
+  var mazeHitbox = document.getElementById('maze-fund-hitbox');
+  var mazeModal = document.getElementById('maze-modal');
+  var mazeIntro = document.getElementById('maze-intro');
+  var mazePlay = document.getElementById('maze-play');
+  var mazeDoorScene = document.getElementById('maze-door-scene');
+  var mazeDoorEnter = document.getElementById('maze-door-enter');
+  var mazeCanvas = document.getElementById('maze-canvas');
+  var mazeStarted = false;
+
+  function resetMazeIntro() {
+    mazeStarted = false;
+    if (window.BackroomsMaze) BackroomsMaze.stop();
+    if (mazeIntro) mazeIntro.hidden = false;
+    if (mazePlay) mazePlay.hidden = true;
+    if (mazeDoorScene) mazeDoorScene.classList.remove('is-open');
+  }
+
+  function beginMazeGame() {
+    if (mazeStarted || !mazeCanvas || !window.BackroomsMaze) return;
+    mazeStarted = true;
+    if (mazeIntro) mazeIntro.hidden = true;
+    if (mazePlay) mazePlay.hidden = false;
+    BackroomsMaze.start(mazeCanvas);
+    mazeCanvas.focus();
+  }
+
+  function openMazeDoor() {
+    if (!mazeDoorScene || mazeStarted) return;
+    mazeDoorScene.classList.add('is-open');
+    setTimeout(beginMazeGame, 900);
+  }
+
+  function openMazeModal() {
+    if (!mazeModal) return;
+    resetMazeIntro();
+    mazeModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    var closeBtn = mazeModal.querySelector('.maze-modal-close');
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeMazeModal() {
+    if (!mazeModal) return;
+    mazeModal.hidden = true;
+    document.body.style.overflow = '';
+    resetMazeIntro();
+    if (mazeHitbox) mazeHitbox.focus();
+  }
+
+  if (mazeHitbox && mazeModal) {
+    mazeHitbox.addEventListener('click', openMazeModal);
+    if (mazeDoorEnter) mazeDoorEnter.addEventListener('click', openMazeDoor);
+    if (mazeDoorScene) {
+      mazeDoorScene.addEventListener('click', function (e) {
+        if (e.target === mazeDoorEnter) return;
+        openMazeDoor();
+      });
+    }
+    mazeModal.querySelectorAll('[data-maze-close]').forEach(function (el) {
+      el.addEventListener('click', closeMazeModal);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !mazeModal.hidden) closeMazeModal();
+    });
   }
 
   /* secret garden radish — pull up to reveal modal */
