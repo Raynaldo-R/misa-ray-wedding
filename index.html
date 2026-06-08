@@ -120,126 +120,6 @@ header {
   }
 }
 
-/* ---------- party mode ---------- */
-.party-mode-control {
-  position: relative;
-  z-index: 2;
-  margin: 22px auto 8px;
-  text-align: center;
-  pointer-events: auto;
-}
-.party-toggle {
-  display: inline-flex;
-  cursor: pointer;
-  user-select: none;
-}
-.party-toggle input {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-.party-toggle-ui {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px 10px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(250, 249, 246, .94);
-  box-shadow: 0 2px 12px rgba(26, 36, 33, .08);
-  font-family: var(--sans);
-  font-size: .72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .14em;
-  color: var(--ink);
-  transition: border-color .2s ease, background .2s ease;
-}
-.party-toggle-thumb {
-  width: 34px;
-  height: 20px;
-  border-radius: 999px;
-  background: var(--stone);
-  box-shadow: inset 0 0 0 1px #d1ccc3;
-  position: relative;
-  flex-shrink: 0;
-  transition: background .2s ease;
-}
-.party-toggle-thumb::after {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,.18);
-  transition: transform .2s ease;
-}
-.party-toggle input:checked + .party-toggle-ui {
-  border-color: var(--sage);
-  background: rgba(232, 229, 222, .96);
-}
-.party-toggle input:checked + .party-toggle-ui .party-toggle-thumb {
-  background: var(--sage);
-  box-shadow: inset 0 0 0 1px var(--forest);
-}
-.party-toggle input:checked + .party-toggle-ui .party-toggle-thumb::after {
-  transform: translateX(14px);
-}
-.party-toggle input:focus-visible + .party-toggle-ui {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.party-float-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10000;
-  overflow: hidden;
-}
-.party-float-layer[hidden] { display: none; }
-.party-float {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: var(--size, 420px);
-  pointer-events: none;
-  opacity: 0;
-  animation: party-drift var(--dur, 60s) linear forwards;
-  will-change: transform, opacity;
-}
-.party-float img {
-  display: block;
-  width: 100%;
-  height: auto;
-  filter: drop-shadow(0 14px 28px rgba(26, 36, 33, .18));
-  animation: party-spin var(--spin-dur, 12s) linear infinite;
-  transform-origin: center center;
-}
-@keyframes party-drift {
-  0% {
-    opacity: 0;
-    transform: translate3d(var(--sx), var(--sy), 0) scale(0.94);
-  }
-  7% { opacity: 1; }
-  93% { opacity: 0.98; }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--ex), var(--ey), 0) scale(1);
-  }
-}
-@keyframes party-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(var(--spin-to, 360deg)); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .party-mode-control { display: none; }
-}
-
 nav {
   display: flex;
   flex-wrap: wrap;
@@ -882,14 +762,61 @@ button[type=submit]:disabled {
   image-rendering: pixelated;
 }
 /* chicken fund interactive widget */
+.fund-chicken-hitbox {
+  display: block;
+  width: 100%;
+  position: relative;
+  margin: 0 auto 12px;
+  padding: 8px 10px 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  transition: background .2s ease;
+}
+.fund-chicken-hitbox:hover,
+.fund-chicken-hitbox:focus-visible {
+  background: rgba(232, 229, 222, .55);
+  outline: none;
+}
+.chicken-expand-hint {
+  display: block;
+  margin: 8px auto 0;
+  font-family: var(--sans);
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--accent-dark);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .2s ease, transform .2s ease;
+  pointer-events: none;
+}
+.fund-chicken-hitbox:hover .chicken-expand-hint,
+.fund-chicken-hitbox:focus-visible .chicken-expand-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
 .chicken-widget {
   position: relative;
   width: min(100%, 168px);
   height: clamp(64px, 12vh, 80px);
-  margin: 0 auto 12px;
-  cursor: crosshair;
+  margin: 0 auto;
   touch-action: none;
-  user-select: none;
+  pointer-events: none;
+}
+.chicken-widget--expanded {
+  width: min(92vw, 420px);
+  height: clamp(200px, 38vh, 280px);
+  margin: 0 auto;
+  cursor: crosshair;
+  pointer-events: auto;
+  touch-action: none;
 }
 .chicken-widget-stage {
   position: relative;
@@ -897,14 +824,15 @@ button[type=submit]:disabled {
   height: 100%;
   overflow: hidden;
   border-radius: 2px;
+  background: linear-gradient(180deg, rgba(250,249,246,0) 0%, rgba(232,229,222,.35) 100%);
 }
 .chicken-widget-ground {
   position: absolute;
   left: 6%;
   right: 6%;
   bottom: 0;
-  height: 2px;
-  background: rgba(74, 107, 95, 0.28);
+  height: 3px;
+  background: rgba(74, 107, 95, 0.35);
   z-index: 1;
 }
 .chicken-widget-birds {
@@ -915,9 +843,15 @@ button[type=submit]:disabled {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 4px;
+  gap: 8px;
   z-index: 3;
   pointer-events: none;
+}
+.chicken-widget--expanded .chicken-bird {
+  max-width: 72px;
+  max-height: 88px;
+  min-width: 48px;
+  min-height: 58px;
 }
 .chicken-bird {
   max-width: 44px;
@@ -937,24 +871,87 @@ button[type=submit]:disabled {
 }
 .chicken-widget-worm {
   position: absolute;
+  left: 0;
+  top: 0;
   width: 16px;
   height: auto;
   pointer-events: none;
-  will-change: transform;
+  will-change: transform, left, top;
   filter: drop-shadow(0 1px 1px rgba(0,0,0,.12));
+  transform-origin: center center;
 }
-.chicken-widget-worm.is-landed {
-  z-index: 2;
+.chicken-widget--expanded .chicken-widget-worm {
+  width: 22px;
 }
+.chicken-widget-worm.is-landed { z-index: 2; }
 .chicken-widget.is-feasting .chicken-widget-birds {
   animation: chicken-bounce .45s ease-in-out infinite alternate;
 }
+.chicken-widget-status {
+  margin-top: 12px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.chicken-widget.is-spray-locked { cursor: not-allowed; }
 @keyframes chicken-bounce {
   from { transform: translateY(0); }
-  to { transform: translateY(-3px); }
+  to { transform: translateY(-4px); }
+}
+.chicken-modal[hidden] { display: none; }
+.chicken-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.chicken-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 36, 33, .45);
+}
+.chicken-modal-panel {
+  position: relative;
+  width: min(96vw, 520px);
+  padding: 28px 24px 24px;
+  border-radius: 6px;
+  background: var(--ivory);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 48px rgba(26, 36, 33, .18);
+}
+.chicken-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.chicken-modal-close:hover { color: var(--ink); }
+.chicken-modal-title {
+  font-family: var(--sans);
+  font-size: .8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  text-align: center;
+  margin-bottom: 16px;
+  color: var(--ink-soft);
 }
 @media (prefers-reduced-motion: reduce) {
   .chicken-widget.is-feasting .chicken-widget-birds { animation: none; }
+  .chicken-expand-hint { opacity: 1; transform: none; }
 }
 .fund h3 {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
@@ -1708,17 +1705,19 @@ section:not(.hero) h2::after {
           <a href="under-construction.html" class="btn btn-outline">Contribute</a>
         </div>
         <div class="fund">
-          <div class="chicken-widget" id="chicken-widget" aria-label="Hover to feed the chickens">
-            <div class="chicken-widget-stage">
-              <div class="chicken-widget-worms" id="chicken-worms"></div>
-              <div class="chicken-widget-ground"></div>
-              <div class="chicken-widget-birds">
-                <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50">
-                <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50">
-                <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50">
+          <button type="button" class="fund-chicken-hitbox" id="chicken-fund-hitbox" aria-label="Expand chicken mini game">
+            <div class="chicken-widget chicken-widget--preview" aria-hidden="true">
+              <div class="chicken-widget-stage">
+                <div class="chicken-widget-ground"></div>
+                <div class="chicken-widget-birds">
+                  <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50">
+                  <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50">
+                  <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50">
+                </div>
               </div>
             </div>
-          </div>
+            <span class="chicken-expand-hint">Expand mini game</span>
+          </button>
           <h3>The Chickens</h3>
           <hr class="fund-rule">
           <p>They need more grubs and snacks!</p>
@@ -1752,16 +1751,6 @@ section:not(.hero) h2::after {
     <a href="#top">↑ Back to top</a>
   </div>
 
-  <div class="party-mode-control">
-    <label class="party-toggle">
-      <input type="checkbox" id="party-mode-toggle" autocomplete="off">
-      <span class="party-toggle-ui">
-        <span class="party-toggle-thumb" aria-hidden="true"></span>
-        <span>Party mode</span>
-      </span>
-    </label>
-  </div>
-
   <div class="secret-mound" id="secret-mound" aria-hidden="true">
     <img class="secret-soil" src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngimg.com%2Fuploads%2Fsoil%2Fsoil_PNG44.png&f=1&nofb=1&ipt=7b48aec5fe015df095528b50db202320789d3a767256c0c6e169d7b7fd6a99d5" alt="" width="860" height="480">
     <button type="button" class="secret-radish" id="secret-radish" aria-label="Pull the radish up">
@@ -1786,7 +1775,25 @@ section:not(.hero) h2::after {
   </div>
 </div>
 
-<div class="party-float-layer" id="party-float-layer" hidden aria-hidden="true"></div>
+<div class="chicken-modal" id="chicken-modal" role="dialog" aria-labelledby="chicken-modal-title" aria-modal="true" hidden>
+  <div class="chicken-modal-backdrop" data-chicken-close></div>
+  <div class="chicken-modal-panel">
+    <button type="button" class="chicken-modal-close" data-chicken-close aria-label="Close">&times;</button>
+    <div class="chicken-modal-title" id="chicken-modal-title">Feed the chickens</div>
+    <div class="chicken-widget chicken-widget--expanded" id="chicken-widget" aria-label="Spray worms to feed the chickens">
+      <div class="chicken-widget-stage">
+        <div class="chicken-widget-worms" id="chicken-worms"></div>
+        <div class="chicken-widget-ground"></div>
+        <div class="chicken-widget-birds">
+          <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50">
+          <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50">
+          <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50">
+        </div>
+      </div>
+    </div>
+    <p class="chicken-widget-status" id="chicken-widget-status" aria-live="polite">Spray up to 20 worms</p>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -2100,51 +2107,95 @@ section:not(.hero) h2::after {
   var camDelay = CAM_DELAY_MIN + Math.random() * (CAM_DELAY_MAX - CAM_DELAY_MIN);
   setTimeout(armChickenCam, camDelay);
 
-  /* chicken fund widget: frozen birds, hover sprays worms, feast activates GIFs */
+  /* chicken fund widget — expand modal, line spray, 20 worm cap / 15 eaten reset */
   var WORM_IMG = 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngimg.com%2Fuploads%2Fworms%2Fworms_PNG32.png&f=1&nofb=1&ipt=7e59e3a5aa1e5178b2888d11179c23049673dc058a54bfb211a6ce13361a25f8';
+  var chickenHitbox = document.getElementById('chicken-fund-hitbox');
+  var chickenModal = document.getElementById('chicken-modal');
   var chickenWidget = document.getElementById('chicken-widget');
   var wormsLayer = document.getElementById('chicken-worms');
-  if (chickenWidget && wormsLayer) {
+  var chickenStatus = document.getElementById('chicken-widget-status');
+  var previewWidget = document.querySelector('.chicken-widget--preview');
+
+  function freezeBird(img, forceStill) {
+    var gifSrc = img.getAttribute('data-gif-src');
+    if (!gifSrc) return;
+    if (img.dataset.stillSrc) {
+      if (forceStill || !img.dataset.awake) img.src = img.dataset.stillSrc;
+      return;
+    }
+    fetch(gifSrc).then(function (r) { return r.blob(); }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var tmp = new Image();
+      tmp.onload = function () {
+        var c = document.createElement('canvas');
+        c.width = tmp.naturalWidth || tmp.width;
+        c.height = tmp.naturalHeight || tmp.height;
+        c.getContext('2d').drawImage(tmp, 0, 0);
+        img.dataset.stillSrc = c.toDataURL('image/png');
+        if (forceStill || !img.dataset.awake) img.src = img.dataset.stillSrc;
+        URL.revokeObjectURL(url);
+      };
+      tmp.onerror = function () { URL.revokeObjectURL(url); };
+      tmp.src = url;
+    }).catch(function () {});
+  }
+
+  if (previewWidget) {
+    previewWidget.querySelectorAll('.chicken-bird').forEach(function (img) {
+      freezeBird(img, true);
+    });
+  }
+
+  if (chickenHitbox && chickenModal && chickenWidget && wormsLayer) {
     var birds = chickenWidget.querySelectorAll('.chicken-bird');
     var stage = chickenWidget.querySelector('.chicken-widget-stage');
     var worms = [];
     var spraying = false;
     var awake = false;
-    var lastSpawn = 0;
-    var sprayX = null;
-    var sprayY = null;
+    var gameActive = false;
+    var lastSprayPoint = null;
     var motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var sleepTimer = null;
     var eatQueue = [];
     var eatInterval = null;
     var EAT_MS = 200;
+    var MAX_SPAWN = 20;
+    var EATEN_RESET = 15;
+    var spawnedCount = 0;
+    var eatenCount = 0;
+    var sprayLocked = false;
 
-    function freezeBird(img) {
-      var gifSrc = img.getAttribute('data-gif-src');
-      if (!gifSrc) return;
-      if (img.dataset.stillSrc) {
-        img.src = img.dataset.stillSrc;
-        return;
+    function updateStatus() {
+      if (!chickenStatus) return;
+      if (sprayLocked) {
+        chickenStatus.textContent = 'Chickens eating… ' + eatenCount + ' / ' + EATEN_RESET;
+      } else {
+        chickenStatus.textContent = 'Spray worms: ' + spawnedCount + ' / ' + MAX_SPAWN;
       }
-      fetch(gifSrc).then(function (r) { return r.blob(); }).then(function (blob) {
-        var url = URL.createObjectURL(blob);
-        var tmp = new Image();
-        tmp.onload = function () {
-          var c = document.createElement('canvas');
-          c.width = tmp.naturalWidth || tmp.width;
-          c.height = tmp.naturalHeight || tmp.height;
-          c.getContext('2d').drawImage(tmp, 0, 0);
-          img.dataset.stillSrc = c.toDataURL('image/png');
-          if (!awake) img.src = img.dataset.stillSrc;
-          URL.revokeObjectURL(url);
-        };
-        tmp.onerror = function () { URL.revokeObjectURL(url); };
-        tmp.src = url;
-      }).catch(function () {});
+    }
+
+    function canSprayMore() {
+      return !sprayLocked && spawnedCount < MAX_SPAWN;
+    }
+
+    function maybeUnlockSpray() {
+      if (spawnedCount >= MAX_SPAWN && eatenCount >= EATEN_RESET) {
+        spawnedCount = 0;
+        eatenCount = 0;
+        sprayLocked = false;
+        chickenWidget.classList.remove('is-spray-locked');
+        worms.forEach(function (w) {
+          if (w.el.parentNode) w.el.remove();
+        });
+        worms.length = 0;
+        eatQueue.length = 0;
+        updateStatus();
+      }
     }
 
     function wakeBirds() {
       birds.forEach(function (img) {
+        img.dataset.awake = '1';
         var gifSrc = img.getAttribute('data-gif-src');
         if (gifSrc) img.src = gifSrc;
       });
@@ -2153,12 +2204,15 @@ section:not(.hero) h2::after {
     function sleepBirds() {
       awake = false;
       chickenWidget.classList.remove('is-feasting');
-      birds.forEach(freezeBird);
+      birds.forEach(function (img) {
+        delete img.dataset.awake;
+        freezeBird(img, true);
+      });
     }
 
     function maybeSleep() {
       clearTimeout(sleepTimer);
-      if (spraying || worms.length || eatQueue.length) return;
+      if (!gameActive || spraying || worms.length || eatQueue.length) return;
       sleepTimer = setTimeout(sleepBirds, 600);
     }
 
@@ -2184,6 +2238,9 @@ section:not(.hero) h2::after {
         if (next.el.parentNode) next.el.remove();
         var idx = worms.indexOf(next);
         if (idx > -1) worms.splice(idx, 1);
+        eatenCount += 1;
+        updateStatus();
+        maybeUnlockSpray();
         if (!eatQueue.length) {
           clearInterval(eatInterval);
           eatInterval = null;
@@ -2192,53 +2249,83 @@ section:not(.hero) h2::after {
       }, EAT_MS);
     }
 
-    function spawnWorm(clientX, clientY) {
+    function stagePoint(clientX, clientY) {
       var rect = stage.getBoundingClientRect();
-      var size = 11 + Math.random() * 9;
-      var x = clientX - rect.left - size * 0.5;
-      var y = clientY - rect.top - size * 0.5;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function spawnWormAt(stageX, stageY) {
+      if (!canSprayMore()) return false;
+      var size = chickenWidget.classList.contains('chicken-widget--expanded')
+        ? 14 + Math.random() * 10
+        : 11 + Math.random() * 9;
+      var x = stageX - size * 0.52;
+      var y = stageY - size * 0.48;
       var el = document.createElement('img');
       el.className = 'chicken-widget-worm';
       el.src = WORM_IMG;
       el.alt = '';
       el.style.width = size + 'px';
-      el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
       wormsLayer.appendChild(el);
       var worm = {
         el: el,
         x: x,
         y: y,
-        vx: (Math.random() - 0.5) * 4.5,
-        vy: -1 - Math.random() * 3,
+        vx: (Math.random() - 0.5) * 3,
+        vy: -0.5 - Math.random() * 2,
         size: size,
         landed: false
       };
       worms.push(worm);
-      return worm;
+      spawnedCount += 1;
+      if (spawnedCount >= MAX_SPAWN) {
+        sprayLocked = true;
+        chickenWidget.classList.add('is-spray-locked');
+      }
+      updateStatus();
+      return true;
     }
 
-    function sprayBurst() {
-      if (!spraying || sprayX === null || sprayY === null) return;
-      var now = performance.now();
-      if (now - lastSpawn < 40) return;
-      lastSpawn = now;
-      var count = motionOk ? 2 + Math.floor(Math.random() * 2) : 1;
-      for (var i = 0; i < count; i++) {
-        spawnWorm(
-          sprayX + (Math.random() - 0.5) * 20,
-          sprayY + (Math.random() - 0.5) * 20
-        );
+    function sprayLine(x0, y0, x1, y1) {
+      if (!canSprayMore()) return;
+      var dist = Math.hypot(x1 - x0, y1 - y0);
+      var step = 10;
+      var steps = Math.max(1, Math.ceil(dist / step));
+      var spawned = 0;
+      var i;
+      for (i = 0; i <= steps; i++) {
+        if (!canSprayMore()) break;
+        var t = i / steps;
+        var px = x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3;
+        var py = y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3;
+        if (spawnWormAt(px, py)) spawned += 1;
       }
+      return spawned;
+    }
+
+    function handleSprayMove(clientX, clientY) {
+      if (!spraying || !gameActive || !canSprayMore()) return;
+      var pt = stagePoint(clientX, clientY);
+      if (!lastSprayPoint) {
+        spawnWormAt(pt.x, pt.y);
+        lastSprayPoint = pt;
+        return;
+      }
+      sprayLine(lastSprayPoint.x, lastSprayPoint.y, pt.x, pt.y);
+      lastSprayPoint = pt;
     }
 
     function tick() {
-      sprayBurst();
-
-      if (stage) {
-        var groundY = stage.clientHeight - 4;
+      if (gameActive && stage) {
+        var groundY = stage.clientHeight - 6;
         worms.forEach(function (w) {
           if (w.landed) return;
-          w.vy += 0.4;
+          w.vy += 0.38;
           w.vx *= 0.985;
           w.x += w.vx;
           w.y += w.vy;
@@ -2247,62 +2334,102 @@ section:not(.hero) h2::after {
             w.y = floor + (Math.random() - 0.5) * 2;
             w.landed = true;
             w.el.classList.add('is-landed');
-            w.el.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px) rotate(' + ((Math.random() - 0.5) * 40).toFixed(1) + 'deg)';
+            w.el.style.left = w.x + 'px';
+            w.el.style.top = w.y + 'px';
+            w.el.style.transform = 'rotate(' + ((Math.random() - 0.5) * 40).toFixed(1) + 'deg)';
             wakeUp();
             enqueueEat(w);
           } else {
-            w.el.style.transform = 'translate(' + w.x + 'px,' + w.y + 'px) rotate(' + (w.vx * 4).toFixed(1) + 'deg)';
+            w.el.style.left = w.x + 'px';
+            w.el.style.top = w.y + 'px';
+            w.el.style.transform = 'rotate(' + (w.vx * 4).toFixed(1) + 'deg)';
           }
         });
       }
-
       requestAnimationFrame(tick);
     }
 
-    birds.forEach(freezeBird);
+    function resetRound() {
+      spawnedCount = 0;
+      eatenCount = 0;
+      sprayLocked = false;
+      spraying = false;
+      lastSprayPoint = null;
+      chickenWidget.classList.remove('is-spray-locked');
+      worms.forEach(function (w) {
+        if (w.el.parentNode) w.el.remove();
+      });
+      worms.length = 0;
+      eatQueue.length = 0;
+      updateStatus();
+    }
+
+    function openChickenModal() {
+      chickenModal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      gameActive = true;
+      resetRound();
+      birds.forEach(function (img) { freezeBird(img, true); });
+      sleepBirds();
+      var closeBtn = chickenModal.querySelector('.chicken-modal-close');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeChickenModal() {
+      chickenModal.hidden = true;
+      document.body.style.overflow = '';
+      gameActive = false;
+      spraying = false;
+      lastSprayPoint = null;
+      sleepBirds();
+      resetRound();
+      if (chickenHitbox) chickenHitbox.focus();
+    }
+
+    chickenHitbox.addEventListener('click', openChickenModal);
+
+    chickenModal.querySelectorAll('[data-chicken-close]').forEach(function (el) {
+      el.addEventListener('click', closeChickenModal);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !chickenModal.hidden) closeChickenModal();
+    });
 
     chickenWidget.addEventListener('mouseenter', function (e) {
+      if (!gameActive || !canSprayMore()) return;
       spraying = true;
-      sprayX = e.clientX;
-      sprayY = e.clientY;
+      lastSprayPoint = stagePoint(e.clientX, e.clientY);
+      spawnWormAt(lastSprayPoint.x, lastSprayPoint.y);
     });
     chickenWidget.addEventListener('mouseleave', function () {
       spraying = false;
-      sprayX = null;
-      sprayY = null;
+      lastSprayPoint = null;
       maybeSleep();
     });
     chickenWidget.addEventListener('mousemove', function (e) {
-      sprayX = e.clientX;
-      sprayY = e.clientY;
+      handleSprayMove(e.clientX, e.clientY);
     });
     chickenWidget.addEventListener('touchstart', function (e) {
+      if (!gameActive || !canSprayMore()) return;
       spraying = true;
       if (e.touches[0]) {
-        sprayX = e.touches[0].clientX;
-        sprayY = e.touches[0].clientY;
+        lastSprayPoint = stagePoint(e.touches[0].clientX, e.touches[0].clientY);
+        spawnWormAt(lastSprayPoint.x, lastSprayPoint.y);
       }
     }, { passive: true });
     chickenWidget.addEventListener('touchmove', function (e) {
-      if (e.touches[0]) {
-        sprayX = e.touches[0].clientX;
-        sprayY = e.touches[0].clientY;
-      }
+      if (e.touches[0]) handleSprayMove(e.touches[0].clientX, e.touches[0].clientY);
     }, { passive: true });
     chickenWidget.addEventListener('touchend', function () {
       spraying = false;
-      sprayX = null;
-      sprayY = null;
+      lastSprayPoint = null;
       maybeSleep();
     });
 
+    birds.forEach(function (img) { freezeBird(img, true); });
+    updateStatus();
     requestAnimationFrame(tick);
-
-    if (!motionOk) {
-      chickenWidget.addEventListener('click', function (e) {
-        spawnWorm(e.clientX, e.clientY);
-      });
-    }
   }
 
   /* secret garden radish — pull up to reveal modal */
@@ -2405,116 +2532,7 @@ section:not(.hero) h2::after {
     });
   }
 
-  /* party mode — slow floating veggies (TOMO-style) */
-  var PARTY_VEGGIES = [
-    'images/party/kale.png',
-    'images/party/carrots.png',
-    'images/party/kabocha.png',
-    'images/party/leek.png',
-    'images/party/garlic.png',
-    'images/party/shallots.png'
-  ];
-  var partyToggle = document.getElementById('party-mode-toggle');
-  var partyLayer = document.getElementById('party-float-layer');
-  var partySpawnTimer;
-  var partyMaxFloats = 9;
-  var partyMotionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  function partyDrift(size) {
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-    var pad = size * 0.55;
-    var edge = Math.floor(Math.random() * 4);
-    var sx;
-    var sy;
-    var ex;
-    var ey;
-    if (edge === 0) {
-      sx = -pad; sy = Math.random() * vh; ex = vw + pad; ey = Math.random() * vh;
-    } else if (edge === 1) {
-      sx = vw + pad; sy = Math.random() * vh; ex = -pad; ey = Math.random() * vh;
-    } else if (edge === 2) {
-      sx = Math.random() * vw; sy = -pad; ex = Math.random() * vw; ey = vh + pad;
-    } else {
-      sx = Math.random() * vw; sy = vh + pad; ex = Math.random() * vw; ey = -pad;
-    }
-    return { sx: sx, sy: sy, ex: ex, ey: ey };
-  }
-
-  function spawnPartyFloater() {
-    if (!partyLayer || partyLayer.hidden) return;
-    if (partyLayer.children.length >= partyMaxFloats) return;
-
-    var floater = document.createElement('div');
-    floater.className = 'party-float';
-    var img = document.createElement('img');
-    img.src = PARTY_VEGGIES[Math.floor(Math.random() * PARTY_VEGGIES.length)];
-    img.alt = '';
-    img.decoding = 'async';
-    img.loading = 'lazy';
-    floater.appendChild(img);
-
-    var size = 360 + Math.random() * 320;
-    var dur = 50 + Math.random() * 40;
-    var spinDur = 5 + Math.random() * 11;
-    var spinTo = (Math.random() > 0.5 ? 360 : -360) + 'deg';
-    var drift = partyDrift(size);
-
-    floater.style.setProperty('--size', size + 'px');
-    floater.style.setProperty('--dur', dur + 's');
-    floater.style.setProperty('--spin-dur', spinDur + 's');
-    floater.style.setProperty('--spin-to', spinTo);
-    floater.style.setProperty('--sx', drift.sx + 'px');
-    floater.style.setProperty('--sy', drift.sy + 'px');
-    floater.style.setProperty('--ex', drift.ex + 'px');
-    floater.style.setProperty('--ey', drift.ey + 'px');
-
-    partyLayer.appendChild(floater);
-    floater.addEventListener('animationend', function (e) {
-      if (e.animationName !== 'party-drift') return;
-      floater.remove();
-      if (partyToggle && partyToggle.checked) spawnPartyFloater();
-    });
-  }
-
-  function startPartyMode() {
-    if (!partyLayer || !partyMotionOk) return;
-    partyLayer.hidden = false;
-    partyLayer.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('party-mode-on');
-    var i;
-    for (i = 0; i < 7; i += 1) {
-      setTimeout(spawnPartyFloater, i * 900);
-    }
-    partySpawnTimer = setInterval(spawnPartyFloater, 3200);
-    try { localStorage.setItem('misa-ray-party-mode', '1'); } catch (e) {}
-  }
-
-  function stopPartyMode() {
-    document.body.classList.remove('party-mode-on');
-    clearInterval(partySpawnTimer);
-    if (partyLayer) {
-      partyLayer.hidden = true;
-      partyLayer.setAttribute('aria-hidden', 'true');
-      partyLayer.innerHTML = '';
-    }
-    try { localStorage.setItem('misa-ray-party-mode', '0'); } catch (e) {}
-  }
-
-  if (partyToggle && partyLayer && partyMotionOk) {
-    partyToggle.addEventListener('change', function () {
-      if (partyToggle.checked) startPartyMode();
-      else stopPartyMode();
-    });
-    try {
-      if (localStorage.getItem('misa-ray-party-mode') === '1') {
-        partyToggle.checked = true;
-        startPartyMode();
-      }
-    } catch (e) {}
-  } else if (partyToggle) {
-    partyToggle.disabled = true;
-  }
+  try { localStorage.removeItem('misa-ray-party-mode'); } catch (e) {}
 })();
 </script>
 
