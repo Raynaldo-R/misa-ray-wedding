@@ -119,6 +119,124 @@ header {
     transform: translate(calc(-50% + var(--hx)), calc(-50% + var(--hy))) scale(1.15) rotate(var(--spin));
   }
 }
+
+/* ---------- party mode ---------- */
+.party-mode-control {
+  position: fixed;
+  left: clamp(10px, 2vw, 18px);
+  bottom: clamp(110px, 20vh, 180px);
+  z-index: 46;
+}
+.party-toggle {
+  display: inline-flex;
+  cursor: pointer;
+  user-select: none;
+}
+.party-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.party-toggle-ui {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(250, 249, 246, .94);
+  box-shadow: 0 2px 12px rgba(26, 36, 33, .08);
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--ink);
+  transition: border-color .2s ease, background .2s ease;
+}
+.party-toggle-thumb {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--stone);
+  box-shadow: inset 0 0 0 1px #d1ccc3;
+  position: relative;
+  flex-shrink: 0;
+  transition: background .2s ease;
+}
+.party-toggle-thumb::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.18);
+  transition: transform .2s ease;
+}
+.party-toggle input:checked + .party-toggle-ui {
+  border-color: var(--sage);
+  background: rgba(232, 229, 222, .96);
+}
+.party-toggle input:checked + .party-toggle-ui .party-toggle-thumb {
+  background: var(--sage);
+  box-shadow: inset 0 0 0 1px var(--forest);
+}
+.party-toggle input:checked + .party-toggle-ui .party-toggle-thumb::after {
+  transform: translateX(14px);
+}
+.party-toggle input:focus-visible + .party-toggle-ui {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.party-float-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 35;
+  overflow: hidden;
+}
+.party-float-layer[hidden] { display: none; }
+.party-float {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: auto;
+  pointer-events: none;
+  opacity: 0;
+  filter: drop-shadow(0 10px 24px rgba(26, 36, 33, .12));
+  animation: party-drift var(--dur, 60s) linear forwards;
+  will-change: transform, opacity;
+}
+@keyframes party-drift {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--sx), var(--sy), 0) rotate(var(--r0)) scale(0.92);
+  }
+  8% { opacity: 0.95; }
+  92% { opacity: 0.9; }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--ex), var(--ey), 0) rotate(var(--r1)) scale(1);
+  }
+}
+body.party-mode-on main,
+body.party-mode-on header,
+body.party-mode-on footer {
+  position: relative;
+  z-index: 36;
+}
+@media (max-width: 620px) {
+  .party-mode-control { bottom: 96px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .party-mode-control { display: none; }
+}
+
 nav {
   display: flex;
   flex-wrap: wrap;
@@ -1280,6 +1398,17 @@ section:not(.hero) h2::after {
   </div>
 </aside>
 
+<div class="party-mode-control">
+  <label class="party-toggle">
+    <input type="checkbox" id="party-mode-toggle" autocomplete="off">
+    <span class="party-toggle-ui">
+      <span class="party-toggle-thumb" aria-hidden="true"></span>
+      <span>Party mode</span>
+    </span>
+  </label>
+</div>
+<div class="party-float-layer" id="party-float-layer" hidden aria-hidden="true"></div>
+
 <header>
   <div class="nav-inner">
     <a href="#top" class="brand">Misa <span class="amp">&amp;</span> Ray</a>
@@ -2270,6 +2399,114 @@ section:not(.hero) h2::after {
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !gardenModal.hidden) closeGardenModal();
     });
+  }
+
+  /* party mode — slow floating veggies (TOMO-style) */
+  var PARTY_VEGGIES = [
+    'images/party/kale.png',
+    'images/party/carrots.png',
+    'images/party/kabocha.png',
+    'images/party/leek.png',
+    'images/party/garlic.png',
+    'images/party/shallots.png'
+  ];
+  var partyToggle = document.getElementById('party-mode-toggle');
+  var partyLayer = document.getElementById('party-float-layer');
+  var partySpawnTimer;
+  var partyMaxFloats = 11;
+  var partyMotionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function partyDrift(size) {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var pad = size * 0.55;
+    var edge = Math.floor(Math.random() * 4);
+    var sx;
+    var sy;
+    var ex;
+    var ey;
+    if (edge === 0) {
+      sx = -pad; sy = Math.random() * vh; ex = vw + pad; ey = Math.random() * vh;
+    } else if (edge === 1) {
+      sx = vw + pad; sy = Math.random() * vh; ex = -pad; ey = Math.random() * vh;
+    } else if (edge === 2) {
+      sx = Math.random() * vw; sy = -pad; ex = Math.random() * vw; ey = vh + pad;
+    } else {
+      sx = Math.random() * vw; sy = vh + pad; ex = Math.random() * vw; ey = -pad;
+    }
+    return { sx: sx, sy: sy, ex: ex, ey: ey };
+  }
+
+  function spawnPartyFloater() {
+    if (!partyLayer || partyLayer.hidden) return;
+    if (partyLayer.children.length >= partyMaxFloats) return;
+
+    var img = document.createElement('img');
+    img.className = 'party-float';
+    img.src = PARTY_VEGGIES[Math.floor(Math.random() * PARTY_VEGGIES.length)];
+    img.alt = '';
+    img.decoding = 'async';
+    img.loading = 'lazy';
+
+    var size = 220 + Math.random() * 220;
+    var dur = 55 + Math.random() * 45;
+    var drift = partyDrift(size);
+    var r0 = (Math.random() - 0.5) * 28;
+    var r1 = r0 + (Math.random() - 0.5) * 50;
+
+    img.style.width = size + 'px';
+    img.style.setProperty('--dur', dur + 's');
+    img.style.setProperty('--sx', drift.sx + 'px');
+    img.style.setProperty('--sy', drift.sy + 'px');
+    img.style.setProperty('--ex', drift.ex + 'px');
+    img.style.setProperty('--ey', drift.ey + 'px');
+    img.style.setProperty('--r0', r0 + 'deg');
+    img.style.setProperty('--r1', r1 + 'deg');
+
+    partyLayer.appendChild(img);
+    img.addEventListener('animationend', function () {
+      img.remove();
+      if (partyToggle && partyToggle.checked) spawnPartyFloater();
+    });
+  }
+
+  function startPartyMode() {
+    if (!partyLayer || !partyMotionOk) return;
+    partyLayer.hidden = false;
+    partyLayer.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('party-mode-on');
+    var i;
+    for (i = 0; i < 7; i += 1) {
+      setTimeout(spawnPartyFloater, i * 900);
+    }
+    partySpawnTimer = setInterval(spawnPartyFloater, 3200);
+    try { localStorage.setItem('misa-ray-party-mode', '1'); } catch (e) {}
+  }
+
+  function stopPartyMode() {
+    document.body.classList.remove('party-mode-on');
+    clearInterval(partySpawnTimer);
+    if (partyLayer) {
+      partyLayer.hidden = true;
+      partyLayer.setAttribute('aria-hidden', 'true');
+      partyLayer.innerHTML = '';
+    }
+    try { localStorage.setItem('misa-ray-party-mode', '0'); } catch (e) {}
+  }
+
+  if (partyToggle && partyLayer && partyMotionOk) {
+    partyToggle.addEventListener('change', function () {
+      if (partyToggle.checked) startPartyMode();
+      else stopPartyMode();
+    });
+    try {
+      if (localStorage.getItem('misa-ray-party-mode') === '1') {
+        partyToggle.checked = true;
+        startPartyMode();
+      }
+    } catch (e) {}
+  } else if (partyToggle) {
+    partyToggle.disabled = true;
   }
 })();
 </script>
