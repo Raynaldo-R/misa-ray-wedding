@@ -82,43 +82,6 @@ header {
   transform-origin: left bottom;
 }
 .brand .amp { color: var(--ink-soft); }
-.brand.is-heartbeating {
-  animation: brand-heartbeat 0.85s ease-in-out 1;
-}
-@keyframes brand-heartbeat {
-  0%, 100% { transform: scale(1); }
-  10% { transform: scale(1.1); }
-  20% { transform: scale(1); }
-  30% { transform: scale(1.08); }
-  40% { transform: scale(1); }
-  40.01%, 100% { transform: scale(1); }
-}
-.brand-heart-burst {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 120;
-  overflow: hidden;
-}
-.brand-heart {
-  position: fixed;
-  font-size: clamp(14px, 2vw, 22px);
-  line-height: 1;
-  opacity: 0;
-  animation: brand-heart-fly 1.35s ease-out forwards;
-  text-shadow: 0 1px 0 rgba(255,255,255,.5);
-}
-@keyframes brand-heart-fly {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
-  }
-  12% { opacity: 1; }
-  100% {
-    opacity: 0;
-    transform: translate(calc(-50% + var(--hx)), calc(-50% + var(--hy))) scale(1.15) rotate(var(--spin));
-  }
-}
 
 nav {
   display: flex;
@@ -286,6 +249,8 @@ p:last-child { margin-bottom: 0; }
   padding: 0;
   gap: 0;
 }
+/* FUTURE: carousel — uncomment block below to re-enable hero photo marquee */
+/*
 .hero-carousel {
   position: relative;
   width: 100%;
@@ -329,6 +294,7 @@ p:last-child { margin-bottom: 0; }
   object-position: center;
   display: block;
 }
+*/
 .hero-inner {
   width: min(1100px, 100%);
   margin: 0 auto;
@@ -574,9 +540,12 @@ p:last-child { margin-bottom: 0; }
 @media (max-width: 420px) {
   .together-modal-photos { column-count: 1; max-width: 360px; margin: 0 auto; }
 }
+/* FUTURE: carousel */
+/*
 @media (prefers-reduced-motion: reduce) {
   .hero-marquee { animation: none; }
 }
+*/
 @media (max-width: 600px) {
   .faq-media-split { grid-template-columns: 1fr; }
   .couple { grid-template-columns: 1fr; }
@@ -878,6 +847,54 @@ button[type=submit]:disabled {
 }
 
 /* ---------- funds ---------- */
+.fund-poll {
+  margin-bottom: clamp(20px, 4vh, 32px);
+  padding: clamp(16px, 3vw, 24px);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 1px 1px 0 #fff inset, -1px -1px 0 #d1ccc3 inset;
+}
+.fund-poll-lead {
+  text-align: center;
+  font-size: clamp(.95rem, 2vw, 1.1rem);
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.fund-poll-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fund-poll-row.is-leading .fund-poll-name { color: var(--forest); }
+.fund-poll-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 4px;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.fund-poll-name { color: var(--ink-soft); }
+.fund-poll-count { color: var(--ink-soft); white-space: nowrap; }
+.fund-poll-track {
+  height: 8px;
+  background: var(--stone);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.fund-poll-fill {
+  height: 100%;
+  background: var(--sage-light);
+  border-radius: 2px;
+  transition: width .45s ease;
+}
+.fund-poll-row.is-leading .fund-poll-fill { background: var(--forest); }
+.fund-contribute { cursor: pointer; font: inherit; }
 .funds-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1758,7 +1775,9 @@ section:not(.hero) h2::after {
 
   <!-- HERO -->
   <section class="hero snap-section" id="top">
+    <!-- FUTURE: carousel — uncomment to re-enable hero photo marquee
     <div class="hero-carousel" id="hero-carousel" aria-hidden="true"></div>
+    -->
     <div class="hero-inner">
       <div class="hero-meta">
         <div class="date">Saturday, April 3, 2027</div>
@@ -2025,9 +2044,13 @@ section:not(.hero) h2::after {
     <div class="wrap">
       <span class="eyebrow">Registry</span>
       <h2>Gifts</h2>
-      <p class="section-note">No registry. Pick a fund if you'd like.</p>
+      <p class="section-note">No registry. Pick a fund if you'd like — your pick helps us see what wins the poll.</p>
+      <div class="fund-poll" id="fund-poll" aria-live="polite">
+        <p class="fund-poll-lead" id="fund-poll-lead">Loading poll…</p>
+        <div class="fund-poll-bars" id="fund-poll-bars"></div>
+      </div>
       <div class="funds-grid">
-        <!-- CONFIG: fund URLs below -->
+        <!-- CONFIG: fund poll + pay links — see FUND_CONFIG in script -->
         <div class="fund">
           <div class="fund-gif">
             <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
@@ -2035,7 +2058,7 @@ section:not(.hero) h2::after {
           <h3>Vacation Fund</h3>
           <hr class="fund-rule">
           <p>Somewhere warm, eventually.</p>
-          <a href="under-construction.html" class="btn btn-outline">Contribute</a>
+          <button type="button" class="btn btn-outline fund-contribute" data-fund="vacation">Contribute</button>
         </div>
         <div class="fund">
           <button type="button" class="fund-maze-hitbox" id="maze-fund-hitbox" aria-label="Expand backrooms maze mini game">
@@ -2047,7 +2070,7 @@ section:not(.hero) h2::after {
           <h3>Future Dream Home</h3>
           <hr class="fund-rule">
           <p>For the garden, and walls around it.</p>
-          <a href="under-construction.html" class="btn btn-outline">Contribute</a>
+          <button type="button" class="btn btn-outline fund-contribute" data-fund="home">Contribute</button>
         </div>
         <div class="fund">
           <button type="button" class="fund-chicken-hitbox" id="chicken-fund-hitbox" aria-label="Expand chicken mini game">
@@ -2066,7 +2089,7 @@ section:not(.hero) h2::after {
           <h3>The Chickens</h3>
           <hr class="fund-rule">
           <p>They need more grubs and snacks!</p>
-          <a href="under-construction.html" class="btn btn-outline">Contribute</a>
+          <button type="button" class="btn btn-outline fund-contribute" data-fund="chickens">Contribute</button>
         </div>
       </div>
     </div>
@@ -2201,64 +2224,6 @@ section:not(.hero) h2::after {
     }
   }
 
-  /* brand heartbeat — 3 beats, then heart burst */
-  var brandLink = document.querySelector('.brand');
-  if (brandLink && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    var heartbeatCount = 0;
-    var heartColors = ['#4a6b5f', '#1e3d34', '#6d8f82', '#faf9f6', '#e8e5de', '#f5f2ea'];
-    var heartBurstLayer;
-
-    function getHeartBurstLayer() {
-      if (!heartBurstLayer) {
-        heartBurstLayer = document.createElement('div');
-        heartBurstLayer.className = 'brand-heart-burst';
-        heartBurstLayer.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(heartBurstLayer);
-      }
-      return heartBurstLayer;
-    }
-
-    function burstHearts() {
-      var rect = brandLink.getBoundingClientRect();
-      var cx = rect.left + rect.width * 0.5;
-      var cy = rect.top + rect.height * 0.62;
-      var layer = getHeartBurstLayer();
-      var count = 18;
-
-      for (var i = 0; i < count; i++) {
-        var heart = document.createElement('span');
-        heart.className = 'brand-heart';
-        heart.textContent = '\u2665';
-        heart.style.left = cx + 'px';
-        heart.style.top = cy + 'px';
-        heart.style.color = heartColors[i % heartColors.length];
-        var angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.35;
-        var dist = 70 + Math.random() * 110;
-        heart.style.setProperty('--hx', (Math.cos(angle) * dist).toFixed(1) + 'px');
-        heart.style.setProperty('--hy', (Math.sin(angle) * dist - 20).toFixed(1) + 'px');
-        heart.style.setProperty('--spin', ((Math.random() - 0.5) * 40).toFixed(1) + 'deg');
-        layer.appendChild(heart);
-        heart.addEventListener('animationend', function () { heart.remove(); });
-      }
-    }
-
-    brandLink.addEventListener('mouseenter', function () {
-      if (!brandLink.classList.contains('is-heartbeating')) {
-        brandLink.classList.add('is-heartbeating');
-      }
-    });
-
-    brandLink.addEventListener('animationend', function (e) {
-      if (e.animationName !== 'brand-heartbeat') return;
-      brandLink.classList.remove('is-heartbeating');
-      heartbeatCount += 1;
-      if (heartbeatCount >= 3) {
-        burstHearts();
-        heartbeatCount = 0;
-      }
-    });
-  }
-
   /* CONFIG: visitor counter key — change COUNTER_KEY if you clone this site (uses countapi.mileshilliard.com) */
   var COUNTER_KEY = 'misa-ray-wedding-port-gamble-visits';
   var API = 'https://countapi.mileshilliard.com/api/v1/';
@@ -2286,6 +2251,131 @@ section:not(.hero) h2::after {
   function showError() {
     el.innerHTML = '<span class="counter-digit counter-loading">?</span>'.repeat(6);
   }
+
+  /*
+   * CONFIG: fund poll + payment links
+   * Replace payUrl with your real PayPal.me link (e.g. https://paypal.me/Raynaldo-R)
+   * CountAPI keys: misa-ray-wedding-fund-vacation, -home, -chickens (same service as visitor counter)
+   * Contribute click → tally pick → open pay link in new tab (guest adds paymentNote in PayPal/Venmo memo)
+   */
+  var FUND_CONFIG = {
+    countApiBase: 'https://countapi.mileshilliard.com/api/v1/',
+    countKeyPrefix: 'misa-ray-wedding-fund-',
+    funds: [
+      {
+        id: 'vacation',
+        label: 'Vacation Fund',
+        payUrl: 'https://paypal.me/USERNAME', // replace USERNAME with Raynaldo-R
+        paymentNote: 'Vacation fund — Misa & Ray wedding'
+      },
+      {
+        id: 'home',
+        label: 'Future Dream Home',
+        payUrl: 'https://paypal.me/USERNAME',
+        paymentNote: 'Dream home fund — Misa & Ray wedding'
+      },
+      {
+        id: 'chickens',
+        label: 'The Chickens',
+        payUrl: 'https://paypal.me/USERNAME',
+        paymentNote: 'Chicken fund — Misa & Ray wedding'
+      }
+    ]
+  };
+
+  var fundPollLead = document.getElementById('fund-poll-lead');
+  var fundPollBars = document.getElementById('fund-poll-bars');
+
+  function fundCountKey(id) {
+    return FUND_CONFIG.countKeyPrefix + id;
+  }
+
+  function fetchFundCount(id, hit) {
+    var url = FUND_CONFIG.countApiBase + (hit ? 'hit/' : 'get/') + fundCountKey(id);
+    return fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+      return typeof d.value === 'number' ? d.value : 0;
+    });
+  }
+
+  function fetchAllFundCounts() {
+    return Promise.all(FUND_CONFIG.funds.map(function (fund) {
+      return fetchFundCount(fund.id, false).then(function (count) {
+        return { id: fund.id, label: fund.label, count: count };
+      });
+    }));
+  }
+
+  function renderFundPoll(rows) {
+    if (!fundPollLead || !fundPollBars) return;
+
+    var total = rows.reduce(function (sum, row) { return sum + row.count; }, 0);
+    var max = rows.reduce(function (m, row) { return Math.max(m, row.count); }, 0);
+    var leaders = rows.filter(function (row) { return row.count === max && max > 0; });
+
+    if (total === 0) {
+      fundPollLead.textContent = 'Be the first to pick a fund — click Contribute on any card below.';
+    } else if (leaders.length === 1) {
+      fundPollLead.textContent = leaders[0].label + ' leads · ' + leaders[0].count + ' pick' + (leaders[0].count === 1 ? '' : 's');
+    } else {
+      var tieNames = leaders.map(function (row) { return row.label; }).join(' & ');
+      fundPollLead.textContent = tieNames + ' tied · ' + max + ' picks each';
+    }
+
+    fundPollBars.innerHTML = rows.map(function (row) {
+      var pct = total > 0 ? Math.round((row.count / total) * 100) : 0;
+      var leading = row.count === max && max > 0;
+      return (
+        '<div class="fund-poll-row' + (leading ? ' is-leading' : '') + '">' +
+          '<div class="fund-poll-meta">' +
+            '<span class="fund-poll-name">' + row.label + '</span>' +
+            '<span class="fund-poll-count">' + row.count + ' · ' + pct + '%</span>' +
+          '</div>' +
+          '<div class="fund-poll-track" aria-hidden="true">' +
+            '<div class="fund-poll-fill" style="width:' + pct + '%"></div>' +
+          '</div>' +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function loadFundPoll() {
+    if (!fundPollLead || !fundPollBars) return;
+    fetchAllFundCounts()
+      .then(renderFundPoll)
+      .catch(function () {
+        fundPollLead.textContent = 'Poll results unavailable right now.';
+        fundPollBars.innerHTML = '';
+      });
+  }
+
+  function openFundPayment(fund) {
+    var url = fund.payUrl;
+    if (fund.paymentNote && /venmo\.com/i.test(url)) {
+      var sep = url.indexOf('?') === -1 ? '?' : '&';
+      url += sep + 'note=' + encodeURIComponent(fund.paymentNote);
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  function handleFundContribute(fundId) {
+    var fund = FUND_CONFIG.funds.find(function (f) { return f.id === fundId; });
+    if (!fund) return;
+
+    fetchFundCount(fundId, true)
+      .then(function () { return fetchAllFundCounts(); })
+      .then(renderFundPoll)
+      .catch(function () { loadFundPoll(); });
+
+    openFundPayment(fund);
+  }
+
+  document.querySelectorAll('.fund-contribute').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      handleFundContribute(btn.getAttribute('data-fund'));
+    });
+  });
+
+  loadFundPoll();
 
   /* Hide party size when guest declines */
   var partyField = document.getElementById('party-field');
@@ -3031,7 +3121,7 @@ section:not(.hero) h2::after {
     });
   }
 
-  /* shared site photos — hero marquee + together modal */
+  /* shared site photos — together modal (+ hero marquee when FUTURE: carousel is enabled) */
   var SITE_PHOTOS = [
     { src: 'images/together/together-01-grisdal.jpg', alt: 'Misa and Ray in the mountains at Grisdal' },
     { src: 'images/together/together-02-industrial.jpg', alt: 'Misa and Ray at an industrial site' },
@@ -3046,10 +3136,13 @@ section:not(.hero) h2::after {
     { src: 'images/garden-ray.jpg', alt: 'Ray tending the garden' }
   ];
 
-  var heroCarousel = document.getElementById('hero-carousel');
   var togetherTrigger = document.getElementById('together-trigger');
   var togetherModal = document.getElementById('together-modal');
   var togetherPhotosEl = document.getElementById('together-modal-photos');
+
+  /* FUTURE: carousel — uncomment block below (and hero-carousel HTML + CSS) to re-enable marquee */
+  /*
+  var heroCarousel = document.getElementById('hero-carousel');
   var marqueeMotionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function buildMarqueeThumb(photo, eager) {
@@ -3087,6 +3180,7 @@ section:not(.hero) h2::after {
       });
     }
   }
+  */
 
   if (togetherPhotosEl) {
     SITE_PHOTOS.forEach(function (photo) {
