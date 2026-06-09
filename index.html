@@ -289,24 +289,37 @@ p:last-child { margin-bottom: 0; }
 .hero-carousel {
   position: relative;
   width: 100%;
-  height: clamp(200px, 36vh, 400px);
+  height: clamp(88px, 14vh, 148px);
   flex-shrink: 0;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+}
+.hero-carousel-track {
+  display: flex;
+  gap: clamp(6px, 1vw, 10px);
+  padding: 0 clamp(16px, 3vw, 32px);
+  transition: transform 1s ease;
 }
 .hero-carousel-slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 1.4s ease;
+  flex: 0 0 auto;
+  width: clamp(72px, 11vw, 128px);
+  aspect-ratio: 1;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(26, 36, 33, 0.12);
 }
-.hero-carousel-slide.is-active { opacity: 1; }
+.hero-carousel-slide.is-active {
+  box-shadow: 0 3px 14px rgba(26, 36, 33, 0.22);
+}
 .hero-carousel-slide img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 35%;
+  object-position: center center;
   display: block;
 }
 .hero-inner {
@@ -534,24 +547,24 @@ p:last-child { margin-bottom: 0; }
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  align-items: start;
 }
 .together-modal-photos img {
   width: 100%;
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
+  height: auto;
   border-radius: 2px;
   display: block;
   box-shadow: 0 2px 10px rgba(26, 36, 33, 0.1);
 }
 @media (max-width: 620px) {
   .together-modal-photos { grid-template-columns: repeat(2, 1fr); }
-  .hero-carousel { height: clamp(160px, 28vh, 280px); }
+  .hero-carousel { height: clamp(76px, 12vh, 120px); }
 }
 @media (max-width: 400px) {
   .together-modal-photos { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-carousel-slide { transition: none; }
+  .hero-carousel-track { transition: none; }
 }
 @media (max-width: 600px) {
   .faq-media-split { grid-template-columns: 1fr; }
@@ -3026,33 +3039,50 @@ section:not(.hero) h2::after {
   var carouselIdx = 0;
 
   if (heroCarousel && TOGETHER_PHOTOS.length) {
+    var track = document.createElement('div');
+    track.className = 'hero-carousel-track';
+    heroCarousel.appendChild(track);
+
     TOGETHER_PHOTOS.forEach(function (photo, i) {
       var slide = document.createElement('div');
       slide.className = 'hero-carousel-slide' + (i === 0 ? ' is-active' : '');
       var img = document.createElement('img');
       img.src = photo.src;
       img.alt = '';
-      img.width = 1200;
-      img.height = 800;
+      img.width = 400;
+      img.height = 400;
       img.loading = i === 0 ? 'eager' : 'lazy';
       img.decoding = 'async';
       slide.appendChild(img);
-      heroCarousel.appendChild(slide);
+      track.appendChild(slide);
     });
 
-    var slides = heroCarousel.querySelectorAll('.hero-carousel-slide');
+    var slides = track.querySelectorAll('.hero-carousel-slide');
     var motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function centerSlide(idx) {
+      var slide = slides[idx];
+      if (!slide) return;
+      var offset = slide.offsetLeft + slide.offsetWidth / 2 - heroCarousel.clientWidth / 2;
+      var maxOffset = Math.max(0, track.scrollWidth - heroCarousel.clientWidth);
+      offset = Math.max(0, Math.min(offset, maxOffset));
+      track.style.transform = 'translateX(' + (-offset) + 'px)';
+    }
 
     function showSlide(idx) {
       slides.forEach(function (s, i) {
         s.classList.toggle('is-active', i === idx);
       });
       carouselIdx = idx;
+      centerSlide(idx);
     }
 
     function advanceCarousel() {
       showSlide((carouselIdx + 1) % slides.length);
     }
+
+    showSlide(0);
+    window.addEventListener('resize', function () { centerSlide(carouselIdx); });
 
     if (slides.length > 1 && motionOk) {
       carouselTimer = setInterval(advanceCarousel, 5000);
