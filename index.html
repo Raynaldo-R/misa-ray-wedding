@@ -995,12 +995,12 @@ button[type=submit]:disabled {
   pointer-events: none;
 }
 .chicken-widget--expanded {
-  width: min(92vw, 420px);
-  height: clamp(200px, 38vh, 280px);
+  width: 100%;
+  height: clamp(180px, 32vh, 240px);
   margin: 0 auto;
-  cursor: crosshair;
+  cursor: pointer;
   pointer-events: auto;
-  touch-action: none;
+  touch-action: manipulation;
 }
 .chicken-widget-stage {
   position: relative;
@@ -1019,17 +1019,74 @@ button[type=submit]:disabled {
   background: rgba(74, 107, 95, 0.35);
   z-index: 1;
 }
-.chicken-widget-birds {
+.chicken-widget-birds,
+.chicken-flock-layer {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 2px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: flex-end;
-  gap: 8px;
+  gap: 4px 6px;
   z-index: 3;
   pointer-events: none;
+  padding: 0 4px 2px;
+}
+.chicken-bird-slot {
+  flex: 0 0 auto;
+  transform: translateY(0);
+  animation: chicken-idle 2.5s ease-in-out infinite alternate;
+  animation-delay: calc(var(--bird-i, 0) * 0.12s);
+}
+@keyframes chicken-idle {
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
+}
+.chicken-bird--rooster { transform: scale(1.08); }
+.chicken-bird--gold { filter: sepia(1) saturate(2.8) hue-rotate(5deg) brightness(1.1); }
+.chicken-bird--ember { filter: sepia(1) saturate(3) hue-rotate(-15deg) brightness(1.05); }
+.chicken-bird--fire {
+  filter: sepia(1) saturate(4) hue-rotate(-35deg) brightness(1.15);
+  box-shadow: 0 0 10px rgba(255, 100, 20, 0.55);
+}
+.chicken-bird--ice { filter: hue-rotate(190deg) saturate(1.6) brightness(1.1); }
+.chicken-bird--shadow { filter: brightness(0.45) contrast(1.3) saturate(0.5); }
+.chicken-flock-layer:has(.chicken-bird-slot:nth-child(7)) .chicken-bird {
+  max-width: 34px;
+  max-height: 42px;
+}
+.chicken-flock-layer:has(.chicken-bird-slot:nth-child(12)) .chicken-bird {
+  max-width: 28px;
+  max-height: 36px;
+}
+.chicken-click-burst {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+.chicken-click-pop {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--forest);
+  white-space: nowrap;
+  animation: chicken-pop .7s ease-out forwards;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.chicken-click-pop img { image-rendering: pixelated; }
+@keyframes chicken-pop {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -120%) scale(1.15); }
 }
 .chicken-widget--expanded .chicken-bird {
   max-width: 72px;
@@ -1145,6 +1202,126 @@ button[type=submit]:disabled {
   border: 1px solid var(--line);
   box-shadow: 0 18px 48px rgba(26, 36, 33, .18);
 }
+.chicken-modal-panel--game {
+  width: min(96vw, 680px);
+  max-height: min(92vh, 820px);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 18px 18px;
+  overflow: hidden;
+}
+.chicken-game-hud {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px 12px;
+  margin-bottom: 12px;
+  font-family: var(--sans);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.chicken-game-hud span {
+  display: block;
+  font-size: .95rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: none;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.chicken-game-hud-hatch { grid-column: 1 / -1; }
+.chicken-game-main { flex-shrink: 0; }
+.chicken-click-label {
+  text-align: center;
+  font-family: var(--sans);
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+  margin-top: 8px;
+}
+.chicken-game-upgrades {
+  flex: 1;
+  min-height: 0;
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  overflow-y: auto;
+}
+.chicken-game-upgrades-title {
+  font-family: var(--sans);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.chicken-upgrade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--ivory);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  opacity: .72;
+  transition: border-color .15s, opacity .15s, background .15s;
+}
+.chicken-upgrade-row.can-afford {
+  opacity: 1;
+  border-color: var(--sage-light);
+}
+.chicken-upgrade-row.can-afford:hover {
+  background: rgba(232, 229, 222, .5);
+}
+.chicken-upgrade-row:disabled { cursor: not-allowed; }
+.chicken-upgrade-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.chicken-upgrade-row-main strong {
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.chicken-upgrade-row-main span {
+  font-size: .68rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.chicken-upgrade-row-cost {
+  flex-shrink: 0;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--forest);
+}
+.chicken-upgrade-maxed {
+  font-size: .72rem;
+  color: var(--ink-soft);
+  text-align: center;
+  padding: 8px;
+}
+.chicken-feed-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
 .chicken-modal-close {
   position: absolute;
   top: 10px;
@@ -1170,6 +1347,8 @@ button[type=submit]:disabled {
 }
 @media (prefers-reduced-motion: reduce) {
   .chicken-widget.is-feasting .chicken-widget-birds { animation: none; }
+  .chicken-bird-slot { animation: none; }
+  .chicken-click-pop { animation: none; opacity: 0; }
   .chicken-expand-hint { opacity: 1; transform: none; }
 }
 /* home fund — backrooms maze */
@@ -2115,10 +2294,10 @@ section:not(.hero) h2::after {
             <div class="chicken-widget chicken-widget--preview" aria-hidden="true">
               <div class="chicken-widget-stage">
                 <div class="chicken-widget-ground"></div>
-                <div class="chicken-widget-birds">
-                  <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50">
-                  <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50">
-                  <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50">
+                <div class="chicken-widget-birds" id="chicken-preview-flock">
+                  <img class="chicken-bird" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50">
+                  <img class="chicken-bird" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50" style="display:none">
+                  <img class="chicken-bird" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50" style="display:none">
                 </div>
               </div>
             </div>
@@ -2126,7 +2305,7 @@ section:not(.hero) h2::after {
           </button>
           <h3>The Chickens</h3>
           <hr class="fund-rule">
-          <p>They need more grubs and snacks!</p>
+          <p>Click to feed the flock — it gets out of hand.</p>
           <button type="button" class="btn btn-outline fund-contribute" data-fund="chickens">Contribute</button>
         </div>
       </div>
@@ -2189,25 +2368,34 @@ section:not(.hero) h2::after {
 
 <div class="chicken-modal" id="chicken-modal" role="dialog" aria-labelledby="chicken-modal-title" aria-modal="true" hidden>
   <div class="chicken-modal-backdrop" data-chicken-close></div>
-  <div class="chicken-modal-panel">
+  <div class="chicken-modal-panel chicken-modal-panel--game">
     <button type="button" class="chicken-modal-close" data-chicken-close aria-label="Close">&times;</button>
-    <div class="chicken-modal-title" id="chicken-modal-title">Feed the chickens</div>
-    <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
-      <button type="button" class="chicken-feed-btn is-active" data-feed-mode="worms">Worms</button>
-      <button type="button" class="chicken-feed-btn" data-feed-mode="feed">Chicken feed</button>
+    <div class="chicken-modal-title" id="chicken-modal-title">Chicken Fund Clicker</div>
+    <div class="chicken-game-hud" aria-live="polite">
+      <div>Grains<span id="chicken-hud-grains">0</span></div>
+      <div>Eggs<span id="chicken-hud-eggs">0</span></div>
+      <div>Flock<span id="chicken-hud-flock">1</span></div>
+      <div>Per click<span id="chicken-hud-click">1 grain / click</span></div>
+      <div class="chicken-game-hud-hatch">Hatch rate<span id="chicken-hud-hatch">0% hatch rate</span></div>
     </div>
-    <div class="chicken-widget chicken-widget--expanded" id="chicken-widget" aria-label="Spray food to feed the chickens">
-      <div class="chicken-widget-stage">
-        <div class="chicken-widget-worms" id="chicken-worms"></div>
-        <div class="chicken-widget-ground"></div>
-        <div class="chicken-widget-birds">
-          <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50">
-          <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50">
-          <img class="chicken-bird" data-gif-src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50">
+    <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
+      <button type="button" class="chicken-feed-btn is-active" id="chicken-mode-grain">Grain</button>
+      <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlock at 50 grains per click">Worms</button>
+    </div>
+    <div class="chicken-game-main">
+      <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
+        <div class="chicken-widget-stage">
+          <div class="chicken-click-burst" id="chicken-click-burst"></div>
+          <div class="chicken-widget-ground"></div>
+          <div class="chicken-flock-layer" id="chicken-flock-layer"></div>
         </div>
       </div>
+      <p class="chicken-click-label" id="chicken-click-label">Scatter feed! (+1 per click)</p>
     </div>
-    <p class="chicken-widget-status" id="chicken-widget-status" aria-live="polite">Spray up to 100 worms</p>
+    <div class="chicken-game-upgrades">
+      <div class="chicken-game-upgrades-title">Upgrades</div>
+      <div id="chicken-upgrade-list"></div>
+    </div>
   </div>
 </div>
 
@@ -2244,6 +2432,7 @@ section:not(.hero) h2::after {
 </div>
 
 <script src="js/maze-raycaster.js"></script>
+<script src="js/chicken-clicker.js"></script>
 <script>
 (function () {
   var wirePhrase = 'Misa & Ray \u00b7 ';
@@ -2707,359 +2896,14 @@ section:not(.hero) h2::after {
   var camDelay = CAM_DELAY_MIN + Math.random() * (CAM_DELAY_MAX - CAM_DELAY_MIN);
   setTimeout(armChickenCam, camDelay);
 
-  /* chicken fund widget — expand modal, dense spray, 100 cap / 50 eaten reload */
-  var WORM_IMG = 'https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fpngimg.com%2Fuploads%2Fworms%2Fworms_PNG32.png&f=1&nofb=1&ipt=7e59e3a5aa1e5178b2888d11179c23049673dc058a54bfb211a6ce13361a25f8';
-  var FEED_COLORS = ['#1a1410', '#2b2018', '#3d2e22', '#4a3828', '#0d0b09'];
-  var chickenHitbox = document.getElementById('chicken-fund-hitbox');
-  var chickenModal = document.getElementById('chicken-modal');
-  var chickenWidget = document.getElementById('chicken-widget');
-  var wormsLayer = document.getElementById('chicken-worms');
-  var chickenStatus = document.getElementById('chicken-widget-status');
-  var feedModeBtns = document.querySelectorAll('[data-feed-mode]');
-  var previewWidget = document.querySelector('.chicken-widget--preview');
-
-  function freezeBird(img, forceStill) {
-    var gifSrc = img.getAttribute('data-gif-src');
-    if (!gifSrc) return;
-    if (img.dataset.stillSrc) {
-      if (forceStill || !img.dataset.awake) img.src = img.dataset.stillSrc;
-      return;
-    }
-    fetch(gifSrc).then(function (r) { return r.blob(); }).then(function (blob) {
-      var url = URL.createObjectURL(blob);
-      var tmp = new Image();
-      tmp.onload = function () {
-        var c = document.createElement('canvas');
-        c.width = tmp.naturalWidth || tmp.width;
-        c.height = tmp.naturalHeight || tmp.height;
-        c.getContext('2d').drawImage(tmp, 0, 0);
-        img.dataset.stillSrc = c.toDataURL('image/png');
-        if (forceStill || !img.dataset.awake) img.src = img.dataset.stillSrc;
-        URL.revokeObjectURL(url);
-      };
-      tmp.onerror = function () { URL.revokeObjectURL(url); };
-      tmp.src = url;
-    }).catch(function () {});
-  }
-
-  if (previewWidget) {
-    previewWidget.querySelectorAll('.chicken-bird').forEach(function (img) {
-      freezeBird(img, true);
+  /* chicken fund — cookie-clicker flock sim */
+  if (window.ChickenClicker) {
+    var chickenGame = new ChickenClicker({
+      modal: document.getElementById('chicken-modal'),
+      hitbox: document.getElementById('chicken-fund-hitbox'),
+      previewFlock: document.getElementById('chicken-preview-flock')
     });
-  }
-
-  if (chickenHitbox && chickenModal && chickenWidget && wormsLayer) {
-    var birds = chickenWidget.querySelectorAll('.chicken-bird');
-    var stage = chickenWidget.querySelector('.chicken-widget-stage');
-    var worms = [];
-    var spraying = false;
-    var awake = false;
-    var gameActive = false;
-    var lastSprayPoint = null;
-    var motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var sleepTimer = null;
-    var eatQueue = [];
-    var eatInterval = null;
-    var EAT_MS = 90;
-    var MAX_SPAWN = 100;
-    var EATEN_RESET = 50;
-    var spawnedCount = 0;
-    var eatenCount = 0;
-    var sprayLocked = false;
-    var feedMode = 'worms';
-
-    function updateStatus() {
-      if (!chickenStatus) return;
-      var label = feedMode === 'feed' ? 'feed' : 'worms';
-      if (sprayLocked) {
-        chickenStatus.textContent = 'Chickens eating… ' + eatenCount + ' / ' + EATEN_RESET + ' (' + label + ')';
-      } else {
-        chickenStatus.textContent = 'Spray ' + label + ': ' + spawnedCount + ' / ' + MAX_SPAWN;
-      }
-    }
-
-    function setFeedMode(mode) {
-      feedMode = mode === 'feed' ? 'feed' : 'worms';
-      feedModeBtns.forEach(function (btn) {
-        btn.classList.toggle('is-active', btn.getAttribute('data-feed-mode') === feedMode);
-      });
-      updateStatus();
-    }
-
-    function canSprayMore() {
-      return !sprayLocked && spawnedCount < MAX_SPAWN;
-    }
-
-    function maybeUnlockSpray() {
-      if (spawnedCount >= MAX_SPAWN && eatenCount >= EATEN_RESET) {
-        spawnedCount = 0;
-        eatenCount = 0;
-        sprayLocked = false;
-        chickenWidget.classList.remove('is-spray-locked');
-        worms.forEach(function (w) {
-          if (w.el.parentNode) w.el.remove();
-        });
-        worms.length = 0;
-        eatQueue.length = 0;
-        updateStatus();
-      }
-    }
-
-    function wakeBirds() {
-      birds.forEach(function (img) {
-        img.dataset.awake = '1';
-        var gifSrc = img.getAttribute('data-gif-src');
-        if (gifSrc) img.src = gifSrc;
-      });
-    }
-
-    function sleepBirds() {
-      awake = false;
-      chickenWidget.classList.remove('is-feasting');
-      birds.forEach(function (img) {
-        delete img.dataset.awake;
-        freezeBird(img, true);
-      });
-    }
-
-    function maybeSleep() {
-      clearTimeout(sleepTimer);
-      if (!gameActive || spraying || worms.length || eatQueue.length) return;
-      sleepTimer = setTimeout(sleepBirds, 600);
-    }
-
-    function wakeUp() {
-      clearTimeout(sleepTimer);
-      if (awake) return;
-      awake = true;
-      chickenWidget.classList.add('is-feasting');
-      wakeBirds();
-    }
-
-    function enqueueEat(worm) {
-      eatQueue.push(worm);
-      if (eatInterval) return;
-      eatInterval = setInterval(function () {
-        if (!eatQueue.length) {
-          clearInterval(eatInterval);
-          eatInterval = null;
-          maybeSleep();
-          return;
-        }
-        var next = eatQueue.shift();
-        if (next.el.parentNode) next.el.remove();
-        var idx = worms.indexOf(next);
-        if (idx > -1) worms.splice(idx, 1);
-        eatenCount += 1;
-        updateStatus();
-        maybeUnlockSpray();
-        if (!eatQueue.length) {
-          clearInterval(eatInterval);
-          eatInterval = null;
-          maybeSleep();
-        }
-      }, EAT_MS);
-    }
-
-    function stagePoint(clientX, clientY) {
-      var rect = stage.getBoundingClientRect();
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    }
-
-    function spawnParticleAt(stageX, stageY) {
-      if (!canSprayMore()) return false;
-      var isFeed = feedMode === 'feed';
-      var size = isFeed
-        ? 3 + Math.random() * 3
-        : (chickenWidget.classList.contains('chicken-widget--expanded')
-          ? 10 + Math.random() * 8
-          : 11 + Math.random() * 9);
-      var x = stageX - size * 0.52;
-      var y = stageY - size * 0.48;
-      var el;
-      if (isFeed) {
-        el = document.createElement('span');
-        el.className = 'chicken-widget-feed';
-        el.style.width = size + 'px';
-        el.style.height = size + 'px';
-        el.style.background = FEED_COLORS[Math.floor(Math.random() * FEED_COLORS.length)];
-      } else {
-        el = document.createElement('img');
-        el.className = 'chicken-widget-worm';
-        el.src = WORM_IMG;
-        el.alt = '';
-        el.style.width = size + 'px';
-      }
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-      wormsLayer.appendChild(el);
-      var worm = {
-        el: el,
-        x: x,
-        y: y,
-        vx: (Math.random() - 0.5) * (isFeed ? 4.5 : 3),
-        vy: -0.5 - Math.random() * (isFeed ? 2.5 : 2),
-        size: size,
-        landed: false
-      };
-      worms.push(worm);
-      spawnedCount += 1;
-      if (spawnedCount >= MAX_SPAWN) {
-        sprayLocked = true;
-        chickenWidget.classList.add('is-spray-locked');
-      }
-      updateStatus();
-      return true;
-    }
-
-    function sprayLine(x0, y0, x1, y1) {
-      if (!canSprayMore()) return;
-      var dist = Math.hypot(x1 - x0, y1 - y0);
-      var step = 3;
-      var steps = Math.max(1, Math.ceil(dist / step));
-      var spawned = 0;
-      var i;
-      for (i = 0; i <= steps; i++) {
-        if (!canSprayMore()) break;
-        var t = i / steps;
-        var px = x0 + (x1 - x0) * t + (Math.random() - 0.5) * 3;
-        var py = y0 + (y1 - y0) * t + (Math.random() - 0.5) * 3;
-        if (spawnParticleAt(px, py)) spawned += 1;
-      }
-      return spawned;
-    }
-
-    function handleSprayMove(clientX, clientY) {
-      if (!spraying || !gameActive || !canSprayMore()) return;
-      var pt = stagePoint(clientX, clientY);
-      if (!lastSprayPoint) {
-        spawnParticleAt(pt.x, pt.y);
-        lastSprayPoint = pt;
-        return;
-      }
-      sprayLine(lastSprayPoint.x, lastSprayPoint.y, pt.x, pt.y);
-      lastSprayPoint = pt;
-    }
-
-    function tick() {
-      if (gameActive && stage) {
-        var groundY = stage.clientHeight - 6;
-        worms.forEach(function (w) {
-          if (w.landed) return;
-          w.vy += 0.38;
-          w.vx *= 0.985;
-          w.x += w.vx;
-          w.y += w.vy;
-          var floor = groundY - w.size;
-          if (w.y >= floor) {
-            w.y = floor + (Math.random() - 0.5) * 2;
-            w.landed = true;
-            w.el.classList.add('is-landed');
-            w.el.style.left = w.x + 'px';
-            w.el.style.top = w.y + 'px';
-            w.el.style.transform = 'rotate(' + ((Math.random() - 0.5) * 40).toFixed(1) + 'deg)';
-            wakeUp();
-            enqueueEat(w);
-          } else {
-            w.el.style.left = w.x + 'px';
-            w.el.style.top = w.y + 'px';
-            w.el.style.transform = 'rotate(' + (w.vx * 4).toFixed(1) + 'deg)';
-          }
-        });
-      }
-      requestAnimationFrame(tick);
-    }
-
-    function resetRound() {
-      spawnedCount = 0;
-      eatenCount = 0;
-      sprayLocked = false;
-      spraying = false;
-      lastSprayPoint = null;
-      chickenWidget.classList.remove('is-spray-locked');
-      worms.forEach(function (w) {
-        if (w.el.parentNode) w.el.remove();
-      });
-      worms.length = 0;
-      eatQueue.length = 0;
-      updateStatus();
-    }
-
-    function openChickenModal() {
-      chickenModal.hidden = false;
-      document.body.style.overflow = 'hidden';
-      gameActive = true;
-      resetRound();
-      birds.forEach(function (img) { freezeBird(img, true); });
-      sleepBirds();
-      var closeBtn = chickenModal.querySelector('.chicken-modal-close');
-      if (closeBtn) closeBtn.focus();
-    }
-
-    function closeChickenModal() {
-      chickenModal.hidden = true;
-      document.body.style.overflow = '';
-      gameActive = false;
-      spraying = false;
-      lastSprayPoint = null;
-      sleepBirds();
-      resetRound();
-      if (chickenHitbox) chickenHitbox.focus();
-    }
-
-    feedModeBtns.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        setFeedMode(btn.getAttribute('data-feed-mode'));
-      });
-    });
-
-    chickenHitbox.addEventListener('click', openChickenModal);
-
-    chickenModal.querySelectorAll('[data-chicken-close]').forEach(function (el) {
-      el.addEventListener('click', closeChickenModal);
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !chickenModal.hidden) closeChickenModal();
-    });
-
-    chickenWidget.addEventListener('mouseenter', function (e) {
-      if (!gameActive || !canSprayMore()) return;
-      spraying = true;
-      lastSprayPoint = stagePoint(e.clientX, e.clientY);
-      spawnParticleAt(lastSprayPoint.x, lastSprayPoint.y);
-    });
-    chickenWidget.addEventListener('mouseleave', function () {
-      spraying = false;
-      lastSprayPoint = null;
-      maybeSleep();
-    });
-    chickenWidget.addEventListener('mousemove', function (e) {
-      handleSprayMove(e.clientX, e.clientY);
-    });
-    chickenWidget.addEventListener('touchstart', function (e) {
-      if (!gameActive || !canSprayMore()) return;
-      spraying = true;
-      if (e.touches[0]) {
-        lastSprayPoint = stagePoint(e.touches[0].clientX, e.touches[0].clientY);
-        spawnParticleAt(lastSprayPoint.x, lastSprayPoint.y);
-      }
-    }, { passive: true });
-    chickenWidget.addEventListener('touchmove', function (e) {
-      if (e.touches[0]) handleSprayMove(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-    chickenWidget.addEventListener('touchend', function () {
-      spraying = false;
-      lastSprayPoint = null;
-      maybeSleep();
-    });
-
-    birds.forEach(function (img) { freezeBird(img, true); });
-    updateStatus();
-    requestAnimationFrame(tick);
+    chickenGame.init();
   }
 
   /* home fund — backrooms maze (door intro → raycaster) */
