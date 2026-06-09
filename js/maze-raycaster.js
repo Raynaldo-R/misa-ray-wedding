@@ -3,52 +3,68 @@
   'use strict';
 
   var MAP = [
-    '1111111111111111111',
-    '1000000010000000001',
-    '1011111010111111101',
-    '1010001010101000101',
-    '1010111110101011101',
-    '1000100000101000001',
-    '1110101111101011111',
-    '1000101000001010001',
-    '1011101011111010111',
-    '1000001010000010001',
-    '1011111010111010111',
-    '1000000000100010001',
-    '1111111110111010111',
-    '1000000000100010001',
-    '1011111111101010111',
-    '1000000000000000002',
-    '1111111111111111111'
+    '1111111111111111111111111',
+    '1000000010000000000000001',
+    '1011111010111111101111101',
+    '1010001010101000101000101',
+    '1010111110101011101011101',
+    '1000100000101000001000001',
+    '1110101111101011111010111',
+    '1000101011111111111010101',
+    '1011101000000000000010111',
+    '1000001000000000000010001',
+    '1011111000000000000011111',
+    '1000001000000000000010001',
+    '1011101000000000000010111',
+    '1000101011111111111010101',
+    '1110101111101011111010111',
+    '1000100000101000001000001',
+    '1010111110101011101011101',
+    '1010001010101000101000101',
+    '1011111010111111101111101',
+    '1000000000000000000000001',
+    '1011111111111111101111101',
+    '1000000000000000000000002',
+    '1111111111111111111111111'
   ];
 
   var FOV = Math.PI / 3;
   var MOVE_SPEED = 0.055;
   var ROT_SPEED = 0.045;
-  var MAX_DIST = 22;
+  var MAX_DIST = 28;
   var WALL_TEX = null;
+  var TOMATO_IMG = null;
   var active = null;
+
+  var HUB = { minX: 8.2, maxX: 17.8, minY: 9.2, maxY: 12.8 };
+  var TOMATO_SPAWN = { x: 17.4, y: 11.0 };
+  var TOMATO_FLEE_ANGLE = Math.atan2(20.5 - TOMATO_SPAWN.y, 23.5 - TOMATO_SPAWN.x);
 
   var CEIL_BASE = { r: 232, g: 218, b: 168 };
   var FLOOR_BASE = { r: 220, g: 202, b: 142 };
   var GRID_BROWN = { r: 148, g: 128, b: 92 };
   var FOG_COLOR = { r: 196, g: 186, b: 148 };
 
-  function loadTexture(src) {
+  function loadImage(src) {
     return new Promise(function (resolve) {
       var img = new Image();
-      img.onload = function () {
-        var c = document.createElement('canvas');
-        c.width = img.height;
-        c.height = img.width;
-        var g = c.getContext('2d');
-        g.translate(c.width, 0);
-        g.rotate(Math.PI / 2);
-        g.drawImage(img, 0, 0);
-        resolve(c);
-      };
+      img.onload = function () { resolve(img); };
       img.onerror = function () { resolve(null); };
       img.src = src;
+    });
+  }
+
+  function loadTexture(src) {
+    return loadImage(src).then(function (img) {
+      if (!img) return null;
+      var c = document.createElement('canvas');
+      c.width = img.height;
+      c.height = img.width;
+      var g = c.getContext('2d');
+      g.translate(c.width, 0);
+      g.rotate(Math.PI / 2);
+      g.drawImage(img, 0, 0);
+      return c;
     });
   }
 
@@ -57,6 +73,10 @@
     var my = Math.floor(y);
     if (my < 0 || my >= map.length || mx < 0 || mx >= map[0].length) return 1;
     return map[my].charCodeAt(mx) - 48;
+  }
+
+  function inHub(px, py) {
+    return px >= HUB.minX && px <= HUB.maxX && py >= HUB.minY && py <= HUB.maxY;
   }
 
   function castRay(map, px, py, angle, maxDist) {
@@ -169,6 +189,91 @@
     ctx.globalAlpha = 1;
   }
 
+  function drawBillboard(ctx, state, sx, sy, img, alpha) {
+    if (!img || alpha <= 0.01) return;
+    var w = ctx.canvas.width;
+    var h = ctx.canvas.height;
+    var halfH = h / 2;
+    var dx = sx - state.px;
+    var dy = sy - state.py;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 0.3 || dist > MAX_DIST) return;
+    var angle = Math.atan2(dy, dx) - state.pa;
+    while (angle > Math.PI) angle -= Math.PI * 2;
+    while (angle < -Math.PI) angle += Math.PI * 2;
+    if (Math.abs(angle) > FOV * 0.58) return;
+    var screenX = (0.5 + angle / FOV) * w;
+    var spriteH = Math.min(h * 0.7, (h / dist) * 0.42);
+    var spriteW = spriteH * (img.width / img.height);
+    var fog = atmosphere(dist);
+    var a = alpha * fog.bright * (1 - fog.t * 0.65);
+    ctx.globalAlpha = Math.max(0, Math.min(1, a));
+    ctx.drawImage(
+      img,
+      screenX - spriteW / 2,
+      halfH - spriteH / 2 + spriteH * 0.12,
+      spriteW,
+      spriteH
+    );
+    ctx.globalAlpha = 1;
+  }
+
+  function updateTomato(state) {
+    if (state.tomatoPhase === 'done') return;
+
+    if (state.tomatoPhase === 'wait' && inHub(state.px, state.py)) {
+      state.tomatoPhase = 'show';
+      state.tomatoX = TOMATO_SPAWN.x;
+      state.tomatoY = TOMATO_SPAWN.y;
+      state.tomatoAlpha = 0;
+      state.tomatoTimer = 0;
+    }
+
+    if (state.tomatoPhase === 'show') {
+      state.tomatoTimer += 1;
+      state.tomatoAlpha = Math.min(1, state.tomatoTimer / 24);
+      if (state.tomatoAlpha >= 1) {
+        state.tomatoPhase = 'flee';
+        state.tomatoTimer = 0;
+      }
+    }
+
+    if (state.tomatoPhase === 'flee') {
+      state.tomatoTimer += 1;
+      var speed = 0.038;
+      state.tomatoX += Math.cos(TOMATO_FLEE_ANGLE) * speed;
+      state.tomatoY += Math.sin(TOMATO_FLEE_ANGLE) * speed;
+      var fadeStart = 20;
+      if (state.tomatoTimer > fadeStart) {
+        state.tomatoAlpha = Math.max(0, 1 - (state.tomatoTimer - fadeStart) / 70);
+      }
+      if (state.tomatoAlpha <= 0 || state.tomatoTimer > 110) {
+        state.tomatoPhase = 'done';
+        state.tomatoAlpha = 0;
+      }
+    }
+  }
+
+  function drawHud(state, w, h) {
+    if (state.escapePhase !== 'play') return;
+    var ctx = state.ctx;
+
+    ctx.fillStyle = 'rgba(26,36,33,0.55)';
+    ctx.fillRect(8, 8, 220, state.tomatoPhase !== 'wait' && state.tomatoPhase !== 'done' ? 58 : 44);
+    ctx.fillStyle = '#faf9f6';
+    ctx.font = '500 11px DM Sans, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Arrow keys — move & turn', 16, 26);
+    if (state.tomatoPhase === 'show' || state.tomatoPhase === 'flee') {
+      ctx.fillText('Something ran down the east hall…', 16, 40);
+      ctx.fillText('Find the green exit wall', 16, 54);
+    } else if (state.tomatoPhase === 'done') {
+      ctx.fillText('Follow the hall toward the exit', 16, 40);
+    } else {
+      ctx.fillText('Find the green exit wall', 16, 40);
+    }
+  }
+
   function render(state) {
     var ctx = state.ctx;
     var w = ctx.canvas.width;
@@ -223,53 +328,76 @@
       drawWallColumn(ctx, j * colW, colW, top, wallH, hit.texU, fogWall, hit.cell === 2, sideShade);
     }
 
-    if (state.won) {
-      ctx.fillStyle = 'rgba(250,249,246,0.88)';
-      ctx.fillRect(0, h * 0.38, w, h * 0.24);
+    if (TOMATO_IMG && state.tomatoPhase !== 'wait' && state.tomatoPhase !== 'done') {
+      drawBillboard(ctx, state, state.tomatoX, state.tomatoY, TOMATO_IMG, state.tomatoAlpha);
+    }
+
+    drawHud(state, w, h);
+
+    if (state.escapePhase === 'fade' || state.escapePhase === 'done') {
+      ctx.fillStyle = 'rgba(255,255,255,' + state.fadeWhite + ')';
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    if (state.escapePhase === 'done') {
+      ctx.fillStyle = 'rgba(250,249,246,0.92)';
+      ctx.fillRect(0, h * 0.36, w, h * 0.28);
       ctx.fillStyle = '#1e3d34';
-      ctx.font = '600 18px DM Sans, sans-serif';
+      ctx.font = '600 20px DM Sans, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('You found the exit.', w / 2, h * 0.48);
+      ctx.fillText('You escaped the backrooms.', w / 2, h * 0.47);
       ctx.font = '500 13px DM Sans, sans-serif';
       ctx.fillStyle = '#5a6b65';
-      ctx.fillText('Press Esc to leave the backrooms.', w / 2, h * 0.54);
-    } else {
-      ctx.fillStyle = 'rgba(26,36,33,0.55)';
-      ctx.fillRect(8, 8, 210, 44);
-      ctx.fillStyle = '#faf9f6';
-      ctx.font = '500 11px DM Sans, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('Arrow keys — move & turn', 16, 26);
-      ctx.fillText('Find the green exit wall', 16, 40);
+      ctx.fillText('Press Esc to leave.', w / 2, h * 0.54);
     }
   }
 
   function tick(state) {
     if (!state.running) return;
-    var keys = state.keys;
-    var nx = state.px;
-    var ny = state.py;
-    var pa = state.pa;
 
-    if (keys.ArrowLeft) pa -= ROT_SPEED;
-    if (keys.ArrowRight) pa += ROT_SPEED;
-
-    var forward = 0;
-    if (keys.ArrowUp) forward = 1;
-    if (keys.ArrowDown) forward = -1;
-
-    if (forward) {
-      var tx = nx + Math.cos(pa) * MOVE_SPEED * forward;
-      var ty = ny + Math.sin(pa) * MOVE_SPEED * forward;
-      if (cell(state.map, tx, ny) === 0 || cell(state.map, tx, ny) === 2) nx = tx;
-      if (cell(state.map, nx, ty) === 0 || cell(state.map, nx, ty) === 2) ny = ty;
+    if (state.escapePhase === 'fade') {
+      state.fadeWhite = Math.min(1, (performance.now() - state.fadeStart) / 1500);
+      if (state.fadeWhite >= 1) {
+        state.escapePhase = 'done';
+      }
+      render(state);
+      state.raf = requestAnimationFrame(function () { tick(state); });
+      return;
     }
 
-    state.px = nx;
-    state.py = ny;
-    state.pa = pa;
+    if (state.escapePhase !== 'done') {
+      var keys = state.keys;
+      var nx = state.px;
+      var ny = state.py;
+      var pa = state.pa;
 
-    if (cell(state.map, nx, ny) === 2) state.won = true;
+      if (keys.ArrowLeft) pa -= ROT_SPEED;
+      if (keys.ArrowRight) pa += ROT_SPEED;
+
+      var forward = 0;
+      if (keys.ArrowUp) forward = 1;
+      if (keys.ArrowDown) forward = -1;
+
+      if (forward) {
+        var tx = nx + Math.cos(pa) * MOVE_SPEED * forward;
+        var ty = ny + Math.sin(pa) * MOVE_SPEED * forward;
+        if (cell(state.map, tx, ny) === 0 || cell(state.map, tx, ny) === 2) nx = tx;
+        if (cell(state.map, nx, ty) === 0 || cell(state.map, nx, ty) === 2) ny = ty;
+      }
+
+      state.px = nx;
+      state.py = ny;
+      state.pa = pa;
+
+      updateTomato(state);
+
+      if (cell(state.map, nx, ny) === 2 && state.escapePhase === 'play') {
+        state.escapePhase = 'fade';
+        state.fadeStart = performance.now();
+        state.fadeWhite = 0;
+        state.keys = {};
+      }
+    }
 
     render(state);
     state.raf = requestAnimationFrame(function () { tick(state); });
@@ -301,7 +429,14 @@
       pa: 0,
       keys: {},
       running: true,
-      won: false,
+      escapePhase: 'play',
+      fadeWhite: 0,
+      fadeStart: 0,
+      tomatoPhase: 'wait',
+      tomatoX: TOMATO_SPAWN.x,
+      tomatoY: TOMATO_SPAWN.y,
+      tomatoAlpha: 0,
+      tomatoTimer: 0,
       frame: null,
       resize: resize,
       onKeyDown: null,
@@ -332,6 +467,9 @@
 
   loadTexture('images/maze/wall.png').then(function (img) {
     WALL_TEX = img;
+  });
+  loadImage('images/maze/tomato.png').then(function (img) {
+    TOMATO_IMG = img;
   });
 
   global.BackroomsMaze = { start: start, stop: stop };

@@ -286,6 +286,29 @@ p:last-child { margin-bottom: 0; }
   padding: 0;
   gap: 0;
 }
+.hero-carousel {
+  position: relative;
+  width: 100%;
+  height: clamp(200px, 36vh, 400px);
+  flex-shrink: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 50%, transparent 100%);
+}
+.hero-carousel-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+.hero-carousel-slide.is-active { opacity: 1; }
+.hero-carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
+}
 .hero-inner {
   width: min(1100px, 100%);
   margin: 0 auto;
@@ -428,6 +451,107 @@ p:last-child { margin-bottom: 0; }
   font-size: 1.15rem;
   text-transform: uppercase;
   letter-spacing: .1em;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: rgba(90, 107, 101, .35);
+  text-underline-offset: 4px;
+}
+.together:hover { color: var(--accent-dark); }
+.together:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* together since 2021 — photo gallery modal */
+.together-modal[hidden] { display: none; }
+.together-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 205;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.together-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 36, 33, 0.55);
+  backdrop-filter: blur(3px);
+}
+.together-modal-panel {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: min(90vh, 820px);
+  overflow-y: auto;
+  background: var(--ivory);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: clamp(28px, 5vw, 40px) clamp(20px, 4vw, 32px) clamp(32px, 5vw, 40px);
+  box-shadow: 0 12px 40px rgba(26, 36, 33, 0.2);
+}
+.together-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-radius: 3px;
+}
+.together-modal-close:hover { color: var(--ink); background: var(--stone); }
+.together-modal-eyebrow {
+  display: block;
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-bottom: 8px;
+}
+.together-modal-panel h2 {
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  text-align: center;
+  margin-bottom: 8px;
+}
+.together-modal-panel .section-note {
+  margin-bottom: clamp(20px, 3vh, 28px);
+  font-size: clamp(.95rem, 2vw, 1.1rem);
+}
+.together-modal-photos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.together-modal-photos img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+  box-shadow: 0 2px 10px rgba(26, 36, 33, 0.1);
+}
+@media (max-width: 620px) {
+  .together-modal-photos { grid-template-columns: repeat(2, 1fr); }
+  .hero-carousel { height: clamp(160px, 28vh, 280px); }
+}
+@media (max-width: 400px) {
+  .together-modal-photos { grid-template-columns: 1fr; max-width: 320px; margin: 0 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-carousel-slide { transition: none; }
 }
 @media (max-width: 600px) {
   .faq-media-split { grid-template-columns: 1fr; }
@@ -1175,7 +1299,16 @@ footer {
   border-top: 1px solid var(--line);
 }
 footer .f-names { font-family: var(--display); font-size: 1.75rem; font-weight: 400; color: var(--ink); margin-bottom: 6px; }
-footer .f-meta { font-size: 1.05rem; margin-bottom: 20px; }
+footer .f-meta { font-size: 1.05rem; margin-bottom: 12px; }
+footer .wedding-countdown {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+footer .wedding-countdown em { font-style: normal; color: var(--accent-dark); }
 footer a { font-size: 1rem; font-weight: 600; }
 
 /* secret garden radish */
@@ -1591,7 +1724,7 @@ section:not(.hero) h2::after {
       <a href="#travel">Getting Here</a>
       <a href="#stay">Stay &amp; Play</a>
       <a href="#rsvp">RSVP</a>
-      <a href="#funds">Gifts</a>
+      <a href="#funds">Registry</a>
       <a href="share-photos.html" class="nav-photos">Share Photos</a>
     </nav>
   </div>
@@ -1601,6 +1734,7 @@ section:not(.hero) h2::after {
 
   <!-- HERO -->
   <section class="hero snap-section" id="top">
+    <div class="hero-carousel" id="hero-carousel" aria-hidden="true"></div>
     <div class="hero-inner">
       <div class="hero-meta">
         <div class="date">Saturday, April 3, 2027</div>
@@ -1628,7 +1762,7 @@ section:not(.hero) h2::after {
         <div>
           <p>Misa and Ray met in late 2019 through mutual friends. They soon realized they loved the same hobbies: watching horror movies, being creative, and most importantly, being in each other's company. Now they are inseparable.</p>
           <p>Ray proposed to Misa in Kyoto, Japan, in January 2025. They were officially married on May 25, 2026, and want all their family and friends to celebrate with them on April 3, 2027.</p>
-          <p class="together">Together since 2021</p>
+          <button type="button" class="together" id="together-trigger">Together since 2021</button>
         </div>
       </div>
     </div>
@@ -1919,7 +2053,7 @@ section:not(.hero) h2::after {
 <footer>
   <div class="f-names">Misa &amp; Ray</div>
   <div class="f-meta">April 3, 2027 · Port Gamble, Washington</div>
-  <p class="aim-status">Misa &amp; Ray: <em>counting down to Port Gamble!</em></p>
+  <p class="wedding-countdown" id="wedding-countdown" aria-live="polite"></p>
 
   <!-- CONFIG: visitor counter — CountAPI namespace/key in script below; counts once per browser session -->
   <div class="visitor-counter">
@@ -1986,6 +2120,17 @@ section:not(.hero) h2::after {
   </div>
 </div>
 
+<div class="together-modal" id="together-modal" role="dialog" aria-labelledby="together-modal-title" aria-modal="true" hidden>
+  <div class="together-modal-backdrop" data-together-close></div>
+  <div class="together-modal-panel">
+    <button type="button" class="together-modal-close" data-together-close aria-label="Close">&times;</button>
+    <span class="together-modal-eyebrow">Our story</span>
+    <h2 id="together-modal-title">Together since 2021</h2>
+    <p class="section-note">a few favorites along the way</p>
+    <div class="together-modal-photos" id="together-modal-photos"></div>
+  </div>
+</div>
+
 <div class="maze-modal" id="maze-modal" role="dialog" aria-labelledby="maze-modal-title" aria-modal="true" hidden>
   <div class="maze-modal-backdrop" data-maze-close></div>
   <div class="maze-modal-panel" id="maze-modal-panel">
@@ -2014,6 +2159,23 @@ section:not(.hero) h2::after {
   document.querySelectorAll('.wire-divider-track').forEach(function (el) {
     el.textContent = wirePhrase.repeat(40);
   });
+
+  /* wedding countdown — April 3, 2027 */
+  var countdownEl = document.getElementById('wedding-countdown');
+  if (countdownEl) {
+    var weddingDay = new Date(2027, 3, 3);
+    weddingDay.setHours(0, 0, 0, 0);
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var daysLeft = Math.round((weddingDay - today) / 86400000);
+    if (daysLeft > 0) {
+      countdownEl.innerHTML = '<em>' + daysLeft + '</em> day' + (daysLeft === 1 ? '' : 's') + ' until Port Gamble';
+    } else if (daysLeft === 0) {
+      countdownEl.innerHTML = '<em>Today</em> is the wedding day!';
+    } else {
+      countdownEl.textContent = 'We said I do in Port Gamble.';
+    }
+  }
 
   /* brand heartbeat — 3 beats, then heart burst */
   var brandLink = document.querySelector('.brand');
@@ -2842,6 +3004,102 @@ section:not(.hero) h2::after {
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !gardenModal.hidden) closeGardenModal();
+    });
+  }
+
+  /* together since 2021 — hero carousel + photo gallery modal */
+  var TOGETHER_PHOTOS = [
+    { src: 'images/together/together-01-grisdal.jpg', alt: 'Misa and Ray in the mountains at Grisdal' },
+    { src: 'images/together/together-02-industrial.jpg', alt: 'Misa and Ray at an industrial site' },
+    { src: 'images/together/together-03-filming.jpg', alt: 'Misa and Ray on a film set' },
+    { src: 'images/together/together-04-woods.jpg', alt: 'Misa and Ray in the woods' },
+    { src: 'images/together/together-05-desert.jpg', alt: 'Misa and Ray in the desert' },
+    { src: 'images/together/together-06-paris.jpg', alt: 'Misa and Ray — Paris street selfie' },
+    { src: 'images/together/together-07-pike-place.jpg', alt: 'Misa and Ray at Pike Place Market' }
+  ];
+
+  var heroCarousel = document.getElementById('hero-carousel');
+  var togetherTrigger = document.getElementById('together-trigger');
+  var togetherModal = document.getElementById('together-modal');
+  var togetherPhotosEl = document.getElementById('together-modal-photos');
+  var carouselTimer = null;
+  var carouselIdx = 0;
+
+  if (heroCarousel && TOGETHER_PHOTOS.length) {
+    TOGETHER_PHOTOS.forEach(function (photo, i) {
+      var slide = document.createElement('div');
+      slide.className = 'hero-carousel-slide' + (i === 0 ? ' is-active' : '');
+      var img = document.createElement('img');
+      img.src = photo.src;
+      img.alt = '';
+      img.width = 1200;
+      img.height = 800;
+      img.loading = i === 0 ? 'eager' : 'lazy';
+      img.decoding = 'async';
+      slide.appendChild(img);
+      heroCarousel.appendChild(slide);
+    });
+
+    var slides = heroCarousel.querySelectorAll('.hero-carousel-slide');
+    var motionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function showSlide(idx) {
+      slides.forEach(function (s, i) {
+        s.classList.toggle('is-active', i === idx);
+      });
+      carouselIdx = idx;
+    }
+
+    function advanceCarousel() {
+      showSlide((carouselIdx + 1) % slides.length);
+    }
+
+    if (slides.length > 1 && motionOk) {
+      carouselTimer = setInterval(advanceCarousel, 5000);
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          clearInterval(carouselTimer);
+          carouselTimer = null;
+        } else if (!carouselTimer) {
+          carouselTimer = setInterval(advanceCarousel, 5000);
+        }
+      });
+    }
+  }
+
+  if (togetherPhotosEl) {
+    TOGETHER_PHOTOS.forEach(function (photo) {
+      var img = document.createElement('img');
+      img.src = photo.src;
+      img.alt = photo.alt;
+      img.width = 600;
+      img.height = 800;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      togetherPhotosEl.appendChild(img);
+    });
+  }
+
+  if (togetherTrigger && togetherModal) {
+    function openTogetherModal() {
+      togetherModal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      var closeBtn = togetherModal.querySelector('.together-modal-close');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeTogetherModal() {
+      togetherModal.hidden = true;
+      document.body.style.overflow = '';
+      togetherTrigger.focus();
+    }
+
+    togetherTrigger.addEventListener('click', openTogetherModal);
+    togetherModal.querySelectorAll('[data-together-close]').forEach(function (el) {
+      el.addEventListener('click', closeTogetherModal);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !togetherModal.hidden) closeTogetherModal();
     });
   }
 
