@@ -182,7 +182,6 @@ section {
   overflow-y: auto;
   padding-top: clamp(18px, 3vh, 32px);
 }
-.fund .btn { margin: 0; padding: 12px 20px; font-size: .72rem; }
 .wrap {
   width: min(1100px, 100%);
   margin: 0 auto;
@@ -295,8 +294,12 @@ p:last-child { margin-bottom: 0; }
   display: block;
 }
 */
+.hero.snap-section {
+  min-height: calc(100svh - var(--header-h));
+  justify-content: center;
+}
 .hero-inner {
-  width: min(1100px, 100%);
+  width: min(900px, 100%);
   margin: 0 auto;
   flex: 1;
   display: flex;
@@ -304,20 +307,20 @@ p:last-child { margin-bottom: 0; }
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: clamp(20px, 4vh, 32px);
-  padding: clamp(20px, 4vh, 40px) clamp(20px, 4vw, 40px);
-  min-height: 0;
+  gap: clamp(28px, 5.5vh, 52px);
+  padding: clamp(40px, 8vh, 80px) clamp(24px, 5vw, 48px);
+  min-height: min(72vh, 640px);
 }
 .hero-meta { text-align: center; }
 .hero .date {
-  font-size: clamp(.9rem, 2.2vw, 1.1rem);
+  font-size: clamp(1.1rem, 2.8vw, 1.5rem);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .18em;
-  margin-bottom: 8px;
+  letter-spacing: .2em;
+  margin-bottom: 12px;
 }
 .hero .place {
-  font-size: clamp(1rem, 2.4vw, 1.2rem);
+  font-size: clamp(1.2rem, 3vw, 1.55rem);
   font-weight: 500;
   color: var(--ink-soft);
 }
@@ -325,18 +328,21 @@ p:last-child { margin-bottom: 0; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  margin-top: clamp(4px, 1.5vh, 16px);
 }
 .hero-action .btn-primary {
-  font-size: .95rem;
-  padding: 18px 48px;
+  font-size: clamp(1.05rem, 2.4vw, 1.2rem);
+  padding: clamp(22px, 3.5vh, 28px) clamp(56px, 12vw, 80px);
+  letter-spacing: .2em;
+  border-radius: 4px;
 }
 .hero-action .btn-ghost {
-  font-size: .78rem;
-  padding: 14px 28px;
+  font-size: clamp(.85rem, 1.9vw, .98rem);
+  padding: 16px 36px;
 }
 .hero .tagline {
-  font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+  font-size: clamp(1.45rem, 3.8vw, 2.15rem);
   font-weight: 400;
   color: var(--ink-soft);
   margin: 0;
@@ -913,25 +919,47 @@ button[type=submit]:disabled {
   transition: width .45s ease;
 }
 .fund-poll-row.is-leading .fund-poll-fill { background: var(--forest); }
-.fund-contribute { cursor: pointer; font: inherit; }
+.fund-contribute {
+  cursor: pointer;
+  font: inherit;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 14px 20px;
+  font-size: clamp(.72rem, 1.6vw, .82rem);
+  letter-spacing: .16em;
+  border-radius: 3px;
+}
 .funds-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(16px, 3vw, 28px);
-  margin-top: 8px;
+  gap: clamp(20px, 3.5vw, 32px);
+  margin-top: 12px;
+  align-items: stretch;
 }
 @media (max-width: 800px) {
-  .funds-grid { gap: 10px; }
+  .funds-grid { gap: 12px; }
   .fund h3 { font-size: clamp(.72rem, 2.8vw, .95rem); }
-  .fund .btn { padding: 10px 10px; font-size: .62rem; letter-spacing: .08em; }
+  .fund .fund-contribute { padding: 12px 10px; font-size: .62rem; letter-spacing: .1em; }
 }
 .fund {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   background: transparent;
   border: none;
   box-shadow: none;
   padding: 0;
+  height: 100%;
 }
+.fund > .fund-gif,
+.fund > .fund-maze-hitbox,
+.fund > .fund-chicken-hitbox { flex-shrink: 0; }
+.fund h3,
+.fund .fund-rule,
+.fund > p { flex-shrink: 0; }
+.fund .fund-contribute { margin-top: auto; width: 100%; }
 .fund-gif {
   margin: 0 auto 12px;
   line-height: 0;
@@ -951,40 +979,42 @@ button[type=submit]:disabled {
   width: 100%;
   position: relative;
   margin: 0 auto 12px;
-  padding: 8px 10px 4px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
+  padding: 12px 10px 10px;
+  border: 2px dashed rgba(74, 107, 95, .45);
+  border-radius: 6px;
+  background: rgba(250, 249, 246, .7);
   cursor: pointer;
   user-select: none;
   font: inherit;
   color: inherit;
   text-align: center;
-  transition: background .2s ease;
+  transition: background .2s ease, border-color .2s ease;
 }
 .fund-chicken-hitbox:hover,
 .fund-chicken-hitbox:focus-visible {
-  background: rgba(232, 229, 222, .55);
+  background: rgba(232, 229, 222, .75);
+  border-color: var(--accent);
   outline: none;
 }
 .chicken-expand-hint {
-  display: block;
-  margin: 8px auto 0;
+  display: inline-block;
+  margin: 10px auto 0;
+  padding: 5px 12px;
   font-family: var(--sans);
-  font-size: .65rem;
+  font-size: .68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .14em;
+  letter-spacing: .12em;
   color: var(--accent-dark);
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity .2s ease, transform .2s ease;
+  background: rgba(74, 107, 95, .12);
+  border-radius: 999px;
+  opacity: 1;
+  transform: none;
   pointer-events: none;
 }
 .fund-chicken-hitbox:hover .chicken-expand-hint,
 .fund-chicken-hitbox:focus-visible .chicken-expand-hint {
-  opacity: 1;
-  transform: translateY(0);
+  background: rgba(74, 107, 95, .2);
 }
 .chicken-widget {
   position: relative;
@@ -1966,26 +1996,26 @@ button[type=submit]:disabled {
   width: 100%;
   position: relative;
   margin: 0 auto 12px;
-  padding: 8px 10px 4px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
+  padding: 12px 10px 10px;
+  border: 2px dashed rgba(74, 107, 95, .45);
+  border-radius: 6px;
+  background: rgba(250, 249, 246, .7);
   cursor: pointer;
   user-select: none;
   font: inherit;
   color: inherit;
   text-align: center;
-  transition: background .2s ease;
+  transition: background .2s ease, border-color .2s ease;
 }
 .fund-maze-hitbox:hover,
 .fund-maze-hitbox:focus-visible {
-  background: rgba(232, 229, 222, .55);
+  background: rgba(232, 229, 222, .75);
+  border-color: var(--accent);
   outline: none;
 }
 .fund-maze-hitbox:hover .chicken-expand-hint,
 .fund-maze-hitbox:focus-visible .chicken-expand-hint {
-  opacity: 1;
-  transform: translateY(0);
+  background: rgba(74, 107, 95, .2);
 }
 .maze-modal[hidden] { display: none; }
 .maze-modal {
@@ -2371,6 +2401,42 @@ section:not(.hero) h2::after {
   margin: 16px auto 0;
   background: var(--ink);
 }
+.chicken-cam-toggle {
+  position: fixed;
+  left: 14px;
+  bottom: 16px;
+  z-index: 46;
+  display: none;
+  font: 600 .68rem/1.2 var(--sans);
+  letter-spacing: .08em;
+  text-transform: none;
+  color: var(--ink-soft);
+  background: rgba(250, 249, 246, .92);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(26, 36, 33, .08);
+  backdrop-filter: blur(6px);
+  transition: color .15s, border-color .15s, background .15s;
+}
+.chicken-cam-toggle:hover {
+  color: var(--accent-dark);
+  border-color: var(--sage-light);
+  background: #fff;
+}
+.chicken-cam-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.chicken-cam-toggle[aria-pressed="true"] {
+  color: var(--forest);
+  border-color: var(--accent);
+  background: rgba(232, 229, 222, .85);
+}
+@media (min-width: 1100px) {
+  .chicken-cam-toggle { display: block; }
+}
 .chicken-cam {
   position: fixed;
   right: 14px;
@@ -2542,6 +2608,7 @@ section:not(.hero) h2::after {
 <body>
 
 <!-- ASSET: chicken-cam feeds — add/remove URLs in CHICKEN_FEEDS array in script below -->
+<button type="button" class="chicken-cam-toggle" id="chicken-cam-toggle" hidden aria-pressed="false">Watch live chicken cam</button>
 <aside class="chicken-cam" id="chicken-cam" aria-hidden="true">
   <div class="chicken-cam-boot" id="chicken-cam-boot" hidden>
     <span class="chicken-cam-boot-line" id="boot-line-1">&gt; init chicken_cam</span>
@@ -2891,7 +2958,7 @@ section:not(.hero) h2::after {
             <div class="fund-gif" aria-hidden="true">
               <img src="https://blob.gifcities.org/gifcities/J6T65FULRGZQSVKG7WS5KDOM65EQIUIJ.gif" alt="" width="120" height="80">
             </div>
-            <span class="chicken-expand-hint">Expand mini game</span>
+            <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
           <h3>Future Dream Home</h3>
           <hr class="fund-rule">
@@ -2910,7 +2977,7 @@ section:not(.hero) h2::after {
                 </div>
               </div>
             </div>
-            <span class="chicken-expand-hint">Expand mini game</span>
+            <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
           <h3>The Chickens</h3>
           <hr class="fund-rule">
@@ -3469,9 +3536,7 @@ section:not(.hero) h2::after {
     });
   }
 
-  /* CONFIG: chicken cam — delay (ms), boot timing, feeds, static burst */
-  var CAM_DELAY_MIN = 20000;
-  var CAM_DELAY_MAX = 30000;
+  /* CONFIG: chicken cam — boot timing, feeds, static burst */
   var CAM_MIN_WIDTH = 1100;
   var CHICKEN_FEEDS = [
     'https://media2.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3ZmZ3bXFubHQycWtxcnp1YW5scXA1ZjRiNjk1dDFzbnhidnFobDVsNCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/H11blOCCqO9NK/giphy.webp',
@@ -3486,12 +3551,46 @@ section:not(.hero) h2::after {
   var chickenLive = document.getElementById('chicken-cam-live');
   var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var feedTimer = null;
+  var camBootTimeouts = [];
+  var camLiveTimeout = null;
+  var camOn = false;
+  var camToggle = document.getElementById('chicken-cam-toggle');
+
+  function clearCamBootTimeouts() {
+    camBootTimeouts.forEach(clearTimeout);
+    camBootTimeouts = [];
+    if (camLiveTimeout) {
+      clearTimeout(camLiveTimeout);
+      camLiveTimeout = null;
+    }
+  }
+
+  function resetChickenCam() {
+    clearCamBootTimeouts();
+    if (feedTimer) {
+      clearInterval(feedTimer);
+      feedTimer = null;
+    }
+    if (!chickenCam) return;
+
+    chickenCam.classList.remove('is-mounted', 'is-visible');
+    chickenCam.setAttribute('aria-hidden', 'true');
+    chickenBoot.classList.remove('is-hiding');
+    chickenBoot.hidden = true;
+    chickenLive.classList.remove('is-visible');
+    chickenLive.hidden = true;
+
+    chickenCam.querySelectorAll('.chicken-cam-boot-line').forEach(function (line) {
+      line.classList.remove('is-shown');
+    });
+    if (staticBurst) staticBurst.classList.remove('is-active');
+  }
 
   function showBootLine(id, delay) {
-    setTimeout(function () {
+    camBootTimeouts.push(setTimeout(function () {
       var line = document.getElementById(id);
       if (line) line.classList.add('is-shown');
-    }, delay);
+    }, delay));
   }
 
   function startFeedLoop() {
@@ -3534,8 +3633,9 @@ section:not(.hero) h2::after {
     requestAnimationFrame(function () {
       chickenLive.classList.add('is-visible');
     });
-    setTimeout(function () {
+    camLiveTimeout = setTimeout(function () {
       chickenBoot.hidden = true;
+      camLiveTimeout = null;
       startFeedLoop();
     }, reducedMotion ? 100 : 700);
   }
@@ -3543,6 +3643,7 @@ section:not(.hero) h2::after {
   function armChickenCam() {
     if (!chickenCam || window.innerWidth < CAM_MIN_WIDTH) return;
 
+    resetChickenCam();
     chickenCam.classList.add('is-mounted');
     chickenCam.setAttribute('aria-hidden', 'false');
     chickenBoot.hidden = false;
@@ -3554,7 +3655,7 @@ section:not(.hero) h2::after {
 
     if (reducedMotion) {
       showBootLine('boot-line-1', 0);
-      setTimeout(goLive, 400);
+      camLiveTimeout = setTimeout(goLive, 400);
       return;
     }
 
@@ -3562,11 +3663,44 @@ section:not(.hero) h2::after {
     showBootLine('boot-line-2', 700);
     showBootLine('boot-line-3', 1300);
     showBootLine('boot-line-4', 2100);
-    setTimeout(goLive, 3000);
+    camLiveTimeout = setTimeout(goLive, 3000);
   }
 
-  var camDelay = CAM_DELAY_MIN + Math.random() * (CAM_DELAY_MAX - CAM_DELAY_MIN);
-  setTimeout(armChickenCam, camDelay);
+  function updateCamToggle() {
+    if (!camToggle) return;
+    camToggle.setAttribute('aria-pressed', camOn ? 'true' : 'false');
+    camToggle.textContent = camOn ? 'Hide chicken cam' : 'Watch live chicken cam';
+  }
+
+  function setChickenCam(on) {
+    if (window.innerWidth < CAM_MIN_WIDTH) return;
+    camOn = on;
+    updateCamToggle();
+    if (on) {
+      armChickenCam();
+    } else {
+      resetChickenCam();
+    }
+  }
+
+  function syncCamToggleVisibility() {
+    if (!camToggle) return;
+    var wide = window.innerWidth >= CAM_MIN_WIDTH;
+    camToggle.hidden = !wide;
+    if (!wide && camOn) {
+      camOn = false;
+      updateCamToggle();
+      resetChickenCam();
+    }
+  }
+
+  if (camToggle) {
+    camToggle.addEventListener('click', function () {
+      setChickenCam(!camOn);
+    });
+    window.addEventListener('resize', syncCamToggleVisibility);
+    syncCamToggleVisibility();
+  }
 
   /* chicken fund — cookie-clicker flock sim */
   if (window.ChickenClicker) {
