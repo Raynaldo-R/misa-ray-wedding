@@ -1075,13 +1075,39 @@ button[type=submit]:disabled {
 }
 .chicken-bird--rooster { filter: contrast(1.05); }
 .chicken-bird--gold { filter: sepia(1) saturate(2.8) hue-rotate(5deg) brightness(1.1); }
-.chicken-bird--ember { filter: sepia(1) saturate(3) hue-rotate(-15deg) brightness(1.05); }
+.chicken-bird--amber { filter: sepia(1) saturate(3) hue-rotate(12deg) brightness(1.08); }
+.chicken-bird--ruby { filter: sepia(1) saturate(3.5) hue-rotate(-25deg) brightness(1.1); }
+.chicken-bird--sapphire { filter: hue-rotate(210deg) saturate(2.2) brightness(1.05); }
+.chicken-bird--rainbow {
+  animation: chicken-rainbow 3s linear infinite;
+  filter: saturate(1.8) brightness(1.12);
+}
+.chicken-bird--ice { filter: hue-rotate(190deg) saturate(1.6) brightness(1.15); }
 .chicken-bird--fire {
   filter: sepia(1) saturate(4) hue-rotate(-35deg) brightness(1.15);
   box-shadow: 0 0 10px rgba(255, 100, 20, 0.55);
 }
-.chicken-bird--ice { filter: hue-rotate(190deg) saturate(1.6) brightness(1.1); }
-.chicken-bird--shadow { filter: brightness(0.45) contrast(1.3) saturate(0.5); }
+.chicken-bird--nuclear {
+  filter: hue-rotate(80deg) saturate(2.5) brightness(1.2);
+  box-shadow: 0 0 12px rgba(180, 255, 60, 0.5);
+}
+.chicken-bird--bronze { filter: sepia(1) saturate(2.2) hue-rotate(-8deg); }
+.chicken-bird--copper { filter: sepia(1) saturate(2.8) hue-rotate(15deg); }
+.chicken-bird--crimson { filter: sepia(1) saturate(3.2) hue-rotate(-30deg) brightness(1.08); }
+.chicken-bird--storm { filter: hue-rotate(200deg) saturate(1.8) contrast(1.1); }
+.chicken-bird--thunder {
+  filter: hue-rotate(45deg) saturate(2.4) brightness(1.15);
+  box-shadow: 0 0 8px rgba(255, 220, 80, 0.45);
+}
+.chicken-bird--frost { filter: hue-rotate(185deg) saturate(1.5) brightness(1.12); }
+.chicken-bird--blaze {
+  filter: sepia(1) saturate(3.8) hue-rotate(-40deg) brightness(1.18);
+  box-shadow: 0 0 10px rgba(255, 90, 10, 0.5);
+}
+@keyframes chicken-rainbow {
+  0% { filter: hue-rotate(0deg) saturate(1.8) brightness(1.12); }
+  100% { filter: hue-rotate(360deg) saturate(1.8) brightness(1.12); }
+}
 .chicken-click-burst {
   position: absolute;
   inset: 0;
@@ -1226,12 +1252,209 @@ button[type=submit]:disabled {
   box-shadow: 0 18px 48px rgba(26, 36, 33, .18);
 }
 .chicken-modal-panel--game {
-  width: min(96vw, 680px);
-  max-height: min(92vh, 820px);
+  width: min(96vw, 920px);
+  max-height: min(92vh, 720px);
   display: flex;
   flex-direction: column;
   padding: 20px 18px 18px;
   overflow: hidden;
+}
+.chicken-game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 0 16px;
+  flex: 1;
+  min-height: 0;
+}
+.chicken-game-left {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.chicken-game-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--line);
+  padding-left: 14px;
+  gap: 10px;
+}
+.chicken-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.chicken-sidebar-section--upgrades { flex: 1.1; }
+.chicken-sidebar-section--fame { flex: 0.9; max-height: 42%; }
+.chicken-sidebar-title {
+  font-family: var(--sans);
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+.chicken-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.chicken-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 5px;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--ivory);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+.chicken-leaderboard-row.is-champion {
+  border-color: var(--sage);
+  background: rgba(196, 212, 106, .08);
+}
+.chicken-leaderboard-row button.chicken-leaderboard-evolve {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 4px 8px;
+  border: 1px solid var(--sage-light);
+  border-radius: 3px;
+  background: transparent;
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--forest);
+  cursor: pointer;
+}
+.chicken-leaderboard-evolve.can-afford { border-color: var(--forest); background: rgba(74, 107, 95, .1); }
+.chicken-leaderboard-evolve:disabled { opacity: .4; cursor: not-allowed; }
+.chicken-leaderboard-main { min-width: 0; flex: 1; }
+.chicken-leaderboard-main strong {
+  display: block;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chicken-leaderboard-main span {
+  font-size: .62rem;
+  color: var(--ink-soft);
+}
+.chicken-leaderboard-tier {
+  flex-shrink: 0;
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+}
+.chicken-leaderboard-empty {
+  font-size: .65rem;
+  color: var(--ink-soft);
+  padding: 6px 4px;
+  line-height: 1.4;
+}
+.chicken-narrative {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.chicken-narrative[hidden] { display: none; }
+.chicken-narrative-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 36, 33, .35);
+  border-radius: 6px;
+}
+.chicken-narrative-card {
+  position: relative;
+  width: min(100%, 340px);
+  padding: 20px 18px 16px;
+  border-radius: 6px;
+  background: var(--ivory);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 32px rgba(26, 36, 33, .15);
+  text-align: center;
+}
+.chicken-narrative-eyebrow {
+  font-family: var(--sans);
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+  margin-bottom: 8px;
+}
+.chicken-narrative-card h3 {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+.chicken-narrative-card p {
+  font-size: .78rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin-bottom: 14px;
+}
+.chicken-narrative-input {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font: inherit;
+  font-size: .85rem;
+  text-align: center;
+}
+.chicken-narrative-btn {
+  padding: 8px 20px;
+  border: 1px solid var(--forest);
+  border-radius: 4px;
+  background: var(--forest);
+  color: var(--ivory);
+  font-family: var(--sans);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.chicken-narrative-btn:hover { filter: brightness(1.08); }
+.chicken-game-panel.is-paused .chicken-widget--expanded { pointer-events: none; opacity: .72; }
+.chicken-upgrade-row--evo { border-color: var(--accent-dark); }
+.chicken-upgrade-row--evo.can-afford { background: rgba(196, 167, 106, .1); }
+@media (max-width: 700px) {
+  .chicken-game-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  .chicken-game-sidebar {
+    border-left: none;
+    border-top: 1px solid var(--line);
+    padding-left: 0;
+    padding-top: 12px;
+    max-height: 240px;
+  }
+  .chicken-sidebar-section--fame { max-height: none; }
 }
 .chicken-game-hud {
   display: grid;
@@ -1258,7 +1481,8 @@ button[type=submit]:disabled {
 .chicken-game-hud-boost { grid-column: span 1; }
 .chicken-upgrade-row--burst { border-color: var(--sage); }
 .chicken-upgrade-row--burst.can-afford { background: rgba(196, 212, 106, .12); }
-.chicken-game-main { flex-shrink: 0; }
+.chicken-game-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.chicken-game-main .chicken-widget--expanded { flex: 1; min-height: clamp(160px, 28vh, 240px); }
 .chicken-click-label {
   text-align: center;
   font-family: var(--sans);
@@ -1268,23 +1492,6 @@ button[type=submit]:disabled {
   text-transform: uppercase;
   color: var(--accent-dark);
   margin-top: 8px;
-}
-.chicken-game-upgrades {
-  flex: 1;
-  min-height: 0;
-  margin-top: 14px;
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
-  overflow-y: auto;
-}
-.chicken-game-upgrades-title {
-  font-family: var(--sans);
-  font-size: .68rem;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  margin-bottom: 8px;
 }
 .chicken-upgrade-row {
   display: flex;
@@ -1374,6 +1581,7 @@ button[type=submit]:disabled {
 @media (prefers-reduced-motion: reduce) {
   .chicken-widget.is-feasting .chicken-widget-birds { animation: none; }
   .chicken-bird-slot { animation: none; transform: translate(-50%, -50%) scale(var(--bird-scale, 1)); }
+  .chicken-bird--rainbow { animation: none; }
   .chicken-click-pop { animation: none; opacity: 0; }
   .chicken-expand-hint { opacity: 1; transform: none; }
 }
@@ -2394,37 +2602,58 @@ section:not(.hero) h2::after {
 
 <div class="chicken-modal" id="chicken-modal" role="dialog" aria-labelledby="chicken-modal-title" aria-modal="true" hidden>
   <div class="chicken-modal-backdrop" data-chicken-close></div>
-  <div class="chicken-modal-panel chicken-modal-panel--game">
+  <div class="chicken-modal-panel chicken-modal-panel--game" id="chicken-game-panel">
     <button type="button" class="chicken-modal-close" data-chicken-close aria-label="Close">&times;</button>
     <div class="chicken-modal-title" id="chicken-modal-title">Chicken Fund Clicker</div>
-    <div class="chicken-game-hud" aria-live="polite">
-      <div>Grains<span id="chicken-hud-grains">0</span></div>
-      <div>Worms<span id="chicken-hud-worms">0</span></div>
-      <div>Eggs<span id="chicken-hud-eggs">0</span></div>
-      <div>Flock<span id="chicken-hud-flock">1</span></div>
-      <div>Per click<span id="chicken-hud-click">1 grain / click</span></div>
-      <div class="chicken-game-hud-hatch">Hatch<span id="chicken-hud-hatch">0%</span></div>
-      <div class="chicken-game-hud-boost">Boost<span id="chicken-hud-boost">—</span></div>
-    </div>
-    <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
-      <button type="button" class="chicken-feed-btn is-active" id="chicken-mode-grain">Grain</button>
-      <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlocks at 8 grains/click or 15 hens">Worms</button>
-    </div>
-    <div class="chicken-game-main">
-      <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
-        <div class="chicken-widget-stage">
-          <div class="chicken-particles" id="chicken-particles"></div>
-          <div class="chicken-egg-layer" id="chicken-egg-layer"></div>
-          <div class="chicken-widget-ground"></div>
-          <div class="chicken-flock-layer" id="chicken-flock-layer"></div>
-          <div class="chicken-click-burst" id="chicken-click-burst"></div>
+    <div class="chicken-game-layout">
+      <div class="chicken-game-left">
+        <div class="chicken-game-hud" aria-live="polite">
+          <div>Grains<span id="chicken-hud-grains">0</span></div>
+          <div>Worms<span id="chicken-hud-worms">0</span></div>
+          <div>Eggs<span id="chicken-hud-eggs">0</span></div>
+          <div>Flock<span id="chicken-hud-flock">1</span></div>
+          <div>Per click<span id="chicken-hud-click">1 grain / click</span></div>
+          <div class="chicken-game-hud-hatch">Hatch<span id="chicken-hud-hatch">0%</span></div>
+          <div class="chicken-game-hud-boost">Boost<span id="chicken-hud-boost">—</span></div>
+        </div>
+        <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
+          <button type="button" class="chicken-feed-btn is-active" id="chicken-mode-grain">Grain</button>
+          <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlocks at 8 grains/click or 15 hens">Worms</button>
+          <button type="button" class="chicken-feed-btn" id="chicken-mode-giant" hidden title="Unlocked by a Rainbow hen">Giant</button>
+        </div>
+        <div class="chicken-game-main">
+          <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
+            <div class="chicken-widget-stage">
+              <div class="chicken-particles" id="chicken-particles"></div>
+              <div class="chicken-egg-layer" id="chicken-egg-layer"></div>
+              <div class="chicken-widget-ground"></div>
+              <div class="chicken-flock-layer" id="chicken-flock-layer"></div>
+              <div class="chicken-click-burst" id="chicken-click-burst"></div>
+            </div>
+          </div>
+          <p class="chicken-click-label" id="chicken-click-label">Scatter feed! (+1 per click)</p>
         </div>
       </div>
-      <p class="chicken-click-label" id="chicken-click-label">Scatter feed! (+1 per click)</p>
+      <aside class="chicken-game-sidebar" aria-label="Upgrades and flock champions">
+        <div class="chicken-sidebar-section chicken-sidebar-section--upgrades">
+          <div class="chicken-sidebar-title">Upgrades</div>
+          <div class="chicken-sidebar-scroll" id="chicken-upgrade-list"></div>
+        </div>
+        <div class="chicken-sidebar-section chicken-sidebar-section--fame">
+          <div class="chicken-sidebar-title">Hall of Fame</div>
+          <div class="chicken-sidebar-scroll" id="chicken-leaderboard"></div>
+        </div>
+      </aside>
     </div>
-    <div class="chicken-game-upgrades">
-      <div class="chicken-game-upgrades-title">Upgrades</div>
-      <div id="chicken-upgrade-list"></div>
+    <div class="chicken-narrative" id="chicken-narrative" hidden>
+      <div class="chicken-narrative-backdrop"></div>
+      <div class="chicken-narrative-card">
+        <p class="chicken-narrative-eyebrow" id="chicken-narrative-eyebrow">Coop Chronicle</p>
+        <h3 id="chicken-narrative-title"></h3>
+        <p id="chicken-narrative-body"></p>
+        <input type="text" class="chicken-narrative-input" id="chicken-narrative-input" maxlength="24" placeholder="Name this bird" hidden>
+        <button type="button" class="chicken-narrative-btn" id="chicken-narrative-btn">Continue</button>
+      </div>
     </div>
   </div>
 </div>
