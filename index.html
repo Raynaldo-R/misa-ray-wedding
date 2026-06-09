@@ -99,8 +99,15 @@ nav a {
   text-decoration: none;
   padding: 6px 0;
   white-space: nowrap;
+  display: inline-block;
+  transform-origin: center bottom;
+  transition: color .22s ease, transform .22s ease;
 }
 nav a:hover { color: var(--accent); }
+nav a.is-active {
+  color: var(--accent-dark);
+  transform: scale(1.1);
+}
 nav a.nav-photos {
   color: var(--accent-dark);
   box-shadow: inset 0 0 0 1px var(--accent);
@@ -116,18 +123,22 @@ nav a:focus-visible {
   outline-offset: 3px;
   border-radius: 2px;
 }
-@media (max-width: 620px) {
-  :root { --header-h: 120px; }
+@media (max-width: 768px) {
+  :root { --header-h: 72px; }
+  nav { display: none; }
   .nav-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 8px 12px 10px 10px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0;
+    padding: 10px 16px 12px;
   }
-  nav { justify-content: flex-start; width: 100%; }
   .brand {
-    font-size: clamp(2.85rem, 15vw, 4rem);
-    margin-bottom: -0.38em;
+    font-size: clamp(2.5rem, 12vw, 3.4rem);
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    transform-origin: center bottom;
   }
 }
 
@@ -365,6 +376,44 @@ p:last-child { margin-bottom: 0; }
   font-family: 'Noto Sans JP', sans-serif;
   font-weight: 500;
   font-size: clamp(1.05rem, 2.8vw, 1.45rem);
+}
+.hero-scroll-hint {
+  display: none;
+}
+@media (max-width: 768px) {
+  .hero-scroll-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin: clamp(8px, 2vh, 20px) auto 0;
+    padding-bottom: 8px;
+    font-family: var(--sans);
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    transition: opacity .45s ease;
+  }
+  .hero-scroll-hint.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .hero-scroll-hint-arrow {
+    display: block;
+    font-size: 1.35rem;
+    line-height: 1;
+    color: var(--accent);
+    animation: scroll-hint-bounce 1.5s ease-in-out infinite;
+  }
+}
+@keyframes scroll-hint-bounce {
+  0%, 100% { transform: translateY(0); opacity: .45; }
+  50% { transform: translateY(7px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-hint-arrow { animation: none; opacity: .8; }
 }
 
 /* ---------- buttons ---------- */
@@ -942,6 +991,33 @@ button[type=submit]:disabled {
   .fund h3 { font-size: clamp(.72rem, 2.8vw, .95rem); }
   .fund .fund-contribute { padding: 12px 10px; font-size: .62rem; letter-spacing: .1em; }
 }
+@media (max-width: 768px) {
+  .chicken-cam-stack { display: none !important; }
+  .fund-wave-hitbox,
+  .fund-maze-hitbox,
+  .fund-chicken-hitbox {
+    pointer-events: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: default;
+  }
+  .fund-wave-hitbox .chicken-expand-hint,
+  .fund-maze-hitbox .chicken-expand-hint,
+  .fund-chicken-hitbox .chicken-expand-hint {
+    display: none;
+  }
+  .fund-chicken-hitbox .chicken-widget {
+    width: min(100%, 140px);
+    height: clamp(64px, 12vh, 80px);
+    pointer-events: none;
+  }
+  .chicken-modal,
+  .wave-modal,
+  .maze-modal {
+    display: none !important;
+  }
+}
 .fund {
   display: flex;
   flex-direction: column;
@@ -954,6 +1030,7 @@ button[type=submit]:disabled {
   height: 100%;
 }
 .fund > .fund-gif,
+.fund > .fund-wave-hitbox,
 .fund > .fund-maze-hitbox,
 .fund > .fund-chicken-hitbox { flex-shrink: 0; }
 .fund h3,
@@ -973,6 +1050,29 @@ button[type=submit]:disabled {
   height: auto;
   image-rendering: pixelated;
 }
+.fund-wave-hitbox {
+  display: block;
+  width: 100%;
+  position: relative;
+  margin: 0 auto 12px;
+  padding: 12px 10px 10px;
+  border: 2px dashed rgba(74, 107, 95, .45);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(94, 200, 232, .12) 0%, rgba(250, 249, 246, .75) 55%);
+  cursor: pointer;
+  user-select: none;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  transition: background .2s ease, border-color .2s ease;
+}
+.fund-wave-hitbox:hover,
+.fund-wave-hitbox:focus-visible {
+  background: rgba(94, 200, 232, .22);
+  border-color: var(--accent);
+  outline: none;
+}
+.fund-wave-hitbox .fund-gif { margin-bottom: 0; }
 /* chicken fund interactive widget */
 .fund-chicken-hitbox {
   display: block;
@@ -2139,6 +2239,108 @@ button[type=submit]:disabled {
   image-rendering: pixelated;
   cursor: crosshair;
 }
+/* honeymoon — oasis ring run (wave racer skeleton) */
+.wave-modal[hidden] { display: none; }
+.wave-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 209;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.wave-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 28, 48, .72);
+}
+.wave-modal-panel {
+  position: relative;
+  width: min(98vw, 760px);
+  padding: 20px 16px 16px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #0e3a58 0%, #082840 100%);
+  border: 1px solid #2a7aa8;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .45);
+}
+.wave-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  font-size: 1.75rem;
+  line-height: 1;
+  color: #8ec8e8;
+  cursor: pointer;
+  padding: 4px 8px;
+  z-index: 2;
+}
+.wave-modal-close:hover { color: #fff; }
+.wave-modal-title {
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  text-align: center;
+  margin-bottom: 12px;
+  color: #b8e8ff;
+}
+.wave-intro {
+  min-height: clamp(240px, 44vh, 360px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  background: radial-gradient(ellipse at center, #1a6a98 0%, #0a3048 72%);
+  border-radius: 4px;
+}
+.wave-intro[hidden],
+.wave-play[hidden] { display: none !important; }
+.wave-intro-lead {
+  font-family: var(--sans);
+  font-size: clamp(.85rem, 2vw, 1rem);
+  font-weight: 600;
+  color: #e8f8ff;
+  max-width: 36ch;
+  line-height: 1.55;
+}
+.wave-intro-keys {
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #8ec8e8;
+}
+.wave-start-btn {
+  border: 1px solid #5ec8e8;
+  border-radius: 3px;
+  background: rgba(94, 200, 232, .15);
+  padding: 10px 22px;
+  font: 700 .72rem var(--sans);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: pointer;
+}
+.wave-start-btn:hover { background: rgba(94, 200, 232, .3); }
+.wave-modal-panel.is-playing .wave-intro { display: none !important; }
+.wave-modal-panel.is-playing .wave-play {
+  display: block !important;
+  height: clamp(360px, 62vh, 520px);
+}
+.wave-play canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  cursor: crosshair;
+}
 .fund h3 {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
   margin-bottom: 10px;
@@ -2401,12 +2603,22 @@ section:not(.hero) h2::after {
   margin: 16px auto 0;
   background: var(--ink);
 }
-.chicken-cam-toggle {
+.chicken-cam-stack {
   position: fixed;
-  left: 14px;
+  right: 14px;
   bottom: 16px;
   z-index: 46;
   display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+.chicken-cam-stack > * { pointer-events: auto; }
+@media (min-width: 1100px) {
+  .chicken-cam-stack { display: flex; }
+}
+.chicken-cam-toggle {
   font: 600 .68rem/1.2 var(--sans);
   letter-spacing: .08em;
   text-transform: none;
@@ -2419,6 +2631,7 @@ section:not(.hero) h2::after {
   box-shadow: 0 2px 8px rgba(26, 36, 33, .08);
   backdrop-filter: blur(6px);
   transition: color .15s, border-color .15s, background .15s;
+  white-space: nowrap;
 }
 .chicken-cam-toggle:hover {
   color: var(--accent-dark);
@@ -2434,16 +2647,10 @@ section:not(.hero) h2::after {
   border-color: var(--accent);
   background: rgba(232, 229, 222, .85);
 }
-@media (min-width: 1100px) {
-  .chicken-cam-toggle { display: block; }
-}
 .chicken-cam {
-  position: fixed;
-  right: 14px;
-  bottom: 16px;
+  position: relative;
   top: auto;
   width: 140px;
-  z-index: 45;
   display: none;
   opacity: 0;
   font: 700 9px/1.2 Tahoma, Arial, sans-serif;
@@ -2608,7 +2815,8 @@ section:not(.hero) h2::after {
 <body>
 
 <!-- ASSET: chicken-cam feeds — add/remove URLs in CHICKEN_FEEDS array in script below -->
-<button type="button" class="chicken-cam-toggle" id="chicken-cam-toggle" hidden aria-pressed="false">Watch live chicken cam</button>
+<div class="chicken-cam-stack" id="chicken-cam-stack">
+<button type="button" class="chicken-cam-toggle" id="chicken-cam-toggle" aria-pressed="false">Watch live chicken cam</button>
 <aside class="chicken-cam" id="chicken-cam" aria-hidden="true">
   <div class="chicken-cam-boot" id="chicken-cam-boot" hidden>
     <span class="chicken-cam-boot-line" id="boot-line-1">&gt; init chicken_cam</span>
@@ -2629,6 +2837,7 @@ section:not(.hero) h2::after {
     </div>
   </div>
 </aside>
+</div>
 
 <header>
   <div class="nav-inner">
@@ -2663,6 +2872,10 @@ section:not(.hero) h2::after {
       </div>
       <p class="tagline lang-en" id="hero-tagline" lang="en" aria-live="polite">RSVP by January 20, 2027</p>
     </div>
+    <p class="hero-scroll-hint" id="hero-scroll-hint" aria-hidden="true">
+      <span>Scroll down for more</span>
+      <span class="hero-scroll-hint-arrow">↓</span>
+    </p>
     <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
   </section>
 
@@ -2945,9 +3158,12 @@ section:not(.hero) h2::after {
       <div class="funds-grid">
         <!-- CONFIG: fund poll + pay links — see FUND_CONFIG in script -->
         <div class="fund">
-          <div class="fund-gif">
-            <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
-          </div>
+          <button type="button" class="fund-wave-hitbox" id="wave-fund-hitbox" aria-label="Expand oasis ring run mini game">
+            <div class="fund-gif" aria-hidden="true">
+              <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
+            </div>
+            <span class="chicken-expand-hint">Click to play ↗</span>
+          </button>
           <h3>Honeymoon Vacation</h3>
           <hr class="fund-rule">
           <p>Somewhere warm, eventually.</p>
@@ -3149,6 +3365,22 @@ section:not(.hero) h2::after {
   </div>
 </div>
 
+<div class="wave-modal" id="wave-modal" role="dialog" aria-labelledby="wave-modal-title" aria-modal="true" hidden>
+  <div class="wave-modal-backdrop" data-wave-close></div>
+  <div class="wave-modal-panel" id="wave-modal-panel">
+    <button type="button" class="wave-modal-close" data-wave-close aria-label="Close">&times;</button>
+    <div class="wave-modal-title" id="wave-modal-title">Honeymoon Vacation — Oasis Ring Run</div>
+    <div class="wave-intro" id="wave-intro">
+      <p class="wave-intro-lead">Wave Race through the honeymoon oasis. Pass every ring before you dock.</p>
+      <p class="wave-intro-keys">↑ accelerate &nbsp;·&nbsp; ← → steer</p>
+      <button type="button" class="wave-start-btn" id="wave-start-btn">Start engine</button>
+    </div>
+    <div class="wave-play" id="wave-play" hidden>
+      <canvas id="wave-canvas" tabindex="0" aria-label="Oasis ring run — use arrow keys"></canvas>
+    </div>
+  </div>
+</div>
+
 <div class="maze-modal" id="maze-modal" role="dialog" aria-labelledby="maze-modal-title" aria-modal="true" hidden>
   <div class="maze-modal-backdrop" data-maze-close></div>
   <div class="maze-modal-panel" id="maze-modal-panel">
@@ -3170,10 +3402,21 @@ section:not(.hero) h2::after {
   </div>
 </div>
 
-<script src="js/maze-raycaster.js"></script>
-<script src="js/chicken-clicker.js"></script>
 <script>
 (function () {
+  var MOBILE_MQ = window.matchMedia('(max-width: 768px)');
+  function isMobileView() { return MOBILE_MQ.matches; }
+
+  function loadScript(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.body.appendChild(s);
+    });
+  }
+
   var wirePhrase = 'Misa & Ray \u00b7 ';
   document.querySelectorAll('.wire-divider-track').forEach(function (el) {
     el.textContent = wirePhrase.repeat(40);
@@ -3214,6 +3457,29 @@ section:not(.hero) h2::after {
       taglineTimer = setInterval(cycleTagline, 3800);
     } else {
       showTagline(0);
+    }
+  }
+
+  /* mobile hero — scroll hint */
+  var heroScrollHint = document.getElementById('hero-scroll-hint');
+  if (heroScrollHint && isMobileView()) {
+    function updateHeroScrollHint() {
+      heroScrollHint.classList.toggle('is-hidden', window.scrollY > 40);
+    }
+    window.addEventListener('scroll', updateHeroScrollHint, { passive: true });
+    updateHeroScrollHint();
+  } else if (heroScrollHint) {
+    heroScrollHint.hidden = true;
+  }
+
+  if (isMobileView()) {
+    var chickensFund = document.getElementById('chicken-fund-hitbox');
+    if (chickensFund) {
+      var chickensBlurb = chickensFund.closest('.fund');
+      if (chickensBlurb) {
+        var blurb = chickensBlurb.querySelector('p');
+        if (blurb) blurb.textContent = 'Something for the flock back home.';
+      }
     }
   }
 
@@ -3683,10 +3949,11 @@ section:not(.hero) h2::after {
     }
   }
 
+  var camStack = document.getElementById('chicken-cam-stack');
+
   function syncCamToggleVisibility() {
-    if (!camToggle) return;
     var wide = window.innerWidth >= CAM_MIN_WIDTH;
-    camToggle.hidden = !wide;
+    if (camStack) camStack.hidden = !wide;
     if (!wide && camOn) {
       camOn = false;
       updateCamToggle();
@@ -3694,92 +3961,190 @@ section:not(.hero) h2::after {
     }
   }
 
-  if (camToggle) {
-    camToggle.addEventListener('click', function () {
-      setChickenCam(!camOn);
-    });
-    window.addEventListener('resize', syncCamToggleVisibility);
-    syncCamToggleVisibility();
-  }
-
-  /* chicken fund — cookie-clicker flock sim */
-  if (window.ChickenClicker) {
-    var chickenGame = new ChickenClicker({
-      modal: document.getElementById('chicken-modal'),
-      hitbox: document.getElementById('chicken-fund-hitbox'),
-      previewFlock: document.getElementById('chicken-preview-flock')
-    });
-    chickenGame.init();
-  }
-
-  /* home fund — backrooms maze (door intro → raycaster) */
-  var mazeHitbox = document.getElementById('maze-fund-hitbox');
-  var mazeModal = document.getElementById('maze-modal');
-  var mazePanel = document.getElementById('maze-modal-panel');
-  var mazeIntro = document.getElementById('maze-intro');
-  var mazePlay = document.getElementById('maze-play');
-  var mazeDoorScene = document.getElementById('maze-door-scene');
-  var mazeDoorEnter = document.getElementById('maze-door-enter');
-  var mazeCanvas = document.getElementById('maze-canvas');
-  var mazeStarted = false;
-
-  function resetMazeIntro() {
-    mazeStarted = false;
-    if (window.BackroomsMaze) BackroomsMaze.stop();
-    if (mazePanel) mazePanel.classList.remove('is-playing');
-    if (mazeIntro) mazeIntro.hidden = false;
-    if (mazePlay) mazePlay.hidden = true;
-    if (mazeDoorScene) mazeDoorScene.classList.remove('is-open');
-  }
-
-  function beginMazeGame() {
-    if (mazeStarted || !mazeCanvas || !window.BackroomsMaze) return;
-    mazeStarted = true;
-    if (mazePanel) mazePanel.classList.add('is-playing');
-    if (mazeIntro) mazeIntro.hidden = true;
-    if (mazePlay) mazePlay.hidden = false;
-    BackroomsMaze.start(mazeCanvas);
-    mazeCanvas.focus();
-  }
-
-  function openMazeDoor() {
-    if (!mazeDoorScene || mazeStarted) return;
-    mazeDoorScene.classList.add('is-open');
-    setTimeout(beginMazeGame, 900);
-  }
-
-  function openMazeModal() {
-    if (!mazeModal) return;
-    resetMazeIntro();
-    mazeModal.hidden = false;
-    document.body.style.overflow = 'hidden';
-    var closeBtn = mazeModal.querySelector('.maze-modal-close');
-    if (closeBtn) closeBtn.focus();
-  }
-
-  function closeMazeModal() {
-    if (!mazeModal) return;
-    mazeModal.hidden = true;
-    document.body.style.overflow = '';
-    resetMazeIntro();
-    if (mazeHitbox) mazeHitbox.focus();
-  }
-
-  if (mazeHitbox && mazeModal) {
-    mazeHitbox.addEventListener('click', openMazeModal);
-    if (mazeDoorEnter) mazeDoorEnter.addEventListener('click', openMazeDoor);
-    if (mazeDoorScene) {
-      mazeDoorScene.addEventListener('click', function (e) {
-        if (e.target === mazeDoorEnter) return;
-        openMazeDoor();
+  if (!isMobileView()) {
+    if (camToggle) {
+      camToggle.addEventListener('click', function () {
+        setChickenCam(!camOn);
       });
+      window.addEventListener('resize', syncCamToggleVisibility);
+      syncCamToggleVisibility();
     }
-    mazeModal.querySelectorAll('[data-maze-close]').forEach(function (el) {
-      el.addEventListener('click', closeMazeModal);
-    });
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !mazeModal.hidden) closeMazeModal();
-    });
+
+    /* nav — highlight section in view while scrolling */
+    (function () {
+      var sectionIds = ['couple', 'details', 'travel', 'stay', 'rsvp', 'funds'];
+      var navById = {};
+      sectionIds.forEach(function (id) {
+        var link = document.querySelector('nav a[href="#' + id + '"]');
+        if (link) navById[id] = link;
+      });
+
+      function headerOffset() {
+        return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 88;
+      }
+
+      function updateNavActive() {
+        var marker = window.scrollY + headerOffset() + window.innerHeight * 0.32;
+        var activeId = null;
+        sectionIds.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el && el.offsetTop <= marker) activeId = id;
+        });
+        Object.keys(navById).forEach(function (id) {
+          navById[id].classList.toggle('is-active', id === activeId);
+        });
+      }
+
+      window.addEventListener('scroll', updateNavActive, { passive: true });
+      window.addEventListener('resize', updateNavActive);
+      updateNavActive();
+    })();
+
+    function initMiniGames() {
+      /* chicken fund — cookie-clicker flock sim */
+      if (window.ChickenClicker) {
+        var chickenGame = new ChickenClicker({
+          modal: document.getElementById('chicken-modal'),
+          hitbox: document.getElementById('chicken-fund-hitbox'),
+          previewFlock: document.getElementById('chicken-preview-flock')
+        });
+        chickenGame.init();
+      }
+
+      /* honeymoon fund — oasis ring run */
+      var waveHitbox = document.getElementById('wave-fund-hitbox');
+      var waveModal = document.getElementById('wave-modal');
+      var wavePanel = document.getElementById('wave-modal-panel');
+      var waveIntro = document.getElementById('wave-intro');
+      var wavePlay = document.getElementById('wave-play');
+      var waveStartBtn = document.getElementById('wave-start-btn');
+      var waveCanvas = document.getElementById('wave-canvas');
+      var waveStarted = false;
+
+      function resetWaveIntro() {
+        waveStarted = false;
+        if (window.WaveRacer) WaveRacer.stop();
+        if (wavePanel) wavePanel.classList.remove('is-playing');
+        if (waveIntro) waveIntro.hidden = false;
+        if (wavePlay) wavePlay.hidden = true;
+      }
+
+      function beginWaveGame() {
+        if (waveStarted || !waveCanvas || !window.WaveRacer) return;
+        waveStarted = true;
+        if (wavePanel) wavePanel.classList.add('is-playing');
+        if (waveIntro) waveIntro.hidden = true;
+        if (wavePlay) wavePlay.hidden = false;
+        WaveRacer.start(waveCanvas);
+        waveCanvas.focus();
+      }
+
+      function openWaveModal() {
+        if (!waveModal) return;
+        resetWaveIntro();
+        waveModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        var closeBtn = waveModal.querySelector('.wave-modal-close');
+        if (closeBtn) closeBtn.focus();
+      }
+
+      function closeWaveModal() {
+        if (!waveModal) return;
+        waveModal.hidden = true;
+        document.body.style.overflow = '';
+        resetWaveIntro();
+        if (waveHitbox) waveHitbox.focus();
+      }
+
+      if (waveHitbox && waveModal) {
+        waveHitbox.addEventListener('click', openWaveModal);
+        if (waveStartBtn) waveStartBtn.addEventListener('click', beginWaveGame);
+        waveModal.querySelectorAll('[data-wave-close]').forEach(function (el) {
+          el.addEventListener('click', closeWaveModal);
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && waveModal && !waveModal.hidden) closeWaveModal();
+        });
+      }
+
+      /* home fund — backrooms maze */
+      var mazeHitbox = document.getElementById('maze-fund-hitbox');
+      var mazeModal = document.getElementById('maze-modal');
+      var mazePanel = document.getElementById('maze-modal-panel');
+      var mazeIntro = document.getElementById('maze-intro');
+      var mazePlay = document.getElementById('maze-play');
+      var mazeDoorScene = document.getElementById('maze-door-scene');
+      var mazeDoorEnter = document.getElementById('maze-door-enter');
+      var mazeCanvas = document.getElementById('maze-canvas');
+      var mazeStarted = false;
+
+      function resetMazeIntro() {
+        mazeStarted = false;
+        if (window.BackroomsMaze) BackroomsMaze.stop();
+        if (mazePanel) mazePanel.classList.remove('is-playing');
+        if (mazeIntro) mazeIntro.hidden = false;
+        if (mazePlay) mazePlay.hidden = true;
+        if (mazeDoorScene) mazeDoorScene.classList.remove('is-open');
+      }
+
+      function beginMazeGame() {
+        if (mazeStarted || !mazeCanvas || !window.BackroomsMaze) return;
+        mazeStarted = true;
+        if (mazePanel) mazePanel.classList.add('is-playing');
+        if (mazeIntro) mazeIntro.hidden = true;
+        if (mazePlay) mazePlay.hidden = false;
+        BackroomsMaze.start(mazeCanvas);
+        mazeCanvas.focus();
+      }
+
+      function openMazeDoor() {
+        if (!mazeDoorScene || mazeStarted) return;
+        mazeDoorScene.classList.add('is-open');
+        setTimeout(beginMazeGame, 900);
+      }
+
+      function openMazeModal() {
+        if (!mazeModal) return;
+        resetMazeIntro();
+        mazeModal.hidden = false;
+        document.body.style.overflow = 'hidden';
+        var closeBtn = mazeModal.querySelector('.maze-modal-close');
+        if (closeBtn) closeBtn.focus();
+      }
+
+      function closeMazeModal() {
+        if (!mazeModal) return;
+        mazeModal.hidden = true;
+        document.body.style.overflow = '';
+        resetMazeIntro();
+        if (mazeHitbox) mazeHitbox.focus();
+      }
+
+      if (mazeHitbox && mazeModal) {
+        mazeHitbox.addEventListener('click', openMazeModal);
+        if (mazeDoorEnter) mazeDoorEnter.addEventListener('click', openMazeDoor);
+        if (mazeDoorScene) {
+          mazeDoorScene.addEventListener('click', function (e) {
+            if (e.target === mazeDoorEnter) return;
+            openMazeDoor();
+          });
+        }
+        mazeModal.querySelectorAll('[data-maze-close]').forEach(function (el) {
+          el.addEventListener('click', closeMazeModal);
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && !mazeModal.hidden) closeMazeModal();
+        });
+      }
+    }
+
+    Promise.all([
+      loadScript('js/maze-raycaster.js'),
+      loadScript('js/wave-racer.js'),
+      loadScript('js/chicken-clicker.js')
+    ]).then(initMiniGames).catch(function () {});
+  } else if (camStack) {
+    camStack.hidden = true;
   }
 
   /* secret garden radish — pull up to reveal modal */
