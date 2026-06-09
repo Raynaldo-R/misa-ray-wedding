@@ -1442,6 +1442,133 @@ button[type=submit]:disabled {
 .chicken-game-panel.is-paused .chicken-widget--expanded { pointer-events: none; opacity: .72; }
 .chicken-upgrade-row--evo { border-color: var(--accent-dark); }
 .chicken-upgrade-row--evo.can-afford { background: rgba(196, 167, 106, .1); }
+.chicken-upgrade-row--horizon { opacity: .5; }
+.chicken-shop-head {
+  font-family: var(--sans);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 8px 0 4px;
+}
+.chicken-shop-head:first-child { margin-top: 0; }
+.chicken-evo-bar {
+  display: block;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.chicken-evo-bar span {
+  display: block;
+  height: 100%;
+  background: var(--sage);
+  border-radius: 2px;
+}
+.chicken-evo-bar--sm { height: 2px; margin-top: 3px; }
+.chicken-goal {
+  margin-bottom: 10px;
+  font-family: var(--sans);
+}
+.chicken-goal-label {
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+.chicken-goal-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.chicken-goal-fill {
+  height: 100%;
+  width: 0;
+  background: var(--forest);
+  border-radius: 2px;
+  transition: width .35s ease;
+}
+.chicken-toast {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  right: 8px;
+  z-index: 12;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: rgba(26, 36, 33, .88);
+  color: var(--ivory);
+  font-family: var(--sans);
+  font-size: .65rem;
+  line-height: 1.35;
+  transform: translateY(-120%);
+  opacity: 0;
+  transition: transform .3s ease, opacity .3s ease;
+  pointer-events: none;
+}
+.chicken-toast.is-visible { transform: translateY(0); opacity: 1; }
+.chicken-hud-pop { animation: chicken-hud-pop .35s ease; }
+.chicken-hud-flash { animation: chicken-hud-flash .5s ease; }
+@keyframes chicken-hud-pop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+@keyframes chicken-hud-flash {
+  0%, 100% { color: var(--ink); }
+  50% { color: var(--accent-dark); }
+}
+.chicken-upgrade-flash { animation: chicken-row-flash .3s ease; }
+@keyframes chicken-row-flash {
+  50% { background: rgba(196, 212, 106, .35); }
+}
+.chicken-hatch-pop { font-size: .62rem; color: var(--forest); }
+.chicken-golden-worm {
+  position: absolute;
+  top: 42%;
+  left: -40px;
+  z-index: 15;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  animation: chicken-golden-drift 8s linear forwards;
+  filter: drop-shadow(0 0 6px gold) sepia(1) saturate(3) hue-rotate(10deg);
+}
+.chicken-golden-worm img { width: 22px; height: auto; image-rendering: pixelated; }
+.chicken-golden-worm--still { left: 50%; transform: translateX(-50%); animation: none; }
+@keyframes chicken-golden-drift {
+  from { left: -40px; }
+  to { left: calc(100% + 20px); }
+}
+.chicken-game-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.chicken-footer-btn {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.chicken-footer-btn:hover { border-color: var(--sage-light); color: var(--ink); }
+.chicken-footer-btn--prestige { margin-left: auto; border-color: var(--accent-dark); color: var(--accent-dark); }
+.chicken-leaderboard-row--retired { opacity: .75; font-style: italic; }
+.chicken-bird-slot { transition: --bird-scale 1s ease; }
 @media (max-width: 700px) {
   .chicken-game-layout {
     grid-template-columns: 1fr;
@@ -1582,6 +1709,9 @@ button[type=submit]:disabled {
   .chicken-widget.is-feasting .chicken-widget-birds { animation: none; }
   .chicken-bird-slot { animation: none; transform: translate(-50%, -50%) scale(var(--bird-scale, 1)); }
   .chicken-bird--rainbow { animation: none; }
+  .chicken-golden-worm { animation: none; left: 50%; transform: translateX(-50%); }
+  .chicken-goal-fill { transition: none; }
+  .chicken-toast { transition: none; }
   .chicken-click-pop { animation: none; opacity: 0; }
   .chicken-expand-hint { opacity: 1; transform: none; }
 }
@@ -2610,19 +2740,24 @@ section:not(.hero) h2::after {
         <div class="chicken-game-hud" aria-live="polite">
           <div>Grains<span id="chicken-hud-grains">0</span></div>
           <div>Worms<span id="chicken-hud-worms">0</span></div>
-          <div>Eggs<span id="chicken-hud-eggs">0</span></div>
+          <div id="chicken-hud-eggs-wrap">Eggs<span id="chicken-hud-eggs">0</span></div>
           <div>Flock<span id="chicken-hud-flock">1</span></div>
           <div>Per click<span id="chicken-hud-click">1 grain / click</span></div>
           <div class="chicken-game-hud-hatch">Hatch<span id="chicken-hud-hatch">0%</span></div>
           <div class="chicken-game-hud-boost">Boost<span id="chicken-hud-boost">—</span></div>
         </div>
+        <div class="chicken-goal" id="chicken-goal-bar">
+          <div class="chicken-goal-label" id="chicken-goal-label">Goal: Buy your first grain upgrade</div>
+          <div class="chicken-goal-track"><div class="chicken-goal-fill" id="chicken-goal-fill"></div></div>
+        </div>
         <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
-          <button type="button" class="chicken-feed-btn is-active" id="chicken-mode-grain">Grain</button>
-          <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlocks at 8 grains/click or 15 hens">Worms</button>
+          <button type="button" class="chicken-feed-btn is-active" id="chicken-mode-grain" aria-pressed="true">Grain</button>
+          <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlocks at 3 grains/click or 5 hens" aria-pressed="false">Worms</button>
           <button type="button" class="chicken-feed-btn" id="chicken-mode-giant" hidden title="Unlocked by a Rainbow hen">Giant</button>
         </div>
         <div class="chicken-game-main">
           <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
+            <div class="chicken-toast" id="chicken-toast" hidden></div>
             <div class="chicken-widget-stage">
               <div class="chicken-particles" id="chicken-particles"></div>
               <div class="chicken-egg-layer" id="chicken-egg-layer"></div>
@@ -2642,8 +2777,14 @@ section:not(.hero) h2::after {
         <div class="chicken-sidebar-section chicken-sidebar-section--fame">
           <div class="chicken-sidebar-title">Hall of Fame</div>
           <div class="chicken-sidebar-scroll" id="chicken-leaderboard"></div>
+          <div id="chicken-hof-retired"></div>
         </div>
       </aside>
+    </div>
+    <div class="chicken-game-footer">
+      <button type="button" class="chicken-footer-btn" id="chicken-save-export">Export</button>
+      <button type="button" class="chicken-footer-btn" id="chicken-save-import">Import</button>
+      <button type="button" class="chicken-footer-btn chicken-footer-btn--prestige" id="chicken-prestige-btn" hidden>Found a New Farm</button>
     </div>
     <div class="chicken-narrative" id="chicken-narrative" hidden>
       <div class="chicken-narrative-backdrop"></div>
