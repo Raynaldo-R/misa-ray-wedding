@@ -1784,8 +1784,8 @@ section:not(.hero) h2::after {
       <a href="#travel">Getting Here</a>
       <a href="#stay">Stay &amp; Play</a>
       <a href="#rsvp">RSVP</a>
-      <a href="#funds">Registry</a>
-      <a href="share-photos.html" class="nav-photos">Share Photos</a>
+      <a href="#funds">Funds</a>
+      <a href="share-photos.html" class="nav-photos">Share Photos ↗</a>
     </nav>
   </div>
 </header>
@@ -1806,7 +1806,7 @@ section:not(.hero) h2::after {
         <a href="#rsvp" class="btn btn-primary">RSVP</a>
         <a href="#travel" class="btn btn-ghost">Getting Here</a>
       </div>
-      <p class="tagline lang-en" id="hero-tagline" lang="en" aria-live="polite">Save the date!</p>
+      <p class="tagline lang-en" id="hero-tagline" lang="en" aria-live="polite">RSVP by January 20, 2027</p>
     </div>
     <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
   </section>
@@ -1822,7 +1822,7 @@ section:not(.hero) h2::after {
           <img src="images/couple.jpg" alt="Misa Steinmetz and Raynaldo Rusi" width="800" height="1000">
         </figure>
         <div>
-          <p>Misa Steinmetz and Raynaldo Rusi met in late 2019 through mutual friends. They soon realized they loved the same hobbies: watching horror movies, being creative, and most importantly, being in each other's company. Now they are inseparable.</p>
+          <p>Misa Steinmetz and Raynaldo Rusi met in late 2019 through mutual friends and started dating in 2021. They soon realized they loved the same hobbies: watching horror movies, being creative, and most importantly, being in each other's company. Now they are inseparable.</p>
           <p>Raynaldo Rusi proposed to Misa Steinmetz in Kyoto, Japan, in January 2025. They were officially married on May 25, 2026, and want all their family and friends to celebrate with them on April 3, 2027.</p>
           <button type="button" class="together" id="together-trigger">Together since 2021</button>
         </div>
@@ -1852,9 +1852,9 @@ section:not(.hero) h2::after {
             <div class="val">1:00 PM at St. Paul's Church<br>
               <span class="sub">31899 NE State Hwy 104, Port Gamble, WA 98364</span>
               <span class="map-links">
-                <a href="https://www.google.com/maps/dir/?api=1&amp;destination=St.+Paul%27s+Episcopal+Church,+31899+NE+State+Route+104,+Kingston,+WA+98346" target="_blank" rel="noopener noreferrer">Get directions ↗</a>
+                <a href="https://www.google.com/maps/dir/?api=1&amp;destination=St.+Paul%27s+Episcopal+Church,+31899+NE+State+Hwy+104,+Port+Gamble,+WA+98364" target="_blank" rel="noopener noreferrer">Get directions ↗</a>
                 ·
-                <a href="https://maps.apple.com/?daddr=St.+Paul%27s+Episcopal+Church,+31899+NE+State+Route+104,+Kingston,+WA+98346" target="_blank" rel="noopener noreferrer">Apple Maps ↗</a>
+                <a href="https://maps.apple.com/?daddr=St.+Paul%27s+Episcopal+Church,+31899+NE+State+Hwy+104,+Port+Gamble,+WA+98364" target="_blank" rel="noopener noreferrer">Apple Maps ↗</a>
               </span>
             </div>
           </div>
@@ -2002,10 +2002,7 @@ section:not(.hero) h2::after {
 
       <!-- CONFIG: RSVP delivery — see RSVP_CONFIG in script (FormSubmit → RSVP@raynaldorusi.com) -->
       <form id="rsvpForm" novalidate>
-        <div class="field field-honey" aria-hidden="true">
-          <label for="website">Website</label>
-          <input type="text" id="website" name="_honey" tabindex="-1" autocomplete="off">
-        </div>
+        <input class="field-honey" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
         <div class="field">
           <label for="name">Name(s)</label>
           <input type="text" id="name" name="name" placeholder="The Smith Family" required>
@@ -2051,7 +2048,7 @@ section:not(.hero) h2::after {
         </div>
         <button type="submit" id="rsvp-submit">Send RSVP</button>
         <div id="rsvp-confirm">Thank you. We can't wait to celebrate with you.</div>
-        <div id="rsvp-error">Something went wrong. Please try again or email us directly at RSVP@raynaldorusi.com.</div>
+        <div id="rsvp-error">Something went wrong. Please try again or <a href="mailto:RSVP@raynaldorusi.com">email us</a>.</div>
       </form>
     </div>
   </section>
@@ -2061,7 +2058,7 @@ section:not(.hero) h2::after {
   <!-- FUNDS -->
   <section id="funds" class="snap-section">
     <div class="wrap">
-      <span class="eyebrow">Registry</span>
+      <span class="eyebrow">Contribute</span>
       <h2>Funds</h2>
       <p class="section-note">There's no registry. Pick a fund!</p>
       <div class="fund-poll" id="fund-poll" aria-live="polite">
@@ -2136,6 +2133,8 @@ section:not(.hero) h2::after {
 
   <div class="footer-links">
     <a href="#top">↑ Back to top</a>
+    ·
+    <a href="share-photos.html">Share photos ↗</a>
   </div>
 
   <div class="secret-mound" id="secret-mound" aria-hidden="true">
@@ -2226,15 +2225,15 @@ section:not(.hero) h2::after {
     el.textContent = wirePhrase.repeat(40);
   });
 
-  /* hero tagline — Save the date! in rotating languages */
+  /* hero tagline — RSVP deadline in rotating languages */
   var heroTagline = document.getElementById('hero-tagline');
   var SAVE_THE_DATE_LINES = [
-    { lang: 'en', cls: 'lang-en', text: 'Save the date!' },
-    { lang: 'sq', cls: 'lang-sq', text: 'Ruajeni datën!' },
-    { lang: 'ja', cls: 'lang-ja', text: 'ご予定を空けておいて！' },
-    { lang: 'fr', cls: 'lang-fr', text: 'Réservez la date !' },
-    { lang: 'el', cls: 'lang-el', text: 'Κρατήστε την ημερομηνία!' },
-    { lang: 'it', cls: 'lang-it', text: 'Segnatela in agenda!' }
+    { lang: 'en', cls: 'lang-en', text: 'RSVP by January 20, 2027' },
+    { lang: 'sq', cls: 'lang-sq', text: 'Përgjigjuni deri më 20 janar 2027' },
+    { lang: 'ja', cls: 'lang-ja', text: '2027年1月20日までにご返信ください' },
+    { lang: 'fr', cls: 'lang-fr', text: 'RSVP avant le 20 janvier 2027' },
+    { lang: 'el', cls: 'lang-el', text: 'Απάντηση μέχρι τις 20 Ιανουαρίου 2027' },
+    { lang: 'it', cls: 'lang-it', text: 'Rispondete entro il 20 gennaio 2027' }
   ];
   if (heroTagline && SAVE_THE_DATE_LINES.length > 1) {
     var taglineIdx = 0;
@@ -2285,28 +2284,45 @@ section:not(.hero) h2::after {
   var COUNTER_KEY = 'misa-ray-wedding-port-gamble-visits';
   var API = 'https://countapi.mileshilliard.com/api/v1/';
   var el = document.getElementById('visitor-digits');
+  var counterWrap = el ? el.closest('.visitor-counter') : null;
+  var counterDone = false;
 
   function render(n) {
+    if (!el) return;
     var digits = String(Math.max(0, n)).padStart(6, '0').split('');
     el.innerHTML = digits.map(function (d) {
       return '<span class="counter-digit">' + d + '</span>';
     }).join('');
   }
 
-  function load(getOnly) {
-    var url = API + (getOnly ? 'get/' : 'hit/') + COUNTER_KEY;
-    return fetch(url).then(function (r) { return r.json(); });
+  function finishCounter(n) {
+    if (counterDone) return;
+    counterDone = true;
+    clearTimeout(counterTimeout);
+    if (typeof n === 'number') render(n);
   }
 
-  if (sessionStorage.getItem('misa-ray-counted')) {
-    load(true).then(function (d) { render(d.value); }).catch(showError);
-  } else {
-    sessionStorage.setItem('misa-ray-counted', '1');
-    load(false).then(function (d) { render(d.value); }).catch(showError);
+  function load(getOnly) {
+    var url = API + (getOnly ? 'get/' : 'hit/') + COUNTER_KEY;
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw new Error('counter failed');
+      return r.json();
+    });
   }
 
   function showError() {
-    el.innerHTML = '<span class="counter-digit counter-loading">?</span>'.repeat(6);
+    if (counterWrap) counterWrap.hidden = true;
+  }
+
+  var counterTimeout = setTimeout(showError, 4000);
+
+  if (el) {
+    if (sessionStorage.getItem('misa-ray-counted')) {
+      load(true).then(function (d) { finishCounter(d.value); }).catch(showError);
+    } else {
+      sessionStorage.setItem('misa-ray-counted', '1');
+      load(false).then(function (d) { finishCounter(d.value); }).catch(showError);
+    }
   }
 
   /*
@@ -2395,12 +2411,27 @@ section:not(.hero) h2::after {
     }).join('');
   }
 
+  var fundPollResolved = false;
+
   function loadFundPoll() {
     if (!fundPollLead || !fundPollBars) return;
+
+    var pollTimeout = setTimeout(function () {
+      if (fundPollResolved) return;
+      fundPollLead.textContent = 'Pick a fund below — contribute to cast your vote.';
+      fundPollBars.innerHTML = '';
+    }, 2500);
+
     fetchAllFundCounts()
-      .then(renderFundPoll)
+      .then(function (rows) {
+        fundPollResolved = true;
+        clearTimeout(pollTimeout);
+        renderFundPoll(rows);
+      })
       .catch(function () {
-        fundPollLead.textContent = 'Poll results unavailable right now.';
+        fundPollResolved = true;
+        clearTimeout(pollTimeout);
+        fundPollLead.textContent = 'Pick a fund below — contribute to cast your vote.';
         fundPollBars.innerHTML = '';
       });
   }
