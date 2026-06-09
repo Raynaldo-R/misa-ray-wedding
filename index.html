@@ -8,7 +8,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Calistoga&family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Calistoga&family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,500&family=Noto+Sans+JP:wght@400;500;700&family=Playwrite+EN:wght@100..400&family=Playwrite+GR:wght@100..400&display=swap" rel="stylesheet">
 
 <style>
 /* Forest + ivory — bold sans throughout */
@@ -336,10 +336,29 @@ p:last-child { margin-bottom: 0; }
   padding: 14px 28px;
 }
 .hero .tagline {
-  font-size: clamp(.95rem, 2vw, 1.1rem);
-  font-weight: 500;
+  font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+  font-weight: 400;
   color: var(--ink-soft);
   margin: 0;
+  min-height: 1.5em;
+  line-height: 1.35;
+  transition: opacity 0.45s ease;
+}
+.hero .tagline.lang-en,
+.hero .tagline.lang-sq,
+.hero .tagline.lang-fr,
+.hero .tagline.lang-it {
+  font-family: 'Playwrite EN', cursive;
+  font-weight: 300;
+}
+.hero .tagline.lang-el {
+  font-family: 'Playwrite GR', cursive;
+  font-weight: 300;
+}
+.hero .tagline.lang-ja {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 500;
+  font-size: clamp(1.05rem, 2.8vw, 1.45rem);
 }
 
 /* ---------- buttons ---------- */
@@ -1787,7 +1806,7 @@ section:not(.hero) h2::after {
         <a href="#rsvp" class="btn btn-primary">RSVP</a>
         <a href="#travel" class="btn btn-ghost">Getting Here</a>
       </div>
-      <p class="tagline">Celebrate our day with us</p>
+      <p class="tagline lang-en" id="hero-tagline" lang="en" aria-live="polite">Save the date!</p>
     </div>
     <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
   </section>
@@ -2206,6 +2225,44 @@ section:not(.hero) h2::after {
   document.querySelectorAll('.wire-divider-track').forEach(function (el) {
     el.textContent = wirePhrase.repeat(40);
   });
+
+  /* hero tagline — Save the date! in rotating languages */
+  var heroTagline = document.getElementById('hero-tagline');
+  var SAVE_THE_DATE_LINES = [
+    { lang: 'en', cls: 'lang-en', text: 'Save the date!' },
+    { lang: 'sq', cls: 'lang-sq', text: 'Ruajeni datën!' },
+    { lang: 'ja', cls: 'lang-ja', text: 'ご予定を空けておいて！' },
+    { lang: 'fr', cls: 'lang-fr', text: 'Réservez la date !' },
+    { lang: 'el', cls: 'lang-el', text: 'Κρατήστε την ημερομηνία!' },
+    { lang: 'it', cls: 'lang-it', text: 'Segnatela in agenda!' }
+  ];
+  if (heroTagline && SAVE_THE_DATE_LINES.length > 1) {
+    var taglineIdx = 0;
+    var taglineTimer;
+    var taglineMotionOk = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function showTagline(i) {
+      var line = SAVE_THE_DATE_LINES[i];
+      heroTagline.lang = line.lang;
+      heroTagline.className = 'tagline ' + line.cls;
+      heroTagline.textContent = line.text;
+      heroTagline.style.opacity = '1';
+    }
+
+    function cycleTagline() {
+      heroTagline.style.opacity = '0';
+      setTimeout(function () {
+        taglineIdx = (taglineIdx + 1) % SAVE_THE_DATE_LINES.length;
+        showTagline(taglineIdx);
+      }, 450);
+    }
+
+    if (taglineMotionOk) {
+      taglineTimer = setInterval(cycleTagline, 3800);
+    } else {
+      showTagline(0);
+    }
+  }
 
   /* wedding countdown — April 3, 2027 */
   var countdownEl = document.getElementById('wedding-countdown');
