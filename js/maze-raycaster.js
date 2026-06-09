@@ -36,9 +36,30 @@
   var TOMATO_IMG = null;
   var active = null;
 
-  var HUB = { minX: 8.2, maxX: 17.8, minY: 9.2, maxY: 12.8 };
-  var TOMATO_SPAWN = { x: 17.4, y: 11.0 };
-  var TOMATO_FLEE_ANGLE = Math.atan2(20.5 - TOMATO_SPAWN.y, 23.5 - TOMATO_SPAWN.x);
+  /* Corridor ends — tomato peeks at far end, then scurries away (one-time) */
+  var CORRIDOR_EVENTS = [
+    {
+      id: 'hub-east',
+      minX: 9, maxX: 16.5, minY: 9.4, maxY: 12.6,
+      spawnX: 17.55, spawnY: 10.6,
+      fleeAngle: 0,
+      minDist: 3.5, maxDist: 12
+    },
+    {
+      id: 'hub-west',
+      minX: 9, maxX: 16.5, minY: 9.4, maxY: 12.6,
+      spawnX: 7.45, spawnY: 11.4,
+      fleeAngle: Math.PI,
+      minDist: 3.5, maxDist: 12
+    },
+    {
+      id: 'lower-east',
+      minX: 6, maxX: 20, minY: 18.6, maxY: 20.4,
+      spawnX: 22.4, spawnY: 19.5,
+      fleeAngle: 0,
+      minDist: 4, maxDist: 14
+    }
+  ];
 
   var CEIL_BASE = { r: 232, g: 218, b: 168 };
   var FLOOR_BASE = { r: 220, g: 202, b: 142 };
@@ -75,8 +96,26 @@
     return map[my].charCodeAt(mx) - 48;
   }
 
-  function inHub(px, py) {
-    return px >= HUB.minX && px <= HUB.maxX && py >= HUB.minY && py <= HUB.maxY;
+  function distTo(px, py, tx, ty) {
+    var dx = tx - px;
+    var dy = ty - py;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function findCorridorTrigger(px, py) {
+    var best = null;
+    var bestDist = Infinity;
+    var i;
+    for (i = 0; i < CORRIDOR_EVENTS.length; i++) {
+      var c = CORRIDOR_EVENTS[i];
+      if (px < c.minX || px > c.maxX || py < c.minY || py > c.maxY) continue;
+      var d = distTo(px, py, c.spawnX, c.spawnY);
+      if (d >= c.minDist && d <= c.maxDist && d < bestDist) {
+        best = c;
+        bestDist = d;
+      }
+    }
+    return best;
   }
 
   function castRay(map, px, py, angle, maxDist) {
@@ -189,7 +228,7 @@
     ctx.globalAlpha = 1;
   }
 
-  function drawBillboard(ctx, state, sx, sy, img, alpha) {
+  function drawBillboard(ctx, state, sx, sy, img, alpha, flipX) {
     if (!img || alpha <= 0.01) return;
     var w = ctx.canvas.width;
     var h = ctx.canvas.height;
@@ -197,57 +236,66 @@
     var dx = sx - state.px;
     var dy = sy - state.py;
     var dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < 0.3 || dist > MAX_DIST) return;
+    if (dist < 0.5 || dist > MAX_DIST) return;
     var angle = Math.atan2(dy, dx) - state.pa;
     while (angle > Math.PI) angle -= Math.PI * 2;
     while (angle < -Math.PI) angle += Math.PI * 2;
-    if (Math.abs(angle) > FOV * 0.58) return;
+    if (Math.abs(angle) > FOV * 0.62) return;
     var screenX = (0.5 + angle / FOV) * w;
-    var spriteH = Math.min(h * 0.7, (h / dist) * 0.42);
+    var spriteH = Math.min(h * 0.45, (h / dist) * 0.26);
     var spriteW = spriteH * (img.width / img.height);
     var fog = atmosphere(dist);
-    var a = alpha * fog.bright * (1 - fog.t * 0.65);
+    var a = alpha * fog.bright * (1 - fog.t * 0.55);
+    var footY = halfH + spriteH * 0.08;
+    ctx.save();
     ctx.globalAlpha = Math.max(0, Math.min(1, a));
-    ctx.drawImage(
-      img,
-      screenX - spriteW / 2,
-      halfH - spriteH / 2 + spriteH * 0.12,
-      spriteW,
-      spriteH
-    );
+    ctx.translate(screenX, footY - spriteH);
+    if (flipX) ctx.scale(-1, 1);
+    ctx.drawImage(img, -spriteW / 2, 0, spriteW, spriteH);
+    ctx.restore();
     ctx.globalAlpha = 1;
+  }
+
+  function startTomatoEvent(state, corridor) {
+    state.tomatoPhase = 'peek';
+    state.tomatoX = corridor.spawnX;
+    state.tomatoY = corridor.spawnY;
+    state.tomatoFleeAngle = corridor.fleeAngle;
+    state.tomatoFlip = Math.cos(corridor.fleeAngle) < 0;
+    state.tomatoAlpha = 0;
+    state.tomatoTimer = 0;
+    state.tomatoCorridorId = corridor.id;
   }
 
   function updateTomato(state) {
     if (state.tomatoPhase === 'done') return;
 
-    if (state.tomatoPhase === 'wait' && inHub(state.px, state.py)) {
-      state.tomatoPhase = 'show';
-      state.tomatoX = TOMATO_SPAWN.x;
-      state.tomatoY = TOMATO_SPAWN.y;
-      state.tomatoAlpha = 0;
-      state.tomatoTimer = 0;
+    if (state.tomatoPhase === 'wait') {
+      var corridor = findCorridorTrigger(state.px, state.py);
+      if (corridor) startTomatoEvent(state, corridor);
+      return;
     }
 
-    if (state.tomatoPhase === 'show') {
+    if (state.tomatoPhase === 'peek') {
       state.tomatoTimer += 1;
-      state.tomatoAlpha = Math.min(1, state.tomatoTimer / 24);
-      if (state.tomatoAlpha >= 1) {
-        state.tomatoPhase = 'flee';
+      if (state.tomatoTimer <= 8) {
+        state.tomatoAlpha = state.tomatoTimer / 8;
+      } else if (state.tomatoTimer <= 28) {
+        state.tomatoAlpha = 1;
+      } else {
+        state.tomatoPhase = 'scurry';
         state.tomatoTimer = 0;
       }
+      return;
     }
 
-    if (state.tomatoPhase === 'flee') {
+    if (state.tomatoPhase === 'scurry') {
       state.tomatoTimer += 1;
-      var speed = 0.038;
-      state.tomatoX += Math.cos(TOMATO_FLEE_ANGLE) * speed;
-      state.tomatoY += Math.sin(TOMATO_FLEE_ANGLE) * speed;
-      var fadeStart = 20;
-      if (state.tomatoTimer > fadeStart) {
-        state.tomatoAlpha = Math.max(0, 1 - (state.tomatoTimer - fadeStart) / 70);
-      }
-      if (state.tomatoAlpha <= 0 || state.tomatoTimer > 110) {
+      var speed = 0.042;
+      state.tomatoX += Math.cos(state.tomatoFleeAngle) * speed;
+      state.tomatoY += Math.sin(state.tomatoFleeAngle) * speed;
+      state.tomatoAlpha = Math.max(0, 1 - state.tomatoTimer / 72);
+      if (state.tomatoTimer >= 72 || state.tomatoAlpha <= 0) {
         state.tomatoPhase = 'done';
         state.tomatoAlpha = 0;
       }
@@ -259,19 +307,12 @@
     var ctx = state.ctx;
 
     ctx.fillStyle = 'rgba(26,36,33,0.55)';
-    ctx.fillRect(8, 8, 220, state.tomatoPhase !== 'wait' && state.tomatoPhase !== 'done' ? 58 : 44);
+    ctx.fillRect(8, 8, 210, 44);
     ctx.fillStyle = '#faf9f6';
     ctx.font = '500 11px DM Sans, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText('Arrow keys — move & turn', 16, 26);
-    if (state.tomatoPhase === 'show' || state.tomatoPhase === 'flee') {
-      ctx.fillText('Something ran down the east hall…', 16, 40);
-      ctx.fillText('Find the green exit wall', 16, 54);
-    } else if (state.tomatoPhase === 'done') {
-      ctx.fillText('Follow the hall toward the exit', 16, 40);
-    } else {
-      ctx.fillText('Find the green exit wall', 16, 40);
-    }
+    ctx.fillText('Find the green exit wall', 16, 40);
   }
 
   function render(state) {
@@ -328,8 +369,8 @@
       drawWallColumn(ctx, j * colW, colW, top, wallH, hit.texU, fogWall, hit.cell === 2, sideShade);
     }
 
-    if (TOMATO_IMG && state.tomatoPhase !== 'wait' && state.tomatoPhase !== 'done') {
-      drawBillboard(ctx, state, state.tomatoX, state.tomatoY, TOMATO_IMG, state.tomatoAlpha);
+    if (TOMATO_IMG && (state.tomatoPhase === 'peek' || state.tomatoPhase === 'scurry')) {
+      drawBillboard(ctx, state, state.tomatoX, state.tomatoY, TOMATO_IMG, state.tomatoAlpha, state.tomatoFlip);
     }
 
     drawHud(state, w, h);
@@ -433,10 +474,13 @@
       fadeWhite: 0,
       fadeStart: 0,
       tomatoPhase: 'wait',
-      tomatoX: TOMATO_SPAWN.x,
-      tomatoY: TOMATO_SPAWN.y,
+      tomatoX: 0,
+      tomatoY: 0,
+      tomatoFleeAngle: 0,
+      tomatoFlip: false,
       tomatoAlpha: 0,
       tomatoTimer: 0,
+      tomatoCorridorId: null,
       frame: null,
       resize: resize,
       onKeyDown: null,
