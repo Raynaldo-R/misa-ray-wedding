@@ -867,7 +867,7 @@ button[type=submit]:disabled {
 
 /* ---------- funds ---------- */
 .fund-poll {
-  margin-bottom: clamp(20px, 4vh, 32px);
+  margin-top: clamp(28px, 5vh, 40px);
   padding: clamp(16px, 3vw, 24px);
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -1814,7 +1814,6 @@ section:not(.hero) h2::after {
   <!-- THE COUPLE -->
   <section id="couple" class="alt snap-section">
     <div class="wrap">
-      <span class="eyebrow">About us</span>
       <h2>The Couple</h2>
       <p class="section-note">how our garden grew</p>
       <div class="couple">
@@ -1835,9 +1834,7 @@ section:not(.hero) h2::after {
   <!-- DETAILS -->
   <section id="details" class="snap-section">
     <div class="wrap">
-      <span class="eyebrow">When &amp; where</span>
       <h2>The Details</h2>
-      <p class="section-note">where &amp; when</p>
       <div class="details-layout">
         <figure class="details-photo">
           <img src="images/church.jpg" alt="St. Paul's Church, Port Gamble" width="600" height="900">
@@ -1891,9 +1888,7 @@ section:not(.hero) h2::after {
   <!-- GETTING HERE -->
   <section id="travel" class="alt snap-section">
     <div class="wrap">
-      <span class="eyebrow">Travel</span>
       <h2>Getting Here</h2>
-      <p class="section-note">ferries, drives &amp; questions</p>
       <p class="faq-quicklinks">
         <a href="https://www.wsdot.com/ferries/schedule/" target="_blank" rel="noopener noreferrer">Ferry schedules ↗</a> ·
         <a href="https://wsdot.com/ferries/traffic/" target="_blank" rel="noopener noreferrer">Wait times ↗</a> ·
@@ -1957,9 +1952,7 @@ section:not(.hero) h2::after {
   <!-- STAY & PLAY -->
   <section id="stay" class="snap-section">
     <div class="wrap">
-      <span class="eyebrow">Visit</span>
       <h2>Stay &amp; Play</h2>
-      <p class="section-note">where to sleep &amp; what to do</p>
 
       <div class="subhead">Lodging</div>
       <div class="cards">
@@ -2092,13 +2085,8 @@ section:not(.hero) h2::after {
   <!-- FUNDS -->
   <section id="funds" class="snap-section">
     <div class="wrap">
-      <span class="eyebrow">Contribute</span>
       <h2>Funds</h2>
       <p class="section-note">There's no registry. Pick a fund!</p>
-      <div class="fund-poll" id="fund-poll" aria-live="polite">
-        <p class="fund-poll-lead" id="fund-poll-lead">Loading poll…</p>
-        <div class="fund-poll-bars" id="fund-poll-bars"></div>
-      </div>
       <div class="funds-grid">
         <!-- CONFIG: fund poll + pay links — see FUND_CONFIG in script -->
         <div class="fund">
@@ -2141,6 +2129,10 @@ section:not(.hero) h2::after {
           <p>They need more grubs and snacks!</p>
           <button type="button" class="btn btn-outline fund-contribute" data-fund="chickens">Contribute</button>
         </div>
+      </div>
+      <div class="fund-poll" id="fund-poll" hidden aria-live="polite">
+        <p class="fund-poll-lead" id="fund-poll-lead"></p>
+        <div class="fund-poll-bars" id="fund-poll-bars"></div>
       </div>
     </div>
   </section>
@@ -2390,8 +2382,13 @@ section:not(.hero) h2::after {
     ]
   };
 
+  var fundPoll = document.getElementById('fund-poll');
   var fundPollLead = document.getElementById('fund-poll-lead');
   var fundPollBars = document.getElementById('fund-poll-bars');
+
+  function showFundPoll() {
+    if (fundPoll) fundPoll.hidden = false;
+  }
 
   function fundCountKey(id) {
     return FUND_CONFIG.countKeyPrefix + id;
@@ -2420,7 +2417,7 @@ section:not(.hero) h2::after {
     var leaders = rows.filter(function (row) { return row.count === max && max > 0; });
 
     if (total === 0) {
-      fundPollLead.textContent = 'Be the first to pick a fund — click Contribute on any card below.';
+      fundPollLead.textContent = 'No picks yet.';
     } else if (leaders.length === 1) {
       fundPollLead.textContent = leaders[0].label + ' leads · ' + leaders[0].count + ' pick' + (leaders[0].count === 1 ? '' : 's');
     } else {
@@ -2445,27 +2442,15 @@ section:not(.hero) h2::after {
     }).join('');
   }
 
-  var fundPollResolved = false;
-
-  function loadFundPoll() {
+  function refreshFundPoll() {
     if (!fundPollLead || !fundPollBars) return;
-
-    var pollTimeout = setTimeout(function () {
-      if (fundPollResolved) return;
-      fundPollLead.textContent = 'Pick a fund below — contribute to cast your vote.';
-      fundPollBars.innerHTML = '';
-    }, 2500);
+    showFundPoll();
+    fundPollLead.textContent = 'Loading…';
 
     fetchAllFundCounts()
-      .then(function (rows) {
-        fundPollResolved = true;
-        clearTimeout(pollTimeout);
-        renderFundPoll(rows);
-      })
+      .then(renderFundPoll)
       .catch(function () {
-        fundPollResolved = true;
-        clearTimeout(pollTimeout);
-        fundPollLead.textContent = 'Pick a fund below — contribute to cast your vote.';
+        fundPollLead.textContent = 'Poll unavailable right now.';
         fundPollBars.innerHTML = '';
       });
   }
@@ -2483,10 +2468,16 @@ section:not(.hero) h2::after {
     var fund = FUND_CONFIG.funds.find(function (f) { return f.id === fundId; });
     if (!fund) return;
 
+    showFundPoll();
+    if (fundPollLead) fundPollLead.textContent = 'Loading…';
+
     fetchFundCount(fundId, true)
       .then(function () { return fetchAllFundCounts(); })
-      .then(renderFundPoll)
-      .catch(function () { loadFundPoll(); });
+      .then(function (rows) {
+        renderFundPoll(rows);
+        if (fundPoll) fundPoll.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      })
+      .catch(function () { refreshFundPoll(); });
 
     openFundPayment(fund);
   }
@@ -2496,8 +2487,6 @@ section:not(.hero) h2::after {
       handleFundContribute(btn.getAttribute('data-fund'));
     });
   });
-
-  loadFundPoll();
 
   /* Hide party size when guest declines */
   var partyField = document.getElementById('party-field');
