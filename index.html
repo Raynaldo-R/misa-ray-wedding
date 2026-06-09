@@ -1252,8 +1252,8 @@ button[type=submit]:disabled {
   box-shadow: 0 18px 48px rgba(26, 36, 33, .18);
 }
 .chicken-modal-panel--game {
-  width: min(96vw, 920px);
-  max-height: min(92vh, 720px);
+  width: min(98vw, 1040px);
+  max-height: min(92vh, 740px);
   display: flex;
   flex-direction: column;
   padding: 20px 18px 18px;
@@ -1261,12 +1261,12 @@ button[type=submit]:disabled {
 }
 .chicken-game-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
-  gap: 0 16px;
+  grid-template-columns: minmax(150px, 200px) minmax(0, 1fr) minmax(190px, 250px);
+  gap: 0 12px;
   flex: 1;
   min-height: 0;
 }
-.chicken-game-left {
+.chicken-game-center {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -1276,17 +1276,52 @@ button[type=submit]:disabled {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  gap: 6px;
+}
+.chicken-game-sidebar--left {
+  border-right: 1px solid var(--line);
+  padding-right: 10px;
+}
+.chicken-game-sidebar--right {
   border-left: 1px solid var(--line);
-  padding-left: 14px;
-  gap: 10px;
+  padding-left: 10px;
 }
 .chicken-sidebar-section {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
 }
-.chicken-sidebar-section--upgrades { flex: 1.1; }
-.chicken-sidebar-section--fame { flex: 0.9; max-height: 42%; }
+.chicken-sidebar-scroll-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.chicken-sidebar-scroll-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22px;
+  background: linear-gradient(to bottom, transparent, var(--ivory));
+  pointer-events: none;
+  border-radius: 0 0 4px 4px;
+}
+.chicken-scroll-hint {
+  flex-shrink: 0;
+  font-family: var(--sans);
+  font-size: .52rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink-soft);
+  opacity: .75;
+  padding: 2px 0 0;
+}
 .chicken-sidebar-title {
   font-family: var(--sans);
   font-size: .62rem;
@@ -1526,23 +1561,186 @@ button[type=submit]:disabled {
   50% { background: rgba(196, 212, 106, .35); }
 }
 .chicken-hatch-pop { font-size: .62rem; color: var(--forest); }
-.chicken-golden-worm {
+.chicken-floating-worm {
   position: absolute;
-  top: 42%;
-  left: -40px;
+  top: 38%;
+  left: -48px;
   z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
-  animation: chicken-golden-drift 8s linear forwards;
-  filter: drop-shadow(0 0 6px gold) sepia(1) saturate(3) hue-rotate(10deg);
+  animation: chicken-floating-drift 8s linear forwards;
 }
-.chicken-golden-worm img { width: 22px; height: auto; image-rendering: pixelated; }
-.chicken-golden-worm--still { left: 50%; transform: translateX(-50%); animation: none; }
-@keyframes chicken-golden-drift {
-  from { left: -40px; }
-  to { left: calc(100% + 20px); }
+.chicken-floating-worm--still { left: 50%; transform: translateX(-50%); animation: none; }
+.chicken-floating-worm--egg { filter: drop-shadow(0 0 5px #e8c84a); }
+.chicken-floating-worm--boost { filter: drop-shadow(0 0 6px #5eb8e8); }
+.chicken-floating-worm-body {
+  width: 20px;
+  height: 9px;
+  border-radius: 50% 45% 50% 45% / 55% 50% 55% 50%;
+  background: linear-gradient(145deg, #e8dcc0, #c9b896);
+}
+.chicken-floating-worm--egg .chicken-floating-worm-body {
+  background: linear-gradient(145deg, #f5e6a8, #d4b84a);
+}
+.chicken-floating-worm--boost .chicken-floating-worm-body {
+  background: linear-gradient(145deg, #b8dff5, #5a9fd4);
+}
+.chicken-floating-worm-label {
+  font-family: var(--sans);
+  font-size: .5rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: rgba(255,255,255,.88);
+  padding: 1px 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+@keyframes chicken-floating-drift {
+  from { left: -48px; }
+  to { left: calc(100% + 24px); }
+}
+.chicken-boost-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 14;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: rgba(26, 36, 33, .82);
+  border: 2px solid var(--sage);
+  pointer-events: none;
+  text-align: center;
+}
+.chicken-boost-banner[hidden] { display: none; }
+.chicken-boost-banner-text {
+  font-family: var(--sans);
+  font-size: .85rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #e8f0a8;
+}
+.chicken-boost-banner-time {
+  font-family: var(--sans);
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ivory);
+  font-variant-numeric: tabular-nums;
+}
+.chicken-boost-banner--grain { border-color: #c4a574; }
+.chicken-boost-banner--grain .chicken-boost-banner-text { color: #f0ddb8; }
+.chicken-boost-banner--worm { border-color: #7eb8d8; }
+.chicken-boost-banner--worm .chicken-boost-banner-text { color: #b8e0f8; }
+.chicken-imposter {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+.chicken-imposter[hidden] { display: none; }
+.chicken-imposter-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 36, 33, .5);
+  border-radius: 6px;
+}
+.chicken-imposter-card {
+  position: relative;
+  width: min(100%, 300px);
+  padding: 16px 14px 14px;
+  border-radius: 8px;
+  background: var(--ivory);
+  border: 2px solid #8b3a3a;
+  box-shadow: 0 14px 36px rgba(26, 36, 33, .2);
+  text-align: center;
+}
+.chicken-imposter-img {
+  width: 72px;
+  height: auto;
+  image-rendering: pixelated;
+  margin-bottom: 8px;
+}
+.chicken-imposter-card h3 {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  color: #8b3a3a;
+  margin-bottom: 6px;
+}
+.chicken-imposter-card p {
+  font-size: .7rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+}
+.chicken-imposter-track {
+  position: relative;
+  width: 36px;
+  height: 160px;
+  margin: 0 auto 10px;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: linear-gradient(to bottom, #e8e4dc, #d8d4cc);
+  overflow: hidden;
+}
+.chicken-imposter-zone {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 28%;
+  border-radius: 4px;
+  background: rgba(74, 107, 95, .45);
+  border: 2px solid var(--forest);
+  bottom: 35%;
+  transition: bottom .05s linear;
+}
+.chicken-imposter-marker {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  bottom: 50%;
+  width: 28px;
+  height: 28px;
+  background: url('assets/game/imposter.gif') center bottom / contain no-repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.chicken-imposter-progress {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.chicken-imposter-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--forest);
+  border-radius: 4px;
+  transition: width .08s linear;
+}
+.chicken-imposter-timer {
+  font-family: var(--sans);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--ink-soft);
 }
 .chicken-game-footer {
   display: flex;
@@ -1617,19 +1815,18 @@ button[type=submit]:disabled {
 .chicken-widget-giant-worm::before { left: 28%; }
 .chicken-widget-giant-worm::after { right: 28%; }
 .chicken-bird-slot { transition: --bird-scale 1s ease; }
-@media (max-width: 700px) {
+@media (max-width: 820px) {
   .chicken-game-layout {
     grid-template-columns: 1fr;
     overflow-y: auto;
   }
-  .chicken-game-sidebar {
-    border-left: none;
+  .chicken-game-sidebar--left,
+  .chicken-game-sidebar--right {
+    border: none;
     border-top: 1px solid var(--line);
-    padding-left: 0;
-    padding-top: 12px;
-    max-height: 240px;
+    padding: 10px 0 0;
+    max-height: 200px;
   }
-  .chicken-sidebar-section--fame { max-height: none; }
 }
 .chicken-game-hud {
   display: grid;
@@ -1757,7 +1954,7 @@ button[type=submit]:disabled {
   .chicken-widget.is-feasting .chicken-widget-birds { animation: none; }
   .chicken-bird-slot { animation: none; transform: translate(-50%, -50%) scale(var(--bird-scale, 1)); }
   .chicken-bird--rainbow { animation: none; }
-  .chicken-golden-worm { animation: none; left: 50%; transform: translateX(-50%); }
+  .chicken-floating-worm { animation: none; left: 50%; transform: translateX(-50%); }
   .chicken-goal-fill { transition: none; }
   .chicken-toast { transition: none; }
   .chicken-click-pop { animation: none; opacity: 0; }
@@ -2784,7 +2981,17 @@ section:not(.hero) h2::after {
     <button type="button" class="chicken-modal-close" data-chicken-close aria-label="Close">&times;</button>
     <div class="chicken-modal-title" id="chicken-modal-title">Chicken Fund Clicker</div>
     <div class="chicken-game-layout">
-      <div class="chicken-game-left">
+      <aside class="chicken-game-sidebar chicken-game-sidebar--left" aria-label="Hall of Fame">
+        <div class="chicken-sidebar-section">
+          <div class="chicken-sidebar-title">Hall of Fame</div>
+          <div class="chicken-sidebar-scroll-wrap">
+            <div class="chicken-sidebar-scroll" id="chicken-leaderboard"></div>
+            <div class="chicken-scroll-hint">scroll ↓</div>
+          </div>
+          <div id="chicken-hof-retired"></div>
+        </div>
+      </aside>
+      <div class="chicken-game-center">
         <div class="chicken-game-hud" aria-live="polite">
           <div>Grains<span id="chicken-hud-grains">0</span></div>
           <div>Worms<span id="chicken-hud-worms">0</span></div>
@@ -2806,6 +3013,10 @@ section:not(.hero) h2::after {
         <div class="chicken-game-main">
           <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
             <div class="chicken-toast" id="chicken-toast" hidden></div>
+            <div class="chicken-boost-banner" id="chicken-boost-banner" hidden>
+              <span class="chicken-boost-banner-text" id="chicken-boost-banner-text">STORM</span>
+              <span class="chicken-boost-banner-time" id="chicken-boost-banner-time">10</span>
+            </div>
             <div class="chicken-widget-stage">
               <div class="chicken-particles" id="chicken-particles"></div>
               <div class="chicken-egg-layer" id="chicken-egg-layer"></div>
@@ -2817,15 +3028,13 @@ section:not(.hero) h2::after {
           <p class="chicken-click-label" id="chicken-click-label">Scatter feed! (+1 per click)</p>
         </div>
       </div>
-      <aside class="chicken-game-sidebar" aria-label="Upgrades and flock champions">
-        <div class="chicken-sidebar-section chicken-sidebar-section--upgrades">
+      <aside class="chicken-game-sidebar chicken-game-sidebar--right" aria-label="Upgrades">
+        <div class="chicken-sidebar-section">
           <div class="chicken-sidebar-title">Upgrades</div>
-          <div class="chicken-sidebar-scroll" id="chicken-upgrade-list"></div>
-        </div>
-        <div class="chicken-sidebar-section chicken-sidebar-section--fame">
-          <div class="chicken-sidebar-title">Hall of Fame</div>
-          <div class="chicken-sidebar-scroll" id="chicken-leaderboard"></div>
-          <div id="chicken-hof-retired"></div>
+          <div class="chicken-sidebar-scroll-wrap">
+            <div class="chicken-sidebar-scroll" id="chicken-upgrade-list"></div>
+            <div class="chicken-scroll-hint">scroll ↓</div>
+          </div>
         </div>
       </aside>
     </div>
@@ -2843,6 +3052,20 @@ section:not(.hero) h2::after {
         <p id="chicken-narrative-body"></p>
         <input type="text" class="chicken-narrative-input" id="chicken-narrative-input" maxlength="24" placeholder="Name this bird" hidden>
         <button type="button" class="chicken-narrative-btn" id="chicken-narrative-btn">Continue</button>
+      </div>
+    </div>
+    <div class="chicken-imposter" id="chicken-imposter" hidden>
+      <div class="chicken-imposter-backdrop"></div>
+      <div class="chicken-imposter-card">
+        <img class="chicken-imposter-img" src="assets/game/imposter.gif" alt="" width="72" height="72">
+        <h3>There's an imposter!</h3>
+        <p>Hold click to raise the green zone. Keep the imposter inside it long enough to kick him out.</p>
+        <div class="chicken-imposter-track" id="chicken-imposter-track">
+          <div class="chicken-imposter-zone" id="chicken-imposter-zone"></div>
+          <div class="chicken-imposter-marker" id="chicken-imposter-marker"></div>
+        </div>
+        <div class="chicken-imposter-progress"><div class="chicken-imposter-progress-fill" id="chicken-imposter-progress-fill"></div></div>
+        <div class="chicken-imposter-timer" id="chicken-imposter-timer">14s left</div>
       </div>
     </div>
   </div>

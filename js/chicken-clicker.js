@@ -18,8 +18,9 @@
   var VISUAL_ROTATE_MS = 9000;
   var DEATH_TOP_N = 50;
   var WORM_IMG = ASSET + 'worm.png';
-  var GOLDEN_WORM_IMG = ASSET + 'worm.png';
+  var IMPOSTER_GIF = ASSET + 'imposter.gif';
   var ROOSTER_GIF = ASSET + 'rooster.gif';
+  var IMPOSTER_QTE_MS = 14000;
   var HEN_GIFS = [ASSET + 'hen-a.gif', ASSET + 'hen-b.gif'];
   var OFFLINE_CAP_MS = 8 * 3600000;
   var FED_TRACK_CAP = 200;
@@ -579,8 +580,11 @@
     this.eggNodes = [];
     this._hudCache = {};
     this._hudScheduled = false;
-    this._goldenTimer = null;
-    this._goldenEl = null;
+    this._floatingTimer = null;
+    this._floatingEl = null;
+    this._imposterTimer = null;
+    this._imposterRaf = null;
+    this._imposterHolding = false;
     this._visualSeed = 0;
     this._visualRotateAt = 0;
     this._layoutTick = 0;
@@ -674,10 +678,12 @@
       if (!this.state.milestones.grainStorm || now < this.state.burstGrainCd) return;
       this.state.burstGrainUntil = now + 10000;
       this.state.burstGrainCd = now + 45000;
+      this.setMode('grain');
     } else {
       if (!this.state.milestones.wormStorm || now < this.state.burstWormCd) return;
       this.state.burstWormUntil = now + 10000;
       this.state.burstWormCd = now + 45000;
+      if (this.state.wormsUnlocked) this.setMode('worm');
     }
     this.requestHud();
     this.upgradesDirty = true;
@@ -685,68 +691,273 @@
     this.scheduleSave();
   };
 
-  ChickenClicker.prototype.scheduleGoldenWorm = function () {
-    var self = this;
-    if (this._goldenTimer) clearTimeout(this._goldenTimer);
-    if (!this.open) return;
-    var delay = 60000 + Math.random() * 60000;
-    this._goldenTimer = setTimeout(function () { self.spawnGoldenWorm(); }, delay);
-  };
-
-  ChickenClicker.prototype.spawnGoldenWorm = function () {
-    if (!this.open || this.paused || !this.els.stage) {
-      this.scheduleGoldenWorm();
+  ChickenClicker.prototype.renderBoostBanner = function () {
+    if (!this.els.boostBanner) return;
+    var now = Date.now();
+    var grain = now < this.state.burstGrainUntil;
+    var worm = now < this.state.burstWormUntil;
+    if (!grain && !worm) {
+      this.els.boostBanner.hidden = true;
       return;
     }
-    if (this._goldenEl) return;
-    var self = this;
-    var el = document.createElement('button');
-    el.type = 'button';
-    el.className = 'chicken-golden-worm' + (REDUCED_MOTION ? ' chicken-golden-worm--still' : '');
-    el.setAttribute('aria-label', 'Catch golden worm');
-    var img = document.createElement('img');
-    img.src = GOLDEN_WORM_IMG;
-    img.alt = '';
-    el.appendChild(img);
-    el.addEventListener('click', function (e) {
-      e.stopPropagation();
-      self.catchGoldenWorm(el);
-    });
-    this.els.stage.appendChild(el);
-    this._goldenEl = el;
-    setTimeout(function () { self.removeGoldenWorm(); }, 8000);
-    this.scheduleGoldenWorm();
+    var until = grain && (!worm || this.state.burstGrainUntil > this.state.burstWormUntil)
+      ? this.state.burstGrainUntil : this.state.burstWormUntil;
+    var isGrain = grain && until === this.state.burstGrainUntil;
+    var secs = Math.max(1, Math.ceil((until - now) / 1000));
+    this.els.boostBanner.hidden = false;
+    this.els.boostBanner.className = 'chicken-boost-banner chicken-boost-banner--' + (isGrain ? 'grain' : 'worm');
+    if (this.els.boostBannerText) {
+      this.els.boostBannerText.textContent = isGrain ? 'GRAIN STORM ×30' : 'WORM RAIN ×10';
+    }
+    if (this.els.boostBannerTime) this.els.boostBannerTime.textContent = String(secs);
   };
 
-  ChickenClicker.prototype.removeGoldenWorm = function () {
-    if (this._goldenEl && this._goldenEl.parentNode) this._goldenEl.remove();
-    this._goldenEl = null;
-  };
-
-  ChickenClicker.prototype.catchGoldenWorm = function (el) {
-    if (el) el.remove();
-    this._goldenEl = null;
-    var roll = Math.random();
+  ChickenClicker.prototype.applyBoost = function (preferWorm) {
+    var now = Date.now();
     var s = this.state;
-    if (roll < 0.3) {
-      var g = Math.max(40, Math.floor(this.state.grainPerClick * 40 * this.clickMult()));
-      s.grains += g;
-      this.showToast('Golden worm: +' + formatNum(g) + ' grains!');
-    } else if (roll < 0.55) {
-      var w = Math.max(8, Math.floor((s.wormPerClick || 1) * 15));
-      s.worms += w;
-      this.showToast('Golden worm: +' + formatNum(w) + ' worms!');
-    } else if (roll < 0.8) {
-      s.eggs += 5;
-      this.showToast('Golden worm: +5 eggs!');
-    } else {
-      var now = Date.now();
-      s.burstGrainUntil = now + 10000;
+    if (preferWorm && s.wormsUnlocked) {
       s.burstWormUntil = now + 10000;
-      this.showToast('Golden worm: 10s storm!');
+      this.setMode('worm');
+      this.showToast('Worm rain — 10 seconds!');
+    } else {
+      s.burstGrainUntil = now + 10000;
+      this.setMode('grain');
+      this.showToast('Grain storm — 10 seconds!');
     }
     this.requestHud();
     this.scheduleSave();
+  };
+
+  ChickenClicker.prototype.scheduleFloatingWorm = function () {
+    var self = this;
+    if (this._floatingTimer) clearTimeout(this._floatingTimer);
+    if (!this.open) return;
+    var delay = 55000 + Math.random() * 65000;
+    this._floatingTimer = setTimeout(function () { self.spawnFloatingWorm(); }, delay);
+  };
+
+  ChickenClicker.prototype.spawnFloatingWorm = function () {
+    if (!this.open || this.paused || !this.els.stage) {
+      this.scheduleFloatingWorm();
+      return;
+    }
+    if (this._floatingEl) return;
+    var self = this;
+    var kind = Math.random() < 0.55 ? 'egg' : 'boost';
+    var el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'chicken-floating-worm chicken-floating-worm--' + kind + (REDUCED_MOTION ? ' chicken-floating-worm--still' : '');
+    el.setAttribute('data-worm-kind', kind);
+    el.setAttribute('aria-label', kind === 'egg' ? 'Bonus eggs worm' : 'Storm boost worm');
+    var label = document.createElement('span');
+    label.className = 'chicken-floating-worm-label';
+    label.textContent = kind === 'egg' ? '+ eggs' : 'storm!';
+    var body = document.createElement('span');
+    body.className = 'chicken-floating-worm-body';
+    el.appendChild(label);
+    el.appendChild(body);
+    el.addEventListener('click', function (e) {
+      e.stopPropagation();
+      self.catchFloatingWorm(el, kind);
+    });
+    this.els.stage.appendChild(el);
+    this._floatingEl = el;
+    setTimeout(function () { self.removeFloatingWorm(); }, 8000);
+    this.scheduleFloatingWorm();
+  };
+
+  ChickenClicker.prototype.removeFloatingWorm = function () {
+    if (this._floatingEl && this._floatingEl.parentNode) this._floatingEl.remove();
+    this._floatingEl = null;
+  };
+
+  ChickenClicker.prototype.catchFloatingWorm = function (el, kind) {
+    if (el) el.remove();
+    this._floatingEl = null;
+    var s = this.state;
+    if (kind === 'egg') {
+      s.eggs += 10;
+      var g = Math.max(35, Math.floor(this.state.grainPerClick * 22 * this.clickMult()));
+      s.grains += g;
+      this.showToast('Bonus: +' + formatNum(g) + ' grains & 10 eggs!');
+    } else {
+      this.applyBoost(s.wormsUnlocked && Math.random() < 0.55);
+    }
+    this.requestHud();
+    this.scheduleSave();
+  };
+
+  ChickenClicker.prototype.removeWeakestBirds = function (count) {
+    var removed = 0;
+    while (removed < count) {
+      var flock = this.state.flock;
+      if (flock.length <= 3) break;
+      var st = recomputeStats(this.state);
+      var weak = sortFlockWeakestFirst(flock);
+      var victim = null;
+      var i;
+      for (i = 0; i < weak.length; i++) {
+        var b = weak[i];
+        if (b.sex === 'hen' && st.hens <= 2) continue;
+        if (b.sex === 'rooster' && st.roosters <= 1) continue;
+        victim = b;
+        break;
+      }
+      if (!victim) break;
+      for (i = 0; i < flock.length; i++) {
+        if (flock[i].id === victim.id) {
+          flock.splice(i, 1);
+          removed += 1;
+          break;
+        }
+      }
+    }
+    if (removed) {
+      this.recompute();
+      this.visualDirty = true;
+      this.leaderboardDirty = true;
+    }
+    return removed;
+  };
+
+  ChickenClicker.prototype.scheduleImposter = function () {
+    var self = this;
+    if (this._imposterTimer) clearTimeout(this._imposterTimer);
+    if (!this.open) return;
+    var delay = 65000 + Math.random() * 85000;
+    this._imposterTimer = setTimeout(function () { self.tryImposterEvent(); }, delay);
+  };
+
+  ChickenClicker.prototype.tryImposterEvent = function () {
+    this.scheduleImposter();
+    if (!this.open || this.paused || this._imposterRaf) return;
+    if (this.state.flock.length < 8) return;
+    this.startImposterQte();
+  };
+
+  ChickenClicker.prototype.startImposterQte = function () {
+    var self = this;
+    if (!this.els.imposter) return;
+    this.removeFloatingWorm();
+    this.setPaused(true);
+    this.els.imposter.hidden = false;
+    this._imposter = {
+      zonePos: 0.35,
+      zoneVel: 0,
+      markerPos: 0.55,
+      markerVel: 0,
+      progress: 0,
+      timeLeft: IMPOSTER_QTE_MS,
+      last: performance.now()
+    };
+    var onUp = function () { self._imposterHolding = false; };
+    var onDown = function (e) {
+      if (e.target.closest('#chicken-imposter')) {
+        e.preventDefault();
+        self._imposterHolding = true;
+      }
+    };
+    this._imposterOnDown = onDown;
+    this._imposterOnUp = onUp;
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchstart', onDown, { passive: false });
+    document.addEventListener('touchend', onUp);
+    var frame = function (t) {
+      if (!self._imposter) return;
+      self.tickImposterQte(t);
+      self._imposterRaf = requestAnimationFrame(frame);
+    };
+    this._imposterRaf = requestAnimationFrame(frame);
+  };
+
+  ChickenClicker.prototype.tickImposterQte = function (now) {
+    var q = this._imposter;
+    if (!q) return;
+    var dt = Math.min(50, now - q.last);
+    q.last = now;
+    q.timeLeft -= dt;
+
+    q.markerVel += (Math.random() - 0.5) * 0.0009 * dt;
+    q.markerVel *= 0.94;
+    q.markerPos += q.markerVel * dt * 0.06;
+    if (q.markerPos < 0.06) { q.markerPos = 0.06; q.markerVel *= -0.5; }
+    if (q.markerPos > 0.94) { q.markerPos = 0.94; q.markerVel *= -0.5; }
+
+    if (this._imposterHolding) q.zoneVel += 0.00014 * dt;
+    else q.zoneVel -= 0.0002 * dt;
+    q.zoneVel *= 0.88;
+    q.zonePos += q.zoneVel * dt * 0.08;
+    if (q.zonePos < 0.1) q.zonePos = 0.1;
+    if (q.zonePos > 0.78) q.zonePos = 0.78;
+
+    var overlap = Math.abs(q.markerPos - q.zonePos) < 0.13;
+    if (overlap) q.progress = Math.min(1, q.progress + 0.000022 * dt);
+    else q.progress = Math.max(0, q.progress - 0.000012 * dt);
+
+    if (this.els.imposterZone) this.els.imposterZone.style.bottom = (q.zonePos * 100) + '%';
+    if (this.els.imposterMarker) this.els.imposterMarker.style.bottom = (q.markerPos * 100) + '%';
+    if (this.els.imposterFill) this.els.imposterFill.style.width = Math.round(q.progress * 100) + '%';
+    if (this.els.imposterTimer) {
+      this.els.imposterTimer.textContent = Math.max(0, Math.ceil(q.timeLeft / 1000)) + 's left';
+    }
+
+    if (q.progress >= 1) this.endImposterQte(true);
+    else if (q.timeLeft <= 0) this.endImposterQte(false);
+  };
+
+  ChickenClicker.prototype.endImposterQte = function (won) {
+    if (this._imposterRaf) {
+      cancelAnimationFrame(this._imposterRaf);
+      this._imposterRaf = null;
+    }
+    if (this._imposterOnDown) {
+      document.removeEventListener('mousedown', this._imposterOnDown);
+      document.removeEventListener('touchstart', this._imposterOnDown);
+    }
+    if (this._imposterOnUp) {
+      document.removeEventListener('mouseup', this._imposterOnUp);
+      document.removeEventListener('touchend', this._imposterOnUp);
+    }
+    this._imposterOnDown = null;
+    this._imposterOnUp = null;
+    this._imposterHolding = false;
+    this._imposter = null;
+    if (this.els.imposter) this.els.imposter.hidden = true;
+    this.setPaused(false);
+
+    var self = this;
+    if (won) {
+      var s = this.state;
+      s.grains += Math.max(120, Math.floor(s.grainPerClick * 60 * this.clickMult()));
+      s.worms += Math.max(20, Math.floor((s.wormPerClick || 1) * 25));
+      s.eggs += 12;
+      this.showNarrative({
+        eyebrow: 'Imposter expelled',
+        title: 'The yard is safe',
+        body: 'You booted the imposter over the fence. The flock celebrates with bonus grain, worms, and eggs.',
+        btn: 'Hero',
+        onDismiss: function () {
+          self.requestHud();
+          self.renderLeaderboard(true);
+          self.scheduleSave();
+        }
+      });
+    } else {
+      var lost = this.removeWeakestBirds(10);
+      this.showNarrative({
+        eyebrow: 'Disaster',
+        title: 'The imposter ran loose',
+        body: 'He tore through the yard before anyone could stop him. ' + lost + ' of your lowest-ranked birds are gone.',
+        btn: 'Mourn & continue',
+        onDismiss: function () {
+          self.requestHud();
+          self.renderYard(true);
+          self.renderLeaderboard(true);
+          self.scheduleSave();
+        }
+      });
+    }
   };
 
   ChickenClicker.prototype.applyOfflineCatchup = function () {
@@ -803,6 +1014,14 @@
     this.els.saveImport = document.getElementById('chicken-save-import');
     this.els.prestigeBtn = document.getElementById('chicken-prestige-btn');
     this.els.hofRetired = document.getElementById('chicken-hof-retired');
+    this.els.boostBanner = document.getElementById('chicken-boost-banner');
+    this.els.boostBannerText = document.getElementById('chicken-boost-banner-text');
+    this.els.boostBannerTime = document.getElementById('chicken-boost-banner-time');
+    this.els.imposter = document.getElementById('chicken-imposter');
+    this.els.imposterZone = document.getElementById('chicken-imposter-zone');
+    this.els.imposterMarker = document.getElementById('chicken-imposter-marker');
+    this.els.imposterFill = document.getElementById('chicken-imposter-progress-fill');
+    this.els.imposterTimer = document.getElementById('chicken-imposter-timer');
 
     if (this.hitbox) this.hitbox.addEventListener('click', function () { self.openModal(); });
     if (this.modal) {
@@ -1244,7 +1463,7 @@
   };
 
   ChickenClicker.prototype.onClick = function (e) {
-    if (this.paused) return;
+    if (this.paused || this._imposter) return;
     var val = this.clickValue();
     var amount = val.amount;
     var nutrition = amount * (val.type === 'worm' ? WORM_NUTRITION : 1);
@@ -1569,6 +1788,7 @@
     if (hatched || this.visualDirty) this.renderYard(this.visualDirty);
     else this.renderEggs();
     this.requestHud();
+    this.renderBoostBanner();
     if (hatched || died) {
       this.renderUpgrades(this.upgradesDirty);
       this.renderLeaderboard(this.leaderboardDirty);
@@ -1717,6 +1937,7 @@
       if (burstG > 1 || burstW > 1) label += ' STORM';
       this.els.clickLabel.textContent = label;
     }
+    this.renderBoostBanner();
   };
 
   ChickenClicker.prototype.layoutBird = function (slot, visualIndex, total, row, rowCount, rows, bird) {
@@ -1998,7 +2219,8 @@
     this._visualRotateAt = Date.now() + VISUAL_ROTATE_MS;
     this.render();
     this.startLoops();
-    this.scheduleGoldenWorm();
+    this.scheduleFloatingWorm();
+    this.scheduleImposter();
     this.modal.querySelector('.chicken-modal-close').focus();
   };
 
@@ -2009,8 +2231,16 @@
     this.open = false;
     document.body.style.overflow = '';
     this.stopLoops();
-    this.removeGoldenWorm();
-    if (this._goldenTimer) clearTimeout(this._goldenTimer);
+    this.removeFloatingWorm();
+    if (this._floatingTimer) clearTimeout(this._floatingTimer);
+    if (this._imposterTimer) clearTimeout(this._imposterTimer);
+    if (this._imposterRaf) {
+      cancelAnimationFrame(this._imposterRaf);
+      this._imposterRaf = null;
+      this._imposter = null;
+      if (this.els.imposter) this.els.imposter.hidden = true;
+      this.setPaused(false);
+    }
     this.flushSave();
     if (this.hitbox) this.hitbox.focus();
   };
