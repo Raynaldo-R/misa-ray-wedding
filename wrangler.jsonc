@@ -1,0 +1,12 @@
+{
+  "name": "misa-ray-wedding",
+  "compatibility_date": "2026-06-09",
+  "assets": {
+    "directory": ".",
+    "exclude": [
+      "DEPLOY.txt",
+      "RSVP_SHEET_SETUP.txt",
+      "google-apps-script.gs"
+    ]
+  }
+}
