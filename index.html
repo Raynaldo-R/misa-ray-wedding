@@ -1568,6 +1568,54 @@ button[type=submit]:disabled {
 .chicken-footer-btn:hover { border-color: var(--sage-light); color: var(--ink); }
 .chicken-footer-btn--prestige { margin-left: auto; border-color: var(--accent-dark); color: var(--accent-dark); }
 .chicken-leaderboard-row--retired { opacity: .75; font-style: italic; }
+.chicken-leaderboard-portrait {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+.chicken-portrait {
+  display: block;
+  width: 28px;
+  height: auto;
+  image-rendering: pixelated;
+  object-fit: contain;
+  object-position: bottom;
+}
+.chicken-portrait--sm { width: 24px; }
+.chicken-narrative-portrait {
+  margin: 0 auto 12px;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+.chicken-narrative-portrait .chicken-portrait { width: 56px; }
+.chicken-narrative-portrait[hidden] { display: none; }
+.chicken-widget-giant-worm {
+  position: absolute;
+  display: block;
+  border-radius: 50% 45% 50% 45% / 55% 50% 55% 50%;
+  background: linear-gradient(145deg, #e8dcc0 0%, #c9b896 55%, #b8a480 100%);
+  box-shadow: inset -1px -2px 0 rgba(0,0,0,.12);
+}
+.chicken-widget-giant-worm::before,
+.chicken-widget-giant-worm::after {
+  content: '';
+  position: absolute;
+  top: 38%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #2a2218;
+}
+.chicken-widget-giant-worm::before { left: 28%; }
+.chicken-widget-giant-worm::after { right: 28%; }
 .chicken-bird-slot { transition: --bird-scale 1s ease; }
 @media (max-width: 700px) {
   .chicken-game-layout {
@@ -2789,6 +2837,7 @@ section:not(.hero) h2::after {
     <div class="chicken-narrative" id="chicken-narrative" hidden>
       <div class="chicken-narrative-backdrop"></div>
       <div class="chicken-narrative-card">
+        <div class="chicken-narrative-portrait" id="chicken-narrative-portrait" hidden></div>
         <p class="chicken-narrative-eyebrow" id="chicken-narrative-eyebrow">Coop Chronicle</p>
         <h3 id="chicken-narrative-title"></h3>
         <p id="chicken-narrative-body"></p>

@@ -11,10 +11,12 @@
   var TICK_MS = 1200;
   var SAVE_DEBOUNCE_MS = 450;
   var WORM_NUTRITION = 10;
-  var MAX_PARTICLES = 36;
-  var MAX_VISUAL_BIRDS = 22;
-  var MAX_VISUAL_EGGS = 14;
-  var MAX_VISUAL_PARTICLES = 10;
+  var MAX_PARTICLES = 24;
+  var MAX_VISUAL_BIRDS = 10;
+  var MAX_VISUAL_EGGS = 8;
+  var MAX_VISUAL_PARTICLES = 8;
+  var VISUAL_ROTATE_MS = 9000;
+  var DEATH_TOP_N = 50;
   var WORM_IMG = ASSET + 'worm.png';
   var GOLDEN_WORM_IMG = ASSET + 'worm.png';
   var ROOSTER_GIF = ASSET + 'rooster.gif';
@@ -26,49 +28,52 @@
   var EGG_COLORS = ['#f5f0e1', '#efe6d0', '#dcc9a8', '#c4a574', '#a89070', '#b8cce8', '#9eb8d8'];
 
   var HEN_EVOLUTIONS = [
-    { id: 'gold', label: 'Golden Hen', tier: 1, minFed: 140, wormCost: 25 },
-    { id: 'amber', label: 'Amber Hen', tier: 2, minFed: 280, wormCost: 75 },
-    { id: 'ruby', label: 'Ruby Hen', tier: 3, minFed: 440, wormCost: 130, needsName: true },
-    { id: 'sapphire', label: 'Sapphire Hen', tier: 4, minFed: 620, wormCost: 210 },
-    { id: 'rainbow', label: 'Rainbow Hen', tier: 5, minFed: 820, wormCost: 340, unlock: 'giantWorm' },
-    { id: 'ice', label: 'Ice Hen', tier: 6, minFed: 1080, wormCost: 480 },
-    { id: 'fire', label: 'Fire Hen', tier: 7, minFed: 1400, wormCost: 720 },
-    { id: 'nuclear', label: 'Nuclear Hen', tier: 8, minFed: 1850, wormCost: 1100, unlock: 'loveStory' }
+    { id: 'gold', label: 'Golden Hen', tier: 1, minFed: 380, wormCost: 45 },
+    { id: 'amber', label: 'Amber Hen', tier: 2, minFed: 720, wormCost: 110 },
+    { id: 'ruby', label: 'Ruby Hen', tier: 3, minFed: 1150, wormCost: 200, needsName: true },
+    { id: 'sapphire', label: 'Sapphire Hen', tier: 4, minFed: 1650, wormCost: 320 },
+    { id: 'rainbow', label: 'Rainbow Hen', tier: 5, minFed: 2300, wormCost: 520, unlock: 'giantWorm' },
+    { id: 'ice', label: 'Ice Hen', tier: 6, minFed: 3100, wormCost: 750 },
+    { id: 'fire', label: 'Fire Hen', tier: 7, minFed: 4100, wormCost: 1050 },
+    { id: 'nuclear', label: 'Nuclear Hen', tier: 8, minFed: 5400, wormCost: 1500, unlock: 'loveStory' }
   ];
 
   var ROOSTER_EVOLUTIONS = [
-    { id: 'bronze', label: 'Bronze Rooster', tier: 1, minFed: 140, wormCost: 25 },
-    { id: 'copper', label: 'Copper Rooster', tier: 2, minFed: 280, wormCost: 75 },
-    { id: 'crimson', label: 'Crimson Rooster', tier: 3, minFed: 440, wormCost: 130, needsName: true },
-    { id: 'storm', label: 'Storm Rooster', tier: 4, minFed: 620, wormCost: 210 },
-    { id: 'thunder', label: 'Thunder Rooster', tier: 5, minFed: 820, wormCost: 340 },
-    { id: 'frost', label: 'Frost Rooster', tier: 6, minFed: 1080, wormCost: 480 },
-    { id: 'blaze', label: 'Blaze Rooster', tier: 7, minFed: 1400, wormCost: 720 },
-    { id: 'nuclear', label: 'Nuclear Rooster', tier: 8, minFed: 1850, wormCost: 1100, unlock: 'loveStory' }
+    { id: 'bronze', label: 'Bronze Rooster', tier: 1, minFed: 380, wormCost: 45 },
+    { id: 'copper', label: 'Copper Rooster', tier: 2, minFed: 720, wormCost: 110 },
+    { id: 'crimson', label: 'Crimson Rooster', tier: 3, minFed: 1150, wormCost: 200, needsName: true },
+    { id: 'storm', label: 'Storm Rooster', tier: 4, minFed: 1650, wormCost: 320 },
+    { id: 'thunder', label: 'Thunder Rooster', tier: 5, minFed: 2300, wormCost: 520 },
+    { id: 'frost', label: 'Frost Rooster', tier: 6, minFed: 3100, wormCost: 750 },
+    { id: 'blaze', label: 'Blaze Rooster', tier: 7, minFed: 4100, wormCost: 1050 },
+    { id: 'nuclear', label: 'Nuclear Rooster', tier: 8, minFed: 5400, wormCost: 1500, unlock: 'loveStory' }
   ];
 
   var EVO_LEGACY = { ember: 'amber', shadow: 'nuclear' };
 
   var FLAVOR_LINES = [
-    'A hen discovers the worm bucket and acts like she found gold.',
-    'The rooster crows. Everyone pretends it was on purpose.',
-    'Someone laid a blue egg. The flock is unbothered.',
-    'Ray tightens a coop hinge. The chickens approve silently.',
-    'Misa scatters grain at dawn. The yard smells like promise.',
-    'Two hens argue over the same sunbeam. Neither yields.',
-    'A chick practices its crow. It sounds like a squeaky hinge.',
-    'The nest boxes are full. Someone is showing off.',
-    'Grain dust hangs in the air like wedding glitter.',
-    'A rooster struts past the camera. He knows.',
-    'The flock discovers a single blueberry. Chaos ensues.',
-    'Someone knocked over the water dish. Classic.',
-    'Feathers everywhere. Housekeeping is not a chicken strength.',
-    'The yard smells like earth and ambition.',
-    'A hen stares at you. She has opinions.',
-    'Midday: every bird is simultaneously napping and alert.',
-    'The coop door squeaks. Free ambiance.',
-    'Worm weather today. Morale: excellent.',
-    'Port Gamble fog rolls in. The chickens are unimpressed.'
+    { t: 'A hen stares at you. She has opinions.', minHens: 1 },
+    { t: 'Ray tightens a coop hinge. The chickens approve silently.' },
+    { t: 'Misa scatters grain at dawn. The yard smells like promise.' },
+    { t: 'The coop door squeaks. Free ambiance.' },
+    { t: 'Port Gamble fog rolls in. The chickens are unimpressed.' },
+    { t: 'Grain dust hangs in the air like wedding glitter.' },
+    { t: 'The yard smells like earth and ambition.' },
+    { t: 'Worm weather today. Morale: excellent.', worms: true },
+    { t: 'A hen discovers the worm bucket and acts like she found gold.', minHens: 1, worms: true },
+    { t: 'Two hens argue over the same sunbeam. Neither yields.', minHens: 2 },
+    { t: 'The rooster crows. Everyone pretends it was on purpose.', minRoosters: 1 },
+    { t: 'A rooster struts past the camera. He knows.', minRoosters: 1 },
+    { t: 'The roosters have formed a committee. Productivity is down.', roostersBeatHens: true },
+    { t: 'Someone laid a blue egg. The flock is unbothered.', minEggs: 1 },
+    { t: 'The nest boxes are full. Someone is showing off.', minEggs: 8 },
+    { t: 'The nest overfloweth. Someone should probably collect those.', minEggs: 50 },
+    { t: 'A chick practices its crow. It sounds like a squeaky hinge.', hatched: true, maxFlock: 18 },
+    { t: 'The flock discovers a single blueberry. Chaos ensues.', minFlock: 4 },
+    { t: 'Someone knocked over the water dish. Classic.', minFlock: 3 },
+    { t: 'Feathers everywhere. Housekeeping is not a chicken strength.', minFlock: 6 },
+    { t: 'Midday: every bird is simultaneously napping and alert.', minFlock: 5 },
+    { t: 'The yard glows faintly green. The chickens seem fine.', nuclear: true }
   ];
 
   var GRAIN_CLICK_UPGRADES = [
@@ -330,6 +335,29 @@
     });
   }
 
+  function sortFlockWeakestFirst(flock) {
+    return flock.slice().sort(function (a, b) {
+      var ta = getBirdTier(a);
+      var tb = getBirdTier(b);
+      if (ta !== tb) return ta - tb;
+      return a.fed - b.fed;
+    });
+  }
+
+  function birdRank(flock, bird) {
+    var ranked = sortFlockForLeaderboard(flock);
+    var i;
+    for (i = 0; i < ranked.length; i++) {
+      if (ranked[i].id === bird.id) return i + 1;
+    }
+    return ranked.length + 1;
+  }
+
+  function portraitHtml(bird, small) {
+    var cls = birdClass(bird) + ' chicken-portrait' + (small ? ' chicken-portrait--sm' : '');
+    return '<img class="' + cls + '" src="' + birdGifFor(bird) + '" alt="" width="48" height="48" loading="lazy" decoding="async">';
+  }
+
   function loadState() {
     try {
       var raw = localStorage.getItem(SAVE_KEY);
@@ -351,6 +379,11 @@
     return HEN_GIFS[bird.id % HEN_GIFS.length];
   }
 
+  function birdGifVisual(bird, skin) {
+    if (bird.sex === 'rooster') return ROOSTER_GIF;
+    return HEN_GIFS[(skin != null ? skin : bird.id) % HEN_GIFS.length];
+  }
+
   function birdClass(bird) {
     return 'chicken-bird chicken-bird--' + bird.sex + (bird.evolution ? ' chicken-bird--' + bird.evolution : '');
   }
@@ -367,14 +400,19 @@
       if (state.flock[i].sex === 'hen') hens++;
       else roosters++;
     }
+    var flockN = state.flock.length;
     var hatch = 0;
     if (roosters) {
-      hatch = Math.min(0.35, roosters * 0.05 + state.incubatorLevel * 0.04);
-      hatch = Math.min(0.35, hatch + Math.min(0.1, state.flock.length * 0.0015));
+      hatch = 0.008 + roosters * 0.014 + state.incubatorLevel * 0.012;
+      hatch = Math.min(0.09, hatch);
+      if (flockN > 40) hatch *= 0.65;
+      if (flockN > 90) hatch *= 0.55;
+      if (flockN > 180) hatch *= 0.45;
     }
-    var eggThreshold = Math.max(10, Math.floor(22 - hens * 0.85 - state.nestBonus * 2.2));
-    var featherBonus = (state.feathers || 0) * 0.01;
-    hatch = Math.min(0.45, hatch + featherBonus);
+    var eggThreshold = Math.max(14, Math.floor(28 - hens * 0.55 - state.nestBonus * 1.8));
+    if (flockN > 50) eggThreshold += Math.floor((flockN - 50) * 0.15);
+    var featherBonus = (state.feathers || 0) * 0.008;
+    hatch = Math.min(0.11, hatch + featherBonus);
     return {
       hens: hens,
       roosters: roosters,
@@ -440,17 +478,37 @@
     return null;
   }
 
-  function sampleVisualFlock(flock, max) {
+  function sampleVisualFlock(flock, max, seed) {
     if (flock.length <= max) {
       var out = [];
-      for (var i = 0; i < flock.length; i++) out.push({ bird: flock[i], idx: i });
+      for (var i = 0; i < flock.length; i++) out.push({ bird: flock[i], idx: i, skin: i });
       return out;
     }
+    var ranked = sortFlockForLeaderboard(flock);
     var picks = [];
-    var step = flock.length / max;
-    for (var j = 0; j < max; j++) {
-      var idx = Math.min(flock.length - 1, Math.floor(j * step + step * 0.5));
-      picks.push({ bird: flock[idx], idx: idx });
+    var used = Object.create(null);
+    var j;
+    var champ = ranked[0];
+    if (champ) {
+      var ci;
+      for (ci = 0; ci < flock.length; ci++) {
+        if (flock[ci].id === champ.id) {
+          picks.push({ bird: champ, idx: ci, skin: 0 });
+          used[champ.id] = 1;
+          break;
+        }
+      }
+    }
+    seed = seed != null ? seed : 0;
+    for (j = picks.length; j < max; j++) {
+      var idx = (seed * 997 + j * 131) % flock.length;
+      var guard = 0;
+      while (used[flock[idx].id] && guard < flock.length) {
+        idx = (idx + 1) % flock.length;
+        guard++;
+      }
+      used[flock[idx].id] = 1;
+      picks.push({ bird: flock[idx], idx: idx, skin: j % 3 });
     }
     return picks;
   }
@@ -478,12 +536,24 @@
   }
 
   function pickFlavorLine(state, stats) {
-    var pool = FLAVOR_LINES.slice();
-    if (stats.roosters > stats.hens) pool.push('The roosters have formed a committee. Productivity is down.');
-    if (state.eggs > 50) pool.push('The nest overfloweth. Someone should probably collect those.');
+    var pool = [];
+    var i;
+    for (i = 0; i < FLAVOR_LINES.length; i++) {
+      var line = FLAVOR_LINES[i];
+      if (line.minHens && stats.hens < line.minHens) continue;
+      if (line.minRoosters && stats.roosters < line.minRoosters) continue;
+      if (line.minEggs && state.eggs < line.minEggs) continue;
+      if (line.minFlock && state.flock.length < line.minFlock) continue;
+      if (line.maxFlock && state.flock.length > line.maxFlock) continue;
+      if (line.worms && !state.wormsUnlocked) continue;
+      if (line.hatched && !hasHatchedBird(state)) continue;
+      if (line.roostersBeatHens && stats.roosters <= stats.hens) continue;
+      if (line.nuclear && !hasNuclearHen(state) && !hasNuclearPair(state)) continue;
+      pool.push(line.t);
+    }
     var named = flockChampion(state.flock);
     if (named && named.name) pool.push(named.name + ' has been staring at the fence for twenty minutes. Plotting.');
-    if (hasNuclearHen(state) || hasNuclearPair(state)) pool.push('The yard glows faintly green. The chickens seem fine.');
+    if (!pool.length) pool.push('The yard is quiet. For now.');
     return pool[(Math.random() * pool.length) | 0];
   }
 
@@ -511,6 +581,9 @@
     this._hudScheduled = false;
     this._goldenTimer = null;
     this._goldenEl = null;
+    this._visualSeed = 0;
+    this._visualRotateAt = 0;
+    this._layoutTick = 0;
     this._bind();
     syncGoalIndex(this.state, this.stats);
     this.checkMilestones();
@@ -720,6 +793,7 @@
     this.els.narrativeBody = document.getElementById('chicken-narrative-body');
     this.els.narrativeInput = document.getElementById('chicken-narrative-input');
     this.els.narrativeBtn = document.getElementById('chicken-narrative-btn');
+    this.els.narrativePortrait = document.getElementById('chicken-narrative-portrait');
     this.els.goalBar = document.getElementById('chicken-goal-bar');
     this.els.goalLabel = document.getElementById('chicken-goal-label');
     this.els.goalFill = document.getElementById('chicken-goal-fill');
@@ -977,6 +1051,15 @@
     if (this.els.narrativeEyebrow) this.els.narrativeEyebrow.textContent = opts.eyebrow || 'Coop Chronicle';
     if (this.els.narrativeTitle) this.els.narrativeTitle.textContent = opts.title || '';
     if (this.els.narrativeBody) this.els.narrativeBody.textContent = opts.body || '';
+    if (this.els.narrativePortrait) {
+      if (opts.bird) {
+        this.els.narrativePortrait.innerHTML = portraitHtml(opts.bird, false);
+        this.els.narrativePortrait.hidden = false;
+      } else {
+        this.els.narrativePortrait.innerHTML = '';
+        this.els.narrativePortrait.hidden = true;
+      }
+    }
     if (this.els.narrativeInput) {
       this.els.narrativeInput.hidden = !opts.nameFor;
       this.els.narrativeInput.value = '';
@@ -1083,6 +1166,7 @@
         eyebrow: 'Evolution',
         title: next.label + ' emerges',
         body: 'Your flock\'s finest has transformed. The yard goes quiet — this one deserves a name.',
+        bird: bird,
         nameFor: bird.id,
         btn: 'Name & continue',
         onDismiss: after
@@ -1092,6 +1176,7 @@
         eyebrow: 'Unlocked',
         title: 'Giant mealworm',
         body: 'A rainbow shimmer unlocks the Giant feed mode — each click drops a mealworm worth 50 regular worms.',
+        bird: bird,
         btn: 'Enormous',
         onDismiss: after
       });
@@ -1116,7 +1201,8 @@
   ChickenClicker.prototype.addNutrition = function (nutrition) {
     var threshold = this.stats.eggThreshold;
     this.state.flockFeedPool += nutrition;
-    while (this.state.flockFeedPool >= threshold) {
+    var eggCap = Math.min(200, 40 + this.stats.hens * 3);
+    while (this.state.flockFeedPool >= threshold && this.state.eggs < eggCap) {
       this.state.flockFeedPool -= threshold;
       this.state.eggs += 1;
     }
@@ -1125,11 +1211,19 @@
   ChickenClicker.prototype.distributeFed = function (nutrition) {
     var flock = this.state.flock;
     if (!flock.length) return;
-    var targets = flock;
-    if (flock.length > FED_TRACK_CAP) targets = sortFlockForLeaderboard(flock).slice(0, FED_TRACK_CAP);
-    var perBird = nutrition * this.stats.invFlock;
+    var champ = flockChampion(flock);
+    var trackN = Math.min(flock.length, 24);
+    var targets = sortFlockForLeaderboard(flock).slice(0, trackN);
+    if (champ && targets.indexOf(champ) < 0) targets.unshift(champ);
+    var champShare = flock.length <= 3 ? 0.55 : 0.35;
+    if (champ) champ.fed += nutrition * champShare;
+    var rest = nutrition * (1 - (champ ? champShare : 0));
+    var perBird = rest / Math.max(1, targets.length);
     var i;
-    for (i = 0; i < targets.length; i++) targets[i].fed += perBird;
+    for (i = 0; i < targets.length; i++) {
+      if (targets[i] === champ) continue;
+      targets[i].fed += perBird;
+    }
   };
 
   ChickenClicker.prototype.feedFlock = function (nutrition) {
@@ -1138,11 +1232,14 @@
   };
 
   ChickenClicker.prototype.passiveTick = function () {
-    var passive = this.stats.hens * 0.12 + this.stats.roosters * 0.04;
-    passive = Math.min(this.stats.eggThreshold * 0.5, passive);
+    var n = this.state.flock.length;
+    var passive = this.stats.hens * 0.07 + this.stats.roosters * 0.025;
+    passive = Math.min(this.stats.eggThreshold * 0.35, passive);
+    if (n > 60) passive *= 0.7;
+    if (n > 120) passive *= 0.6;
     if (passive > 0) {
       this.addNutrition(passive);
-      this.distributeFed(passive * 0.25);
+      this.distributeFed(passive * 0.15);
     }
   };
 
@@ -1163,13 +1260,11 @@
     this.feedFlock(nutrition);
     this.spawnParticles(e, val);
     this.spawnPop(e, val);
-    this.visualDirty = true;
     this.leaderboardDirty = true;
     this.upgradesDirty = true;
     this.requestHud();
-    this.renderYard(false);
     this.syncUpgradeAfford();
-    this.syncLeaderboardEvolve();
+    this.deferLeaderboard();
     this.checkGoals();
     this.maybeFlavorToast();
     this.scheduleSave();
@@ -1205,7 +1300,13 @@
       var py = cy + (Math.random() - 0.5) * spread * 0.5;
       var el;
       var size;
-      if (val.type === 'worm') {
+      if (val.giant) {
+        el = document.createElement('span');
+        el.className = 'chicken-widget-giant-worm';
+        size = 14 + Math.random() * 6;
+        el.style.width = size + 'px';
+        el.style.height = (size * 0.45) + 'px';
+      } else if (val.type === 'worm') {
         el = document.createElement('img');
         el.className = 'chicken-widget-worm';
         el.src = WORM_IMG;
@@ -1364,13 +1465,17 @@
     var rate = this.stats.hatch;
     if (!rate || !this.state.eggs) return false;
 
+    var flockN = this.state.flock.length;
+    var maxHatch = flockN < 20 ? 1 : flockN < 70 ? 2 : 3;
     var changed = false;
-    var attempts = Math.min(this.state.eggs, Math.max(1, Math.ceil(this.state.eggs * rate * 0.2)));
+    var hatched = 0;
+    var attempts = Math.min(this.state.eggs, Math.max(1, Math.ceil(this.state.eggs * rate * 0.035)));
     var i;
     for (i = 0; i < attempts; i++) {
-      if (!this.state.eggs) break;
+      if (!this.state.eggs || hatched >= maxHatch) break;
       if (Math.random() > rate) continue;
       this.state.eggs -= 1;
+      hatched += 1;
       var isRooster = Math.random() < 0.24;
       this.state.flock.push({
         id: this.state.nextId++,
@@ -1396,28 +1501,95 @@
     return changed;
   };
 
+  ChickenClicker.prototype.deathTick = function () {
+    var flock = this.state.flock;
+    if (flock.length < 12) return false;
+    var n = flock.length;
+    var chance = n < 25 ? 0.0015 : n < 50 ? 0.003 : n < 100 ? 0.005 : 0.008;
+    if (Math.random() > chance) return false;
+
+    var weak = sortFlockWeakestFirst(flock);
+    var victim = null;
+    var i;
+    for (i = 0; i < weak.length; i++) {
+      var b = weak[i];
+      var tier = getBirdTier(b);
+      if (tier >= 7 && Math.random() < 0.97) continue;
+      if (tier >= 5 && Math.random() < 0.85) continue;
+      if (tier >= 3 && Math.random() < 0.5) continue;
+      if (b.sex === 'hen' && this.stats.hens <= 2) continue;
+      if (b.sex === 'rooster' && this.stats.roosters <= 1) continue;
+      victim = b;
+      break;
+    }
+    if (!victim) return false;
+
+    var rank = birdRank(flock, victim);
+    for (i = 0; i < flock.length; i++) {
+      if (flock[i].id === victim.id) {
+        flock.splice(i, 1);
+        break;
+      }
+    }
+    this.recompute();
+    this.visualDirty = true;
+    this.leaderboardDirty = true;
+    this.upgradesDirty = true;
+
+    if (rank <= DEATH_TOP_N) {
+      var self = this;
+      var label = birdDisplayName(victim);
+      this.showNarrative({
+        eyebrow: 'Loss in the yard',
+        title: label + ' has passed on',
+        body: (victim.name || 'A beloved bird') + ' wandered off beyond the fence. The flock remembers.',
+        bird: victim,
+        btn: 'Farewell',
+        onDismiss: function () { self.checkGoals(); }
+      });
+    } else {
+      this.showToast('A humble bird wandered off.');
+    }
+    this.scheduleSave();
+    return true;
+  };
+
   ChickenClicker.prototype.loop = function () {
     if (!this.open || this.paused) return;
+    var now = Date.now();
+    if (now > this._visualRotateAt) {
+      this._visualRotateAt = now + VISUAL_ROTATE_MS;
+      this._visualSeed += 1;
+      this.visualDirty = true;
+    }
     this.passiveTick();
+    var died = this.deathTick();
+    if (died) return;
     var hatched = this.hatchTick();
     if (hatched || this.visualDirty) this.renderYard(this.visualDirty);
     else this.renderEggs();
     this.requestHud();
-    if (hatched) {
-      this.leaderboardDirty = true;
-      this.renderUpgrades(true);
-      this.renderLeaderboard(true);
+    if (hatched || died) {
+      this.renderUpgrades(this.upgradesDirty);
+      this.renderLeaderboard(this.leaderboardDirty);
       this._renderPreview();
     } else {
       this.syncUpgradeAfford();
+      if (this.leaderboardDirty) this.renderLeaderboard(true);
     }
-    if (this.leaderboardDirty) this.renderLeaderboard(true);
-    this.updateBirdLayouts();
+    this._layoutTick += 1;
+    if (this._layoutTick % 5 === 0) this.updateBirdLayouts();
   };
 
   ChickenClicker.prototype.updateBirdLayouts = function () {
     if (!this.flockNodes.length || !this.els.stage) return;
-    var samples = sampleVisualFlock(this.state.flock, MAX_VISUAL_BIRDS);
+    var growing = false;
+    var fi;
+    for (fi = 0; fi < this.state.flock.length; fi++) {
+      if (this.state.flock[fi].bornAt && Date.now() - this.state.flock[fi].bornAt < 20000) growing = true;
+    }
+    if (!growing) return;
+    var samples = sampleVisualFlock(this.state.flock, MAX_VISUAL_BIRDS, this._visualSeed);
     var total = samples.length;
     var rows = total <= 3 ? 1 : total <= 9 ? 2 : 3;
     var j;
@@ -1453,6 +1625,16 @@
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+  };
+
+  ChickenClicker.prototype.deferLeaderboard = function () {
+    var self = this;
+    if (this._lbTimer) return;
+    this._lbTimer = setTimeout(function () {
+      self._lbTimer = null;
+      if (self.leaderboardDirty) self.renderLeaderboard(true);
+      else self.syncLeaderboardEvolve();
+    }, 500);
   };
 
   ChickenClicker.prototype.requestHud = function () {
@@ -1569,9 +1751,9 @@
     }
     this.visualDirty = false;
 
-    var samples = sampleVisualFlock(this.state.flock, MAX_VISUAL_BIRDS);
+    var samples = sampleVisualFlock(this.state.flock, MAX_VISUAL_BIRDS, this._visualSeed);
     var total = samples.length;
-    var rows = total <= 3 ? 1 : total <= 9 ? 2 : 3;
+    var rows = total <= 3 ? 1 : total <= 6 ? 2 : 3;
 
     if (force || this.flockNodes.length !== total) {
       this.els.flockLayer.innerHTML = '';
@@ -1579,11 +1761,12 @@
       var i;
       for (i = 0; i < total; i++) {
         var bird = samples[i].bird;
+        var skin = samples[i].skin;
         var slot = document.createElement('div');
         slot.className = 'chicken-bird-slot';
         var img = document.createElement('img');
         img.className = birdClass(bird);
-        img.src = birdGifFor(bird);
+        img.src = birdGifVisual(bird, skin);
         img.alt = '';
         img.loading = 'lazy';
         img.decoding = 'async';
@@ -1597,6 +1780,7 @@
         var node = this.flockNodes[j];
         var b = samples[j].bird;
         node.img.className = birdClass(b);
+        node.img.src = birdGifVisual(b, samples[j].skin);
         this.layoutBird(node.slot, j, total, 0, 0, rows, b);
       }
     }
@@ -1770,6 +1954,7 @@
       var isChamp = champion && champion.id === bird.id;
       var pct = nextDef ? Math.round(evoProgress(bird) * 100) : 100;
       html += '<div class="chicken-leaderboard-row' + (isChamp ? ' is-champion' : '') + '">' +
+        '<div class="chicken-leaderboard-portrait">' + portraitHtml(bird, true) + '</div>' +
         '<div class="chicken-leaderboard-tier">T' + tier + '</div>' +
         '<div class="chicken-leaderboard-main"><strong>' + birdDisplayName(bird) + '</strong>' +
         '<span>' + tierLabel + ' · ' + Math.floor(bird.fed) + ' fed</span>' +
@@ -1810,6 +1995,7 @@
     this.recompute();
     syncGoalIndex(this.state, this.stats);
     this.checkGoals();
+    this._visualRotateAt = Date.now() + VISUAL_ROTATE_MS;
     this.render();
     this.startLoops();
     this.scheduleGoldenWorm();
