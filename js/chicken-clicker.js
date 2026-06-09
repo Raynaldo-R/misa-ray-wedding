@@ -1,5 +1,5 @@
 /**
- * Chicken Fund clicker — v4 "The Coop Update"
+ * Chicken Fund clicker — v4.1 "The Coop Update"
  */
 (function (global) {
   'use strict';
@@ -28,29 +28,94 @@
   var FEED_COLORS = ['#1a1410', '#2b2018', '#3d2e22', '#4a3828', '#5c4030', '#0d0b09'];
   var EGG_COLORS = ['#f5f0e1', '#efe6d0', '#dcc9a8', '#c4a574', '#a89070', '#b8cce8', '#9eb8d8'];
 
-  var HEN_EVOLUTIONS = [
-    { id: 'gold', label: 'Golden Hen', tier: 1, minFed: 380, wormCost: 45 },
-    { id: 'amber', label: 'Amber Hen', tier: 2, minFed: 720, wormCost: 110 },
-    { id: 'ruby', label: 'Ruby Hen', tier: 3, minFed: 1150, wormCost: 200, needsName: true },
-    { id: 'sapphire', label: 'Sapphire Hen', tier: 4, minFed: 1650, wormCost: 320 },
-    { id: 'rainbow', label: 'Rainbow Hen', tier: 5, minFed: 2300, wormCost: 520, unlock: 'giantWorm' },
-    { id: 'ice', label: 'Ice Hen', tier: 6, minFed: 3100, wormCost: 750 },
-    { id: 'fire', label: 'Fire Hen', tier: 7, minFed: 4100, wormCost: 1050 },
-    { id: 'nuclear', label: 'Nuclear Hen', tier: 8, minFed: 5400, wormCost: 1500, unlock: 'loveStory' }
+  var EVO_IDS = [
+    'blue-crest', 'red-crest', 'spotted-wing', 'green-talon', 'ringneck', 'patterned', 'iridescent', 'crested',
+    'bronze', 'copper', 'silver', 'gold', 'fire', 'ice', 'nuclear', 'quantum'
+  ];
+  var EVO_NAMES = [
+    'Blue Crest', 'Red Crest', 'Spotted Wing', 'Green Talon', 'Ringneck', 'Patterned', 'Iridescent', 'Crested',
+    'Bronze', 'Copper', 'Silver', 'Gold', 'Fire', 'Ice', 'Nuclear', 'Quantum'
+  ];
+  var EVO_COSTS = [25, 45, 80, 140, 245, 430, 755, 1320, 2310, 4045, 7080, 12390, 21685, 37950, 66410, 116220];
+  var EVO_MIN_FED = [40, 64, 102, 163, 261, 418, 669, 1070, 1712, 2739, 4382, 7011, 11218, 17949, 28718, 45949];
+
+  var EVO_PERKS = [
+    { eggLay: 0.02 },
+    { eggLay: 0.03 },
+    { hatch: 0.01 },
+    { eggLay: 0.04 },
+    { hatch: 0.02 },
+    { eggLay: 0.05 },
+    { hatch: 0.03 },
+    { eggLay: 0.06 },
+    { eggLay: 0.08, hatch: 0.02 },
+    { eggLay: 0.10, hatch: 0.03 },
+    { eggLay: 0.12, hatch: 0.04, grainPerClick: 1 },
+    { eggLay: 0.15, hatch: 0.05, grainPerClick: 2 },
+    { eggLay: 0.20, hatch: 0.06, grainPerClick: 3 },
+    { eggLay: 0.25, hatch: 0.07, wormTrickle: 0.1 },
+    { eggLay: 0.30, hatch: 0.10, grainPerClick: 5 },
+    { eggLay: 0.50, hatch: 0.50, grainPerClick: 5, wormTrickle: 0.1, quantum: true }
   ];
 
-  var ROOSTER_EVOLUTIONS = [
-    { id: 'bronze', label: 'Bronze Rooster', tier: 1, minFed: 380, wormCost: 45 },
-    { id: 'copper', label: 'Copper Rooster', tier: 2, minFed: 720, wormCost: 110 },
-    { id: 'crimson', label: 'Crimson Rooster', tier: 3, minFed: 1150, wormCost: 200, needsName: true },
-    { id: 'storm', label: 'Storm Rooster', tier: 4, minFed: 1650, wormCost: 320 },
-    { id: 'thunder', label: 'Thunder Rooster', tier: 5, minFed: 2300, wormCost: 520 },
-    { id: 'frost', label: 'Frost Rooster', tier: 6, minFed: 3100, wormCost: 750 },
-    { id: 'blaze', label: 'Blaze Rooster', tier: 7, minFed: 4100, wormCost: 1050 },
-    { id: 'nuclear', label: 'Nuclear Rooster', tier: 8, minFed: 5400, wormCost: 1500, unlock: 'loveStory' }
+  var OLD_HEN_EVO_IDS = ['gold', 'amber', 'ruby', 'sapphire', 'rainbow', 'ice', 'fire', 'nuclear'];
+  var OLD_ROO_EVO_IDS = ['bronze', 'copper', 'crimson', 'storm', 'thunder', 'frost', 'blaze', 'nuclear'];
+  var EVO_LEGACY = { ember: 'red-crest', shadow: 'nuclear' };
+
+  function makeEvoChain(sex) {
+    var chain = [];
+    var suffix = sex === 'hen' ? ' Hen' : ' Rooster';
+    var i;
+    for (i = 0; i < EVO_IDS.length; i++) {
+      chain.push({
+        id: EVO_IDS[i],
+        label: EVO_NAMES[i] + suffix,
+        tier: i + 1,
+        minFed: EVO_MIN_FED[i],
+        wormCost: EVO_COSTS[i],
+        needsName: i + 1 >= 3
+      });
+    }
+    return chain;
+  }
+
+  var HEN_EVOLUTIONS = makeEvoChain('hen');
+  var ROOSTER_EVOLUTIONS = makeEvoChain('rooster');
+
+  var FLOCK_MILESTONES = [
+    { flock: 25, id: 'worms', label: 'Worms unlocked', desc: 'Dig in the dirt for wriggly treats.' },
+    { flock: 50, id: 'nest', label: 'Nest boxes', desc: 'Extra nest boxes are now available.' },
+    { flock: 100, id: 'phase2', label: 'Material evolutions', desc: 'Bronze and beyond can be purchased.' },
+    { flock: 200, id: 'incubator', label: 'Incubators', desc: 'Warm incubators can be purchased.' },
+    { flock: 300, id: 'grainStorm', label: 'Grain Storm', desc: '30× grain burst unlocked.' },
+    { flock: 400, id: 'wormStorm', label: 'Worm Rain', desc: '10× worm burst unlocked.' },
+    { flock: 500, id: 'habitat', label: 'Habitat upgrades', desc: 'Upgrade the yard for passive bonuses.' },
+    { flock: 600, id: 'loveStory', label: 'Love Story', desc: 'Eligible birds may find romance.' },
+    { flock: 700, id: 'giantWorm', label: 'Giant Worm mode', desc: 'Feed giant mealworms.' },
+    { flock: 800, id: 'quantum', label: 'Quantum evolution', desc: 'Tier 16 evolutions unlocked.' },
+    { flock: 900, id: 'almostThere', label: 'Almost There', desc: 'The flock is nearly legendary.' },
+    { flock: 1000, id: 'ending', label: 'The flock ascends', desc: 'Your coop story reaches its peak.', ending: true }
   ];
 
-  var EVO_LEGACY = { ember: 'amber', shadow: 'nuclear' };
+  var HABITAT_TIERS = [
+    { tier: 0, name: 'Bare yard', cost: 0 },
+    { tier: 1, name: 'Small coop', cost: 500, eggLay: 0.05 },
+    { tier: 2, name: 'Large coop', cost: 2000, eggLay: 0.10, hatch: 0.02 },
+    { tier: 3, name: 'Fenced run', cost: 8000, eggLay: 0.15, hatch: 0.05 },
+    { tier: 4, name: 'Open pasture', cost: 30000, eggLay: 0.25, hatch: 0.10, nutritionTrickle: 0.2 }
+  ];
+
+  var BROODING_UPGRADES = [
+    { id: 'straw', label: 'Straw bedding', desc: '+3% hatch rate', cost: 80, hatch: 0.03 },
+    { id: 'heat', label: 'Heat lamp', desc: '+5% hatch rate', cost: 200, hatch: 0.05 },
+    { id: 'decoy', label: 'Ceramic eggs (decoys)', desc: '+4% hatch, hens lay 10% more', cost: 600, hatch: 0.04, eggLay: 0.10 },
+    { id: 'brooder', label: 'Dedicated brooder', desc: '+8% hatch rate', cost: 1800, hatch: 0.08 },
+    { id: 'turner', label: 'Automated turner', desc: '+10% hatch rate', cost: 5000, hatch: 0.10 },
+    { id: 'climate', label: 'Climate-controlled room', desc: '+15% hatch rate', cost: 15000, hatch: 0.15 }
+  ];
+
+  var BROODING_BY_ID = Object.create(null);
+  BROODING_UPGRADES.forEach(function (u) { BROODING_BY_ID[u.id] = u; });
 
   var FLAVOR_LINES = [
     { t: 'A hen stares at you. She has opinions.', minHens: 1 },
@@ -137,6 +202,10 @@
       burstGrainCd: 0,
       burstWormCd: 0,
       milestones: { grainStorm: false, wormStorm: false, henThousand: false },
+      flockMilestoneFlags: {},
+      habitat: 0,
+      broodingBought: {},
+      pairedNestBonus: 0,
       unlocks: { giantWorm: false, loveStory: false, loveStorySeen: false },
       burstGiantUntil: 0,
       burstGiantCd: 0,
@@ -147,7 +216,7 @@
       farmNumber: 1,
       hallOfFame: [],
       lastSeen: Date.now(),
-      flock: [{ id: 1, sex: 'hen', fed: 0, evolution: null, name: null }]
+      flock: [{ id: 1, sex: 'hen', fed: 0, evolution: null, name: null, paired: false }]
     };
   }
 
@@ -185,12 +254,179 @@
     var roo = false;
     var i;
     for (i = 0; i < state.flock.length; i++) {
-      if (state.flock[i].evolution === 'nuclear') {
+      if (getBirdTier(state.flock[i]) >= 15) {
         if (state.flock[i].sex === 'hen') hen = true;
         else roo = true;
       }
     }
     return hen && roo;
+  }
+
+  function emptyBonus() {
+    return { eggLay: 0, hatch: 0, grainPerClick: 0, wormTrickle: 0, nutritionTrickle: 0, allMult: 0 };
+  }
+
+  function getBirdPerkValues(bird) {
+    var tier = getBirdTier(bird);
+    if (!tier) return emptyBonus();
+    var p = EVO_PERKS[tier - 1];
+    var out = emptyBonus();
+    if (p.eggLay) out.eggLay = p.eggLay;
+    if (p.hatch) out.hatch = p.hatch;
+    if (p.grainPerClick) out.grainPerClick = p.grainPerClick;
+    if (p.wormTrickle) out.wormTrickle = p.wormTrickle;
+    if (p.quantum) {
+      out.eggLay *= 1.5;
+      out.hatch *= 1.5;
+      out.grainPerClick *= 1.5;
+      out.wormTrickle *= 2;
+      out.quantumDouble = true;
+    }
+    return out;
+  }
+
+  function getFlockBonus(flock) {
+    var out = emptyBonus();
+    var i;
+    for (i = 0; i < flock.length; i++) {
+      var b = getBirdPerkValues(flock[i]);
+      out.eggLay += b.eggLay;
+      out.hatch += b.hatch;
+      out.grainPerClick += b.grainPerClick;
+      out.wormTrickle += b.wormTrickle;
+    }
+    return out;
+  }
+
+  function getHabitatBonus(habitatTier) {
+    var out = emptyBonus();
+    var def = HABITAT_TIERS[habitatTier || 0];
+    if (!def) return out;
+    if (def.eggLay) out.eggLay = def.eggLay;
+    if (def.hatch) out.hatch = def.hatch;
+    if (def.nutritionTrickle) out.nutritionTrickle = def.nutritionTrickle;
+    return out;
+  }
+
+  function getBroodingBonus(broodingBought) {
+    var out = emptyBonus();
+    var i;
+    for (i = 0; i < BROODING_UPGRADES.length; i++) {
+      if (!broodingBought[BROODING_UPGRADES[i].id]) continue;
+      var u = BROODING_UPGRADES[i];
+      if (u.hatch) out.hatch += u.hatch;
+      if (u.eggLay) out.eggLay += u.eggLay;
+    }
+    return out;
+  }
+
+  function getPairedBonuses(flock) {
+    var out = emptyBonus();
+    var hasHighPair = false;
+    var hasElitePair = false;
+    var nuclearPair = false;
+    var quantumPair = false;
+    var i;
+    for (i = 0; i < flock.length; i++) {
+      var b = flock[i];
+      if (!b.paired) continue;
+      var tier = getBirdTier(b);
+      if (tier >= 13 && tier <= 15) hasElitePair = true;
+      else if (tier >= 9 && tier <= 12) hasHighPair = true;
+      if (tier >= 15 && b.sex === 'hen') {
+        for (var j = 0; j < flock.length; j++) {
+          if (flock[j].paired && flock[j].sex === 'rooster' && getBirdTier(flock[j]) >= 15) nuclearPair = true;
+        }
+      }
+      if (tier >= 16 && b.sex === 'hen') {
+        for (var k = 0; k < flock.length; k++) {
+          if (flock[k].paired && flock[k].sex === 'rooster' && getBirdTier(flock[k]) >= 16) quantumPair = true;
+        }
+      }
+    }
+    if (hasHighPair) out.hatch += 0.05;
+    if (hasElitePair) out.wormTrickle += 0.2;
+    if (nuclearPair) out.allMult += 0.10;
+    out.quantumPair = quantumPair;
+    return out;
+  }
+
+  function formatBirdBonus(bird) {
+    if (!bird.evolution) return '';
+    var b = getBirdPerkValues(bird);
+    var parts = [];
+    if (b.eggLay > 0.005) parts.push('Lays ' + Math.round(b.eggLay * 100) + '% more eggs');
+    if (b.hatch > 0.005) parts.push('+' + Math.round(b.hatch * 100) + '% hatch');
+    if (b.grainPerClick > 0) parts.push('+' + b.grainPerClick + ' grain/click');
+    if (b.wormTrickle > 0) parts.push('+' + b.wormTrickle.toFixed(1) + ' worms/tick');
+    return parts.join(' · ');
+  }
+
+  function flockMilestoneMet(state, id) {
+    if (state.flockMilestoneFlags && state.flockMilestoneFlags[id]) return true;
+    var i;
+    for (i = 0; i < FLOCK_MILESTONES.length; i++) {
+      if (FLOCK_MILESTONES[i].id === id && state.flock.length >= FLOCK_MILESTONES[i].flock) return true;
+    }
+    return false;
+  }
+
+  function nextFlockMilestone(state) {
+    var i;
+    for (i = 0; i < FLOCK_MILESTONES.length; i++) {
+      if (!flockMilestoneMet(state, FLOCK_MILESTONES[i].id)) return FLOCK_MILESTONES[i];
+    }
+    return null;
+  }
+
+  function canReachEvoTier(state, tier) {
+    if (tier <= 8) return true;
+    if (tier <= 15) return state.flock.length >= 100;
+    if (tier === 16) return state.flock.length >= 800 && flockMilestoneMet(state, 'quantum');
+    return false;
+  }
+
+  function migrateBirdEvolution(bird) {
+    if (!bird.evolution) return;
+    if (EVO_LEGACY[bird.evolution]) bird.evolution = EVO_LEGACY[bird.evolution];
+    if (EVO_IDS.indexOf(bird.evolution) >= 0) return;
+    var oldList = bird.sex === 'rooster' ? OLD_ROO_EVO_IDS : OLD_HEN_EVO_IDS;
+    var idx = oldList.indexOf(bird.evolution);
+    if (idx < 0) return;
+    bird.evolution = idx === 7 ? 'nuclear' : EVO_IDS[idx];
+  }
+
+  function injectTrackCStyles() {
+    if (typeof document === 'undefined' || document.getElementById('chicken-track-c-styles')) return;
+    var css = document.createElement('style');
+    css.id = 'chicken-track-c-styles';
+    css.textContent = [
+      '.chicken-widget-stage.habitat-0{background:#b5a990}',
+      '.chicken-widget-stage.habitat-1{background:#8a7560}',
+      '.chicken-widget-stage.habitat-2{background:#6b8c42}',
+      '.chicken-widget-stage.habitat-3{background:#4a7a2e}',
+      '.chicken-widget-stage.habitat-4{background:#3d6b24}',
+      '.chicken-bird-bonus{font-size:.72em;opacity:.85;display:block;margin-top:2px}',
+      '.chicken-love-overlay{position:absolute;inset:0;z-index:20;pointer-events:none;overflow:hidden}',
+      '.chicken-love-sprite{position:absolute;bottom:18%;width:48px;height:48px;transition:left 1.5s ease,right 1.5s ease,opacity .4s}',
+      '.chicken-love-sprite--hen{left:-60px}.chicken-love-sprite--roo{right:-60px}',
+      '.chicken-love-overlay.is-active .chicken-love-sprite--hen{left:32%}',
+      '.chicken-love-overlay.is-active .chicken-love-sprite--roo{right:32%}',
+      '.chicken-love-heart{position:absolute;left:50%;bottom:28%;transform:translateX(-50%) scale(.6);font-size:28px;opacity:0}',
+      '.chicken-love-overlay.is-active .chicken-love-heart{opacity:1;animation:chicken-love-pulse 1s ease-in-out infinite}',
+      '@keyframes chicken-love-pulse{0%,100%{transform:translateX(-50%) scale(.85)}50%{transform:translateX(-50%) scale(1.15)}}',
+      '.chicken-bird--blue-crest{filter:hue-rotate(200deg) saturate(1.4)}',
+      '.chicken-bird--red-crest{filter:sepia(1) saturate(2.5) hue-rotate(-15deg)}',
+      '.chicken-bird--spotted-wing{filter:contrast(1.1) saturate(1.3)}',
+      '.chicken-bird--green-talon{filter:hue-rotate(90deg) saturate(1.5)}',
+      '.chicken-bird--ringneck{filter:sepia(.4) saturate(1.8) hue-rotate(25deg)}',
+      '.chicken-bird--patterned{filter:saturate(1.6) contrast(1.05)}',
+      '.chicken-bird--iridescent{filter:hue-rotate(280deg) saturate(2) brightness(1.1)}',
+      '.chicken-bird--crested{filter:brightness(1.08) saturate(1.4)}',
+      '.chicken-bird--silver{filter:grayscale(.35) brightness(1.15)}',
+      '.chicken-bird--quantum{filter:hue-rotate(260deg) saturate(3) brightness(1.25);box-shadow:0 0 14px rgba(160,120,255,.55)}'
+    ].join('');
+    document.head.appendChild(css);
   }
 
   function hasGrainUpgrade(state) {
@@ -250,9 +486,25 @@
     if (!s.hallOfFame) s.hallOfFame = [];
     if (!s.lastSeen) s.lastSeen = Date.now();
     if (s.prestigeUnlocked == null) s.prestigeUnlocked = false;
+    if (!s.flockMilestoneFlags) s.flockMilestoneFlags = {};
+    if (s.habitat == null) s.habitat = 0;
+    if (!s.broodingBought) s.broodingBought = {};
+    if (s.pairedNestBonus == null) s.pairedNestBonus = 0;
     s.flock.forEach(function (b) {
-      if (b.evolution && EVO_LEGACY[b.evolution]) b.evolution = EVO_LEGACY[b.evolution];
+      migrateBirdEvolution(b);
       if (b.name == null) b.name = null;
+      if (b.paired == null) b.paired = false;
+    });
+    FLOCK_MILESTONES.forEach(function (m) {
+      if (s.flock.length >= m.flock) {
+        s.flockMilestoneFlags[m.id] = true;
+        if (m.id === 'worms') s.wormsUnlocked = true;
+        if (m.id === 'grainStorm') s.milestones.grainStorm = true;
+        if (m.id === 'wormStorm') s.milestones.wormStorm = true;
+        if (m.id === 'loveStory') s.unlocks.loveStory = true;
+        if (m.id === 'giantWorm') s.unlocks.giantWorm = true;
+        if (m.id === 'ending') s.prestigeUnlocked = true;
+      }
     });
     return s;
   }
@@ -284,9 +536,10 @@
     return chain[tier];
   }
 
-  function getNextEvolution(bird) {
+  function getNextEvolution(bird, state) {
     var next = getNextEvoDef(bird);
     if (!next || bird.fed < next.minFed) return null;
+    if (state && !canReachEvoTier(state, next.tier)) return null;
     return next;
   }
 
@@ -402,6 +655,14 @@
       else roosters++;
     }
     var flockN = state.flock.length;
+    var flockBonus = getFlockBonus(state.flock);
+    var habitatBonus = getHabitatBonus(state.habitat);
+    var broodingBonus = getBroodingBonus(state.broodingBought || {});
+    var pairedBonus = getPairedBonuses(state.flock);
+    var eggLayBonus = flockBonus.eggLay + habitatBonus.eggLay + broodingBonus.eggLay;
+    var hatchBonus = flockBonus.hatch + habitatBonus.hatch + broodingBonus.hatch + pairedBonus.hatch;
+    var allMult = 1 + pairedBonus.allMult;
+
     var hatch = 0;
     if (roosters) {
       hatch = 0.008 + roosters * 0.014 + state.incubatorLevel * 0.012;
@@ -410,15 +671,20 @@
       if (flockN > 90) hatch *= 0.55;
       if (flockN > 180) hatch *= 0.45;
     }
-    var eggThreshold = Math.max(14, Math.floor(28 - hens * 0.55 - state.nestBonus * 1.8));
+    var nestTotal = state.nestBonus + (state.pairedNestBonus || 0);
+    var eggThreshold = Math.max(14, Math.floor(28 - hens * 0.55 - nestTotal * 1.8));
     if (flockN > 50) eggThreshold += Math.floor((flockN - 50) * 0.15);
+    if (eggLayBonus > 0) eggThreshold = Math.max(8, Math.floor(eggThreshold / (1 + eggLayBonus * allMult)));
     var featherBonus = (state.feathers || 0) * 0.008;
-    hatch = Math.min(0.11, hatch + featherBonus);
+    hatch = Math.min(0.35, (hatch + featherBonus + hatchBonus * allMult));
     return {
       hens: hens,
       roosters: roosters,
       hatch: hatch,
       eggThreshold: eggThreshold,
+      grainPerClickBonus: Math.floor(flockBonus.grainPerClick * allMult),
+      wormTrickle: (flockBonus.wormTrickle + pairedBonus.wormTrickle) * allMult,
+      nutritionTrickle: habitatBonus.nutritionTrickle,
       invFlock: state.flock.length > 0 ? 1 / Math.min(state.flock.length, FED_TRACK_CAP) : 1
     };
   }
@@ -527,11 +793,17 @@
   }
 
   function evoUpgradeRow(bird, next, s) {
-    var ready = bird.fed >= next.minFed;
+    var ready = bird.fed >= next.minFed && canReachEvoTier(s, next.tier);
     var afford = ready && s.worms >= next.wormCost;
     var pct = Math.round(evoProgress(bird) * 100);
+    var lockNote = '';
+    if (bird.fed >= next.minFed && !canReachEvoTier(s, next.tier)) {
+      lockNote = next.tier === 16 ? ' (needs 800 birds)' : ' (needs 100 birds)';
+    }
+    var bonusTxt = formatBirdBonus({ evolution: next.id, sex: bird.sex });
     return '<button type="button" class="chicken-upgrade-row chicken-upgrade-row--evo' + (afford ? ' can-afford' : '') + (!ready ? ' chicken-upgrade-row--horizon' : '') + '" data-buy="evo:' + bird.id + '"' + (afford ? '' : ' disabled') + '>' +
-      '<span class="chicken-upgrade-row-main"><strong>Evolve ' + birdDisplayName(bird) + '</strong><span>→ ' + next.label + '</span>' +
+      '<span class="chicken-upgrade-row-main"><strong>Evolve ' + birdDisplayName(bird) + '</strong><span>→ ' + next.label + lockNote + '</span>' +
+      (bonusTxt ? '<span class="chicken-bird-bonus">' + bonusTxt + '</span>' : '') +
       '<span class="chicken-evo-bar"><span style="width:' + pct + '%"></span></span></span>' +
       '<span class="chicken-upgrade-row-cost">' + formatNum(next.wormCost) + ' w</span></button>';
   }
@@ -588,6 +860,8 @@
     this._visualSeed = 0;
     this._visualRotateAt = 0;
     this._layoutTick = 0;
+    this._loveStoryTimer = null;
+    injectTrackCStyles();
     this._bind();
     syncGoalIndex(this.state, this.stats);
     this.checkMilestones();
@@ -639,28 +913,45 @@
     }
   };
 
+  ChickenClicker.prototype.checkFlockMilestones = function () {
+    var s = this.state;
+    if (!s.flockMilestoneFlags) s.flockMilestoneFlags = {};
+    var self = this;
+    var changed = false;
+    var i;
+    for (i = 0; i < FLOCK_MILESTONES.length; i++) {
+      var m = FLOCK_MILESTONES[i];
+      if (s.flockMilestoneFlags[m.id]) continue;
+      if (s.flock.length < m.flock) continue;
+      s.flockMilestoneFlags[m.id] = true;
+      changed = true;
+      if (m.id === 'worms' && !s.wormsUnlocked) {
+        s.wormsUnlocked = true;
+        s.worms += 5;
+        this.upgradesDirty = true;
+      }
+      if (m.id === 'grainStorm') s.milestones.grainStorm = true;
+      if (m.id === 'wormStorm') s.milestones.wormStorm = true;
+      if (m.id === 'habitat') { /* shop row appears */ }
+      if (m.id === 'loveStory') s.unlocks.loveStory = true;
+      if (m.id === 'giantWorm') s.unlocks.giantWorm = true;
+      if (m.id === 'ending') {
+        s.prestigeUnlocked = true;
+        setTimeout(function () { self.showEndingCard(); }, 400);
+      } else {
+        this.showToast(m.label + ' — ' + m.desc);
+      }
+      this.upgradesDirty = true;
+    }
+    if (changed) this.recompute();
+  };
+
   ChickenClicker.prototype.checkMilestones = function () {
     var s = this.state;
-    if (!s.wormsUnlocked && (s.grainPerClick >= 3 || this.stats.hens >= 5)) {
-      this.unlockWorms(true);
-    }
-    if (!s.wormsUnlocked && s.lifetimeHens >= 100) {
-      s.wormsUnlocked = true;
-      s.worms += 25;
-      this.upgradesDirty = true;
-    }
+    this.checkFlockMilestones();
     if (s.lifetimeHens >= 1000 && !s.milestones.henThousand) {
       s.milestones.henThousand = true;
-      s.wormsUnlocked = true;
       s.wormPerClick = Math.max(s.wormPerClick, 3);
-      this.upgradesDirty = true;
-    }
-    if (s.lifetimeRoosters >= 500 && !s.milestones.grainStorm) {
-      s.milestones.grainStorm = true;
-      this.upgradesDirty = true;
-    }
-    if (s.lifetimeRoosters >= 150 && !s.milestones.wormStorm) {
-      s.milestones.wormStorm = true;
       this.upgradesDirty = true;
     }
   };
@@ -987,6 +1278,7 @@
     this.els.hudBoost = document.getElementById('chicken-hud-boost');
     this.els.clickArea = document.getElementById('chicken-click-area');
     this.els.stage = document.querySelector('#chicken-click-area .chicken-widget-stage');
+    this.els.yardStage = this.els.stage;
     this.els.flockLayer = document.getElementById('chicken-flock-layer');
     this.els.eggLayer = document.getElementById('chicken-egg-layer');
     this.els.particleLayer = document.getElementById('chicken-particles');
@@ -1071,6 +1363,8 @@
         if (parts[0] === 'grain' && GRAIN_BY_ID[parts[1]]) self.buyGrainUpgrade(GRAIN_BY_ID[parts[1]]);
         else if (parts[0] === 'worm' && WORM_BY_ID[parts[1]]) self.buyWormUpgrade(WORM_BY_ID[parts[1]]);
         else if (parts[0] === 'coop' && COOP_BY_ID[parts[1]]) self.buyCoopUpgrade(COOP_BY_ID[parts[1]]);
+        else if (parts[0] === 'habitat') self.buyHabitat();
+        else if (parts[0] === 'brood' && BROODING_BY_ID[parts[1]]) self.buyBrooding(BROODING_BY_ID[parts[1]]);
         else if (parts[0] === 'evo') self.evolveBird(Number(parts[1]));
       });
     }
@@ -1178,16 +1472,16 @@
   ChickenClicker.prototype.renderGoal = function () {
     if (!this.els.goalLabel) return;
     var s = this.state;
-    if (s.goalIndex >= GOALS.length) {
-      this.els.goalLabel.textContent = 'All goals complete — sandbox mode';
+    var next = nextFlockMilestone(s);
+    if (!next) {
+      this.els.goalLabel.textContent = 'All flock milestones complete — sandbox mode';
       if (this.els.goalFill) this.els.goalFill.style.width = '100%';
       return;
     }
-    var g = GOALS[s.goalIndex];
-    this.els.goalLabel.textContent = 'Goal: ' + g.label;
+    var flock = s.flock.length;
+    this.els.goalLabel.textContent = 'Next: ' + next.flock + ' birds → ' + next.label + ' (' + flock + '/' + next.flock + ')';
     if (this.els.goalFill) {
-      var p = g.progress ? g.progress(s, this.stats) : (g.check(s, this.stats) ? 1 : 0);
-      this.els.goalFill.style.width = Math.round(p * 100) + '%';
+      this.els.goalFill.style.width = Math.round(Math.min(1, flock / next.flock) * 100) + '%';
     }
   };
 
@@ -1329,48 +1623,113 @@
     this.showToast(pickFlavorLine(this.state, this.stats));
   };
 
-  ChickenClicker.prototype.checkLoveStory = function () {
-    var s = this.state;
-    if (s.unlocks.loveStorySeen) return;
-    var hasNuclearHen = false;
-    var hasNuclearRooster = false;
+  ChickenClicker.prototype.scheduleLoveStoryCheck = function () {
+    var self = this;
+    if (this._loveStoryTimer) clearTimeout(this._loveStoryTimer);
+    if (!this.open) return;
+    var delay = 30000 + Math.random() * 30000;
+    this._loveStoryTimer = setTimeout(function () { self.tryLoveStoryDate(); }, delay);
+  };
+
+  ChickenClicker.prototype.tryLoveStoryDate = function () {
+    this.scheduleLoveStoryCheck();
+    if (!this.open || this.paused || this._loveSceneActive) return;
+    if (!flockMilestoneMet(this.state, 'loveStory')) return;
+
+    var bestHen = null;
+    var bestRoo = null;
+    var bestHenTier = 0;
+    var bestRooTier = 0;
     var i;
-    for (i = 0; i < s.flock.length; i++) {
-      if (s.flock[i].evolution === 'nuclear') {
-        if (s.flock[i].sex === 'hen') hasNuclearHen = true;
-        else hasNuclearRooster = true;
+    for (i = 0; i < this.state.flock.length; i++) {
+      var b = this.state.flock[i];
+      if (b.paired) continue;
+      var tier = getBirdTier(b);
+      if (tier < 5) continue;
+      if (b.sex === 'hen' && tier >= bestHenTier) {
+        bestHenTier = tier;
+        bestHen = b;
+      } else if (b.sex === 'rooster' && tier >= bestRooTier) {
+        bestRooTier = tier;
+        bestRoo = b;
       }
     }
-    if (!hasNuclearHen || !hasNuclearRooster) return;
-    s.unlocks.loveStorySeen = true;
+    if (!bestHen || !bestRoo) return;
+    this.playLoveStoryCutscene(bestHen, bestRoo);
+  };
+
+  ChickenClicker.prototype.playLoveStoryCutscene = function (hen, roo) {
     var self = this;
-    this.showNarrative({
-      eyebrow: 'Unlocked — Love story',
-      title: 'Dawn grain, dusk coop',
-      body: 'Misa scattered grain at first light while Ray tightened the last hinge on the coop. Between them, a golden hen and a thunder rooster learned the same dance — and the flock has never been the same.',
-      btn: 'Beautiful'
-    });
+    if (!this.els.stage) return;
+    this._loveSceneActive = true;
+    var overlay = this.els.loveOverlay;
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'chicken-love-overlay';
+      overlay.innerHTML = '<img class="chicken-love-sprite chicken-love-sprite--hen" alt="">' +
+        '<span class="chicken-love-heart" aria-hidden="true">❤</span>' +
+        '<img class="chicken-love-sprite chicken-love-sprite--roo" alt="">';
+      this.els.stage.appendChild(overlay);
+      this.els.loveOverlay = overlay;
+    }
+    var imgs = overlay.querySelectorAll('img');
+    imgs[0].src = birdGifFor(hen);
+    imgs[0].className = 'chicken-love-sprite chicken-love-sprite--hen ' + birdClass(hen);
+    imgs[1].src = birdGifFor(roo);
+    imgs[1].className = 'chicken-love-sprite chicken-love-sprite--roo ' + birdClass(roo);
+    overlay.classList.remove('is-active');
+    void overlay.offsetWidth;
+    overlay.classList.add('is-active');
+
+    var henName = birdDisplayName(hen);
+    var rooName = birdDisplayName(roo);
+    this.showToast(henName + ' and ' + rooName + ' are dating! 🌸');
+
+    hen.paired = true;
+    roo.paired = true;
+    var pairTier = Math.min(getBirdTier(hen), getBirdTier(roo));
+    if (pairTier >= 5 && pairTier <= 8) this.state.pairedNestBonus = (this.state.pairedNestBonus || 0) + 1;
+
+    var nuclearPair = getBirdTier(hen) >= 15 && getBirdTier(roo) >= 15;
+    var quantumPair = getBirdTier(hen) >= 16 && getBirdTier(roo) >= 16;
+
+    setTimeout(function () {
+      overlay.classList.remove('is-active');
+      self._loveSceneActive = false;
+      self.recompute();
+      self.requestHud();
+      self.upgradesDirty = true;
+      self.scheduleSave();
+      if (quantumPair) {
+        self.showToast('The flock has ascended.');
+      } else if (nuclearPair && !self.state.unlocks.loveStorySeen) {
+        self.state.unlocks.loveStorySeen = true;
+        self.showNarrative({
+          eyebrow: 'Love story',
+          title: 'Dawn grain, dusk coop',
+          body: 'Misa scattered grain at first light while Ray tightened the last hinge on the coop. Between ' + henName + ' and ' + rooName + ', the flock has never been the same.',
+          btn: 'Beautiful'
+        });
+      }
+    }, 3000);
   };
 
   ChickenClicker.prototype.evolveBird = function (birdId) {
     var bird = this.findBird(birdId);
     if (!bird) return;
-    var next = getNextEvolution(bird);
+    var next = getNextEvolution(bird, this.state);
     if (!next || this.state.worms < next.wormCost) return;
 
     this.state.worms -= next.wormCost;
     bird.evolution = next.id;
+    this.recompute();
     this.visualDirty = true;
     this.upgradesDirty = true;
     this.leaderboardDirty = true;
 
-    if (next.unlock === 'giantWorm') this.state.unlocks.giantWorm = true;
-    if (next.unlock === 'loveStory') this.state.unlocks.loveStory = true;
-
     var champion = flockChampion(this.state.flock);
     var self = this;
     var after = function () {
-      self.checkLoveStory();
       self.checkGoals();
       self.requestHud();
       self.renderUpgrades(true);
@@ -1390,15 +1749,6 @@
         btn: 'Name & continue',
         onDismiss: after
       });
-    } else if (next.unlock === 'giantWorm') {
-      this.showNarrative({
-        eyebrow: 'Unlocked',
-        title: 'Giant mealworm',
-        body: 'A rainbow shimmer unlocks the Giant feed mode — each click drops a mealworm worth 50 regular worms.',
-        bird: bird,
-        btn: 'Enormous',
-        onDismiss: after
-      });
     } else {
       after();
     }
@@ -1414,7 +1764,8 @@
       return { type: 'worm', amount: Math.max(1, Math.floor(this.state.wormPerClick * mult)) };
     }
     mult *= this.burstMult('grain');
-    return { type: 'grain', amount: Math.max(1, Math.floor(this.state.grainPerClick * mult)) };
+    var grainBase = this.state.grainPerClick + (this.stats.grainPerClickBonus || 0);
+    return { type: 'grain', amount: Math.max(1, Math.floor(grainBase * mult)) };
   };
 
   ChickenClicker.prototype.addNutrition = function (nutrition) {
@@ -1453,12 +1804,18 @@
   ChickenClicker.prototype.passiveTick = function () {
     var n = this.state.flock.length;
     var passive = this.stats.hens * 0.07 + this.stats.roosters * 0.025;
+    passive += this.stats.nutritionTrickle || 0;
     passive = Math.min(this.stats.eggThreshold * 0.35, passive);
     if (n > 60) passive *= 0.7;
     if (n > 120) passive *= 0.6;
     if (passive > 0) {
       this.addNutrition(passive);
       this.distributeFed(passive * 0.15);
+    }
+    var trickle = this.stats.wormTrickle || 0;
+    if (trickle > 0) {
+      this.state.worms += trickle;
+      this.state.lifetimeWorms += trickle;
     }
   };
 
@@ -1618,10 +1975,10 @@
     this.state.bought[def.id] = count + 1;
 
     if (def.type === 'hen') {
-      this.state.flock.push({ id: this.state.nextId++, sex: 'hen', fed: 0, evolution: null, name: null, bornAt: Date.now() });
+      this.state.flock.push({ id: this.state.nextId++, sex: 'hen', fed: 0, evolution: null, name: null, paired: false, bornAt: Date.now() });
       this.state.lifetimeHens += 1;
     } else if (def.type === 'rooster') {
-      this.state.flock.push({ id: this.state.nextId++, sex: 'rooster', fed: 0, evolution: null, name: null, bornAt: Date.now() });
+      this.state.flock.push({ id: this.state.nextId++, sex: 'rooster', fed: 0, evolution: null, name: null, paired: false, bornAt: Date.now() });
       this.state.lifetimeRoosters += 1;
     } else if (def.type === 'nest') {
       this.state.nestBonus += 1;
@@ -1634,6 +1991,36 @@
     this.upgradesDirty = true;
     this.leaderboardDirty = true;
     this.afterPurchase('flock');
+  };
+
+  ChickenClicker.prototype.buyHabitat = function () {
+    var s = this.state;
+    if (!flockMilestoneMet(s, 'habitat')) return;
+    var nextTier = (s.habitat || 0) + 1;
+    if (nextTier >= HABITAT_TIERS.length) return;
+    var def = HABITAT_TIERS[nextTier];
+    if (s.grains < def.cost) return;
+    s.grains -= def.cost;
+    s.habitat = nextTier;
+    this.recompute();
+    this.visualDirty = true;
+    this.upgradesDirty = true;
+    this.showToast('Habitat: ' + def.name);
+    this.afterPurchase('grains');
+  };
+
+  ChickenClicker.prototype.buyBrooding = function (def) {
+    var s = this.state;
+    if (!hasHatchedBird(s)) return;
+    if (s.broodingBought[def.id]) return;
+    var idx = BROODING_UPGRADES.indexOf(def);
+    if (idx > 0 && !s.broodingBought[BROODING_UPGRADES[idx - 1].id]) return;
+    if (s.grains < def.cost) return;
+    s.grains -= def.cost;
+    s.broodingBought[def.id] = 1;
+    this.recompute();
+    this.upgradesDirty = true;
+    this.afterPurchase('grains');
   };
 
   ChickenClicker.prototype.flashHud = function (key) {
@@ -1702,6 +2089,7 @@
         fed: 0,
         evolution: null,
         name: null,
+        paired: false,
         bornAt: Date.now()
       });
       if (isRooster) this.state.lifetimeRoosters += 1;
@@ -1782,6 +2170,7 @@
       this.visualDirty = true;
     }
     this.passiveTick();
+    this.checkFlockMilestones();
     var died = this.deathTick();
     if (died) return;
     var hatched = this.hatchTick();
@@ -1921,7 +2310,7 @@
     if (this.els.modeWorm) {
       this.els.modeWorm.classList.toggle('is-active', this.state.feedMode === 'worm');
       this.els.modeWorm.disabled = !this.state.wormsUnlocked;
-      this.els.modeWorm.title = this.state.wormsUnlocked ? '' : 'Unlocks at 3 grains/click or 5 hens';
+      this.els.modeWorm.title = this.state.wormsUnlocked ? '' : 'Unlocks at 25 birds';
       this.els.modeWorm.setAttribute('aria-pressed', this.state.feedMode === 'worm' ? 'true' : 'false');
     }
     if (this.els.modeGiant) {
@@ -1971,6 +2360,12 @@
       return;
     }
     this.visualDirty = false;
+
+    if (this.els.yardStage) {
+      var hab = this.state.habitat || 0;
+      var hi;
+      for (hi = 0; hi <= 4; hi++) this.els.yardStage.classList.toggle('habitat-' + hi, hi === hab);
+    }
 
     var samples = sampleVisualFlock(this.state.flock, MAX_VISUAL_BIRDS, this._visualSeed);
     var total = samples.length;
@@ -2057,7 +2452,7 @@
       var buy = btn.getAttribute('data-buy') || '';
       if (buy.indexOf('evo:') === 0) {
         var bird = self.findBird(Number(buy.split(':')[1]));
-        var next = bird ? getNextEvolution(bird) : null;
+        var next = bird ? getNextEvolution(bird, s) : null;
         var afford = next && s.worms >= next.wormCost;
         btn.disabled = !afford;
         btn.classList.toggle('can-afford', !!afford);
@@ -2113,13 +2508,39 @@
     COOP_UPGRADES.forEach(function (def) {
       var count = s.bought[def.id] || 0;
       if (def.max && count >= def.max) return;
+      if (def.id === 'nest' && !flockMilestoneMet(s, 'nest')) return;
+      if (def.id === 'incubator' && !flockMilestoneMet(s, 'incubator')) return;
       var cost = coopUpgradeCost(def, s);
       var wc = wormCostForGrain(cost);
       var desc = def.desc;
       if (count) desc += ' (' + count + (def.max ? '/' + def.max : '') + ')';
       coop += upgradeRow(def.label, desc, cost, wc, canPay(s, cost, wc), 'coop:' + def.id, false);
     });
+    if (flockMilestoneMet(s, 'habitat')) {
+      var habTier = s.habitat || 0;
+      if (habTier < HABITAT_TIERS.length - 1) {
+        var nextHab = HABITAT_TIERS[habTier + 1];
+        var habDesc = HABITAT_TIERS[habTier].name + ' → ' + nextHab.name;
+        var habBonus = getHabitatBonus(nextHab.tier);
+        var habParts = [];
+        if (habBonus.eggLay) habParts.push('+' + Math.round(habBonus.eggLay * 100) + '% eggs');
+        if (habBonus.hatch) habParts.push('+' + Math.round(habBonus.hatch * 100) + '% hatch');
+        if (habBonus.nutritionTrickle) habParts.push('+' + habBonus.nutritionTrickle + ' nutrition/tick');
+        if (habParts.length) habDesc += ' · ' + habParts.join(', ');
+        coop += upgradeRow('Upgrade habitat', habDesc, nextHab.cost, wormCostForGrain(nextHab.cost), s.grains >= nextHab.cost, 'habitat', false);
+      }
+    }
     if (coop) html += '<h4 class="chicken-shop-head">Coop</h4>' + coop;
+
+    if (hasHatchedBird(s)) {
+      var brood = '';
+      BROODING_UPGRADES.forEach(function (def, idx) {
+        if (s.broodingBought[def.id]) return;
+        if (idx > 0 && !s.broodingBought[BROODING_UPGRADES[idx - 1].id]) return;
+        brood += upgradeRow(def.label, def.desc, def.cost, wormCostForGrain(def.cost), s.grains >= def.cost, 'brood:' + def.id, false);
+      });
+      if (brood) html += '<h4 class="chicken-shop-head">Brooding</h4>' + brood;
+    }
 
     var evo = '';
     sortFlockForLeaderboard(s.flock).slice(0, 6).forEach(function (bird) {
@@ -2143,7 +2564,7 @@
         if (s.flock[i].id === id) { bird = s.flock[i]; break; }
       }
       if (!bird) return;
-      var next = getNextEvolution(bird);
+      var next = getNextEvolution(bird, s);
       var afford = next && s.worms >= next.wormCost;
       btn.disabled = !afford;
       btn.classList.toggle('can-afford', !!afford);
@@ -2170,15 +2591,17 @@
       var def = bird.evolution ? evoDefById(bird, bird.evolution) : null;
       var tierLabel = def ? def.label : (bird.sex === 'rooster' ? 'Rooster' : 'Hen');
       var nextDef = getNextEvoDef(bird);
-      var next = getNextEvolution(bird);
+      var next = getNextEvolution(bird, s);
       var afford = next && s.worms >= next.wormCost;
       var isChamp = champion && champion.id === bird.id;
       var pct = nextDef ? Math.round(evoProgress(bird) * 100) : 100;
+      var bonusLine = tier ? formatBirdBonus(bird) : '';
       html += '<div class="chicken-leaderboard-row' + (isChamp ? ' is-champion' : '') + '">' +
         '<div class="chicken-leaderboard-portrait">' + portraitHtml(bird, true) + '</div>' +
         '<div class="chicken-leaderboard-tier">T' + tier + '</div>' +
         '<div class="chicken-leaderboard-main"><strong>' + birdDisplayName(bird) + '</strong>' +
         '<span>' + tierLabel + ' · ' + Math.floor(bird.fed) + ' fed</span>' +
+        (bonusLine ? '<span class="chicken-bird-bonus">' + bonusLine + '</span>' : '') +
         (nextDef ? '<span class="chicken-evo-bar chicken-evo-bar--sm"><span style="width:' + pct + '%"></span></span>' : '') +
         '</div>';
       if (nextDef) {
@@ -2221,6 +2644,7 @@
     this.startLoops();
     this.scheduleFloatingWorm();
     this.scheduleImposter();
+    this.scheduleLoveStoryCheck();
     this.modal.querySelector('.chicken-modal-close').focus();
   };
 
@@ -2234,6 +2658,7 @@
     this.removeFloatingWorm();
     if (this._floatingTimer) clearTimeout(this._floatingTimer);
     if (this._imposterTimer) clearTimeout(this._imposterTimer);
+    if (this._loveStoryTimer) clearTimeout(this._loveStoryTimer);
     if (this._imposterRaf) {
       cancelAnimationFrame(this._imposterRaf);
       this._imposterRaf = null;

@@ -123,6 +123,9 @@ nav a:focus-visible {
   outline-offset: 3px;
   border-radius: 2px;
 }
+.header-rsvp-mobile {
+  display: none;
+}
 @media (max-width: 768px) {
   :root { --header-h: 72px; }
   nav { display: none; }
@@ -132,6 +135,7 @@ nav a:focus-visible {
     align-items: flex-end;
     gap: 0;
     padding: 10px 16px 12px;
+    transition: padding .25s ease;
   }
   .brand {
     font-size: clamp(2.5rem, 12vw, 3.4rem);
@@ -139,7 +143,38 @@ nav a:focus-visible {
     width: 100%;
     text-align: center;
     transform-origin: center bottom;
+    transition: font-size .25s ease, width .25s ease;
   }
+  header.is-compact {
+    box-shadow: 0 1px 0 var(--line);
+  }
+  header.is-compact .nav-inner {
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px 10px;
+  }
+  header.is-compact .brand {
+    font-size: clamp(1.35rem, 6.5vw, 1.85rem);
+    width: auto;
+    margin: 0;
+    text-align: left;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  header.is-compact .header-rsvp-mobile {
+    display: inline-block;
+    flex-shrink: 0;
+    font-size: .68rem;
+    padding: 10px 16px;
+    margin: 0;
+    letter-spacing: .14em;
+    transform: scale(0.85);
+    transform-origin: center right;
+  }
+}
+.fund-gif--mobile { display: none; }
+@media (max-width: 768px) {
+  .fund-gif--mobile { display: block; margin: 0 auto 12px; line-height: 0; }
 }
 
 /* ---------- layout ---------- */
@@ -995,22 +1030,10 @@ button[type=submit]:disabled {
   .chicken-cam-stack { display: none !important; }
   .fund-wave-hitbox,
   .fund-maze-hitbox,
-  .fund-chicken-hitbox {
-    pointer-events: none;
-    border: none;
-    background: transparent;
-    padding: 0;
-    cursor: default;
-  }
-  .fund-wave-hitbox .chicken-expand-hint,
-  .fund-maze-hitbox .chicken-expand-hint,
-  .fund-chicken-hitbox .chicken-expand-hint {
-    display: none;
-  }
-  .fund-chicken-hitbox .chicken-widget {
-    width: min(100%, 140px);
-    height: clamp(64px, 12vh, 80px);
-    pointer-events: none;
+  .fund-chicken-hitbox,
+  .chicken-expand-hint,
+  .chicken-widget--preview {
+    display: none !important;
   }
   .chicken-modal,
   .wave-modal,
@@ -2334,12 +2357,83 @@ button[type=submit]:disabled {
   display: block !important;
   height: clamp(360px, 62vh, 520px);
 }
-.wave-play canvas {
+.wave-play .wave-game-root {
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 3px;
-  cursor: crosshair;
+  outline: none;
+}
+.wave-game {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a6b8a;
+}
+.wave-game__sky {
+  position: absolute;
+  inset: 0 0 42% 0;
+  background: #c8e6f0;
+  background-size: 100% 120px;
+}
+.wave-game__water {
+  position: absolute;
+  inset: 58% 0 0 0;
+  background: #1a6b8a;
+  background-size: 100% 80px;
+}
+.wave-game__rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.wave-ring {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14px;
+  display: flex;
+}
+.wave-ring__post {
+  height: 100%;
+  background: #ffe566;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+}
+.wave-ring__gap { flex-shrink: 0; }
+.wave-ring--passed .wave-ring__post { opacity: .35; }
+.wave-game__player {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  pointer-events: none;
+}
+.wave-game__sprite {
+  width: 48px;
+  height: 28px;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+}
+.wave-game__sprite--straight { background: #4a9eff; }
+.wave-game__sprite--lean-left {
+  background: #ff9f4a;
+  transform: skewX(-14deg);
+}
+.wave-game__sprite--lean-right {
+  background: #ff9f4a;
+  transform: skewX(14deg);
+}
+.wave-game__hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+  padding: 6px 10px;
+  font: 600 11px/1.3 Tahoma, sans-serif;
+  color: #fff;
+  background: rgba(8, 28, 48, .55);
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 3px;
 }
 .fund h3 {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
@@ -2839,9 +2933,10 @@ section:not(.hero) h2::after {
 </aside>
 </div>
 
-<header>
+<header id="site-header">
   <div class="nav-inner">
     <a href="#top" class="brand">Misa <span class="amp">&amp;</span> Ray</a>
+    <a href="#rsvp" class="btn btn-primary header-rsvp-mobile">RSVP</a>
     <nav>
       <a href="#couple">The Couple</a>
       <a href="#details">Details</a>
@@ -3164,6 +3259,9 @@ section:not(.hero) h2::after {
             </div>
             <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
+          <div class="fund-gif fund-gif--mobile" aria-hidden="true">
+            <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
+          </div>
           <h3>Honeymoon Vacation</h3>
           <hr class="fund-rule">
           <p>Somewhere warm, eventually.</p>
@@ -3176,6 +3274,9 @@ section:not(.hero) h2::after {
             </div>
             <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
+          <div class="fund-gif fund-gif--mobile" aria-hidden="true">
+            <img src="https://blob.gifcities.org/gifcities/J6T65FULRGZQSVKG7WS5KDOM65EQIUIJ.gif" alt="" width="120" height="80">
+          </div>
           <h3>Future Dream Home</h3>
           <hr class="fund-rule">
           <p>The walls are closing in.</p>
@@ -3195,6 +3296,9 @@ section:not(.hero) h2::after {
             </div>
             <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
+          <div class="fund-gif fund-gif--mobile" aria-hidden="true">
+            <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
+          </div>
           <h3>The Chickens</h3>
           <hr class="fund-rule">
           <p>Click to feed the flock — it gets out of hand.</p>
@@ -3376,7 +3480,7 @@ section:not(.hero) h2::after {
       <button type="button" class="wave-start-btn" id="wave-start-btn">Start engine</button>
     </div>
     <div class="wave-play" id="wave-play" hidden>
-      <canvas id="wave-canvas" tabindex="0" aria-label="Oasis ring run — use arrow keys"></canvas>
+      <div id="wave-game-root" class="wave-game-root" aria-label="Oasis ring run — use arrow keys or WASD"></div>
     </div>
   </div>
 </div>
@@ -3471,6 +3575,33 @@ section:not(.hero) h2::after {
   } else if (heroScrollHint) {
     heroScrollHint.hidden = true;
   }
+
+  /* mobile sticky header — wordmark + RSVP after hero, hide at footer */
+  (function () {
+    var siteHeader = document.getElementById('site-header');
+    var heroSection = document.getElementById('top');
+    var footerEl = document.querySelector('footer');
+    if (!siteHeader || !heroSection) return;
+
+    function updateMobileHeader() {
+      if (!isMobileView()) {
+        siteHeader.classList.remove('is-compact');
+        return;
+      }
+      var heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+      var pastHero = window.scrollY + 8 > heroBottom - 48;
+      var footerVisible = false;
+      if (footerEl) {
+        var rect = footerEl.getBoundingClientRect();
+        footerVisible = rect.top < window.innerHeight * 0.92;
+      }
+      siteHeader.classList.toggle('is-compact', pastHero && !footerVisible);
+    }
+
+    window.addEventListener('scroll', updateMobileHeader, { passive: true });
+    window.addEventListener('resize', updateMobileHeader);
+    updateMobileHeader();
+  })();
 
   if (isMobileView()) {
     var chickensFund = document.getElementById('chicken-fund-hitbox');
@@ -4018,25 +4149,24 @@ section:not(.hero) h2::after {
       var waveIntro = document.getElementById('wave-intro');
       var wavePlay = document.getElementById('wave-play');
       var waveStartBtn = document.getElementById('wave-start-btn');
-      var waveCanvas = document.getElementById('wave-canvas');
+      var waveGameRoot = document.getElementById('wave-game-root');
       var waveStarted = false;
 
       function resetWaveIntro() {
         waveStarted = false;
-        if (window.WaveRacer) WaveRacer.stop();
+        if (window.WaveRacer) WaveRacer.destroy();
         if (wavePanel) wavePanel.classList.remove('is-playing');
         if (waveIntro) waveIntro.hidden = false;
         if (wavePlay) wavePlay.hidden = true;
       }
 
       function beginWaveGame() {
-        if (waveStarted || !waveCanvas || !window.WaveRacer) return;
+        if (waveStarted || !waveGameRoot || !window.WaveRacer) return;
         waveStarted = true;
         if (wavePanel) wavePanel.classList.add('is-playing');
         if (waveIntro) waveIntro.hidden = true;
         if (wavePlay) wavePlay.hidden = false;
-        WaveRacer.start(waveCanvas);
-        waveCanvas.focus();
+        WaveRacer.init(waveGameRoot);
       }
 
       function openWaveModal() {
