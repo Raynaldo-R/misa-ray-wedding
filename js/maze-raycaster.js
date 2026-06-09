@@ -106,11 +106,7 @@
     };
   }
 
-  function rgbStr(c) {
-    return 'rgb(' + c.r + ',' + c.g + ',' + c.b + ')';
-  }
-
-  function ceilingColor(wx, wy, fog) {
+  function ceilingRgb(wx, wy, fog) {
     var tx = Math.floor(wx);
     var ty = Math.floor(wy);
     var fx = wx - tx;
@@ -124,41 +120,38 @@
       && fx > 0.5 - lightSize / 2 && fx < 0.5 + lightSize / 2
       && fy > 0.5 - lightSize / 2 && fy < 0.5 + lightSize / 2;
 
-    var r = CEIL_BASE.r;
-    var g = CEIL_BASE.g;
-    var b = CEIL_BASE.b;
-    if (onGrid) {
-      r = GRID_BROWN.r;
-      g = GRID_BROWN.g;
-      b = GRID_BROWN.b;
-    }
     if (inLight) {
-      var glow = 1 - fog.t * 0.4;
-      r = Math.round(255 * glow);
-      g = Math.round(255 * glow);
-      b = Math.round(255 * glow);
-      return rgbStr({ r: r, g: g, b: b });
+      var glow = Math.round(255 * (1 - fog.t * 0.4));
+      return { r: glow, g: glow, b: glow };
     }
-    return rgbStr(mixFog(r, g, b, fog));
+    var r = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
+    var g = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
+    var b = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
+    return mixFog(r, g, b, fog);
   }
 
-  function floorColor(wx, wy, fog) {
+  function floorRgb(wx, wy, fog) {
     var n = ((Math.floor(wx * 8) + Math.floor(wy * 8)) % 5) * 3;
-    var r = FLOOR_BASE.r - n;
-    var g = FLOOR_BASE.g - n;
-    var b = FLOOR_BASE.b - n;
-    return rgbStr(mixFog(r, g, b, fog));
+    return mixFog(FLOOR_BASE.r - n, FLOOR_BASE.g - n, FLOOR_BASE.b - n, fog);
+  }
+
+  function setPx(buf, w, x, y, c) {
+    var i = (y * w + x) * 4;
+    buf[i] = c.r;
+    buf[i + 1] = c.g;
+    buf[i + 2] = c.b;
+    buf[i + 3] = 255;
   }
 
   function drawWallColumn(ctx, x, colW, y0, wallH, texU, fog, isExit, sideShade) {
-    var h = Math.ceil(wallH);
     var shade = fog.bright * sideShade;
+    var alpha = shade * (1 - fog.t * 0.35);
     if (isExit) {
       ctx.fillStyle = 'rgb('
         + Math.round(140 * shade) + ','
         + Math.round(230 * shade) + ','
         + Math.round(150 * shade) + ')';
-      ctx.fillRect(x, y0, colW + 1, h);
+      ctx.fillRect(x, y0, colW + 1, wallH);
       return;
     }
     if (!WALL_TEX) {
@@ -166,18 +159,13 @@
         + Math.round(196 * shade) + ','
         + Math.round(212 * shade) + ','
         + Math.round(106 * shade) + ')';
-      ctx.fillRect(x, y0, colW + 1, h);
+      ctx.fillRect(x, y0, colW + 1, wallH);
       return;
     }
     var tw = WALL_TEX.width;
-    var th = WALL_TEX.height;
-    for (var row = 0; row < h; row++) {
-      var v = row / wallH;
-      var ty = Math.min(th - 1, Math.floor(v * th));
-      var tx = Math.min(tw - 1, Math.floor(texU * tw));
-      ctx.globalAlpha = shade * (1 - fog.t * 0.35);
-      ctx.drawImage(WALL_TEX, tx, ty, 1, 1, x, y0 + row, colW + 1, 1);
-    }
+    var sx = Math.floor(texU * tw) % tw;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(WALL_TEX, sx, 0, 1, WALL_TEX.height, x, y0, colW + 1, wallH);
     ctx.globalAlpha = 1;
   }
 
@@ -190,33 +178,49 @@
     var py = state.py;
     var pa = state.pa;
     var halfH = h / 2;
-    var numRays = Math.max(120, Math.floor(w / 2));
-    var colW = w / numRays;
+    var numRays = Math.max(100, Math.floor(w / 2));
+    var colW = Math.max(1, Math.ceil(w / numRays));
+    var halfFov = FOV / 2;
+
+    if (!state.frame || state.frame.width !== w || state.frame.height !== h) {
+      state.frame = ctx.createImageData(w, h);
+    }
+    var buf = state.frame.data;
+
     var y;
     for (y = 0; y < h; y++) {
       if (y === halfH) continue;
       var rowDist = (halfH * 0.92) / Math.abs(halfH - y);
       var fog = atmosphere(rowDist);
       var isCeil = y < halfH;
-      for (var i = 0; i < numRays; i++) {
-        var rayAngle = pa - FOV / 2 + (i / numRays) * FOV;
+      var x0 = 0;
+      var i;
+      for (i = 0; i < numRays; i++) {
+        var rayAngle = pa - halfFov + (i / numRays) * FOV;
         var wx = px + Math.cos(rayAngle) * rowDist;
         var wy = py + Math.sin(rayAngle) * rowDist;
-        ctx.fillStyle = isCeil ? ceilingColor(wx, wy, fog) : floorColor(wx, wy, fog);
-        ctx.fillRect(i * colW, y, colW + 1, 1);
+        var c = isCeil ? ceilingRgb(wx, wy, fog) : floorRgb(wx, wy, fog);
+        var x1 = Math.min(w, Math.round((i + 1) * colW));
+        var xi;
+        for (xi = x0; xi < x1; xi++) {
+          setPx(buf, w, xi, y, c);
+        }
+        x0 = x1;
       }
     }
 
+    ctx.putImageData(state.frame, 0, 0);
+
     for (var j = 0; j < numRays; j++) {
-      var ang = pa - FOV / 2 + (j / numRays) * FOV;
+      var ang = pa - halfFov + (j / numRays) * FOV;
       var hit = castRay(map, px, py, ang, MAX_DIST);
       var dist = hit.dist * Math.cos(ang - pa);
       if (dist < 0.001) dist = 0.001;
       var wallH = Math.min(h, (h / dist) * 0.72);
       var top = halfH - wallH / 2;
-      var fog = atmosphere(dist);
+      var fogWall = atmosphere(dist);
       var sideShade = hit.side === 'x' ? 0.82 : 1;
-      drawWallColumn(ctx, j * colW, colW, top, wallH, hit.texU, fog, hit.cell === 2, sideShade);
+      drawWallColumn(ctx, j * colW, colW, top, wallH, hit.texU, fogWall, hit.cell === 2, sideShade);
     }
 
     if (state.won) {
@@ -298,6 +302,7 @@
       keys: {},
       running: true,
       won: false,
+      frame: null,
       resize: resize,
       onKeyDown: null,
       onKeyUp: null,
