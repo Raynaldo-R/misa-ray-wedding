@@ -10,13 +10,13 @@
     '1010111110101011101011101',
     '1000100000101000001000001',
     '1110101111101011111010111',
-    '1000101011111111111010101',
+    '1000101010000000111010101',
     '1011101000000000000010111',
     '1000001000000000000010001',
-    '1011111000000000000011111',
+    '1010111000000000000010111',
     '1000001000000000000010001',
     '1011101000000000000010111',
-    '1000101011111111111010101',
+    '1000101010000000111010101',
     '1110101111101011111010111',
     '1000100000101000001000001',
     '1010111110101011101011101',
@@ -34,9 +34,9 @@
   var MAX_DIST = 28;
   var WALL_TEX = null;
   var TOMATO_IMG = null;
+  var CHICKEN_IMG = null;
   var active = null;
 
-  /* Corridor ends — tomato peeks at far end, then scurries away (one-time) */
   var CORRIDOR_EVENTS = [
     {
       id: 'hub-east',
@@ -61,10 +61,19 @@
     }
   ];
 
+  /* Chicken dash scare zones — cross-axis sprint, cannot catch player */
+  var SCARE_ZONES = [
+    { minX: 7.5, maxX: 18.5, minY: 9, maxY: 13, axis: 'x', fixed: 10.8, from: 7.6, to: 18.4 },
+    { minX: 7.5, maxX: 18.5, minY: 9, maxY: 13, axis: 'x', fixed: 11.6, from: 18.4, to: 7.6 },
+    { minX: 0.5, maxX: 7, minY: 1, maxY: 5.5, axis: 'y', fixed: 3.2, from: 1.2, to: 5.2 },
+    { minX: 17.5, maxX: 24, minY: 14, maxY: 19, axis: 'y', fixed: 20.5, from: 14.2, to: 18.8 },
+    { minX: 8, maxX: 16, minY: 17, maxY: 20.5, axis: 'x', fixed: 18.5, from: 8.2, to: 15.8 }
+  ];
+
   var CEIL_BASE = { r: 232, g: 218, b: 168 };
   var FLOOR_BASE = { r: 220, g: 202, b: 142 };
   var GRID_BROWN = { r: 148, g: 128, b: 92 };
-  var FOG_COLOR = { r: 196, g: 186, b: 148 };
+  var FOG_COLOR = { r: 168, g: 198, b: 224 };
 
   function loadImage(src) {
     return new Promise(function (resolve) {
@@ -118,6 +127,15 @@
     return best;
   }
 
+  function findScareZone(px, py) {
+    var i;
+    for (i = 0; i < SCARE_ZONES.length; i++) {
+      var z = SCARE_ZONES[i];
+      if (px >= z.minX && px <= z.maxX && py >= z.minY && py <= z.maxY) return z;
+    }
+    return null;
+  }
+
   function castRay(map, px, py, angle, maxDist) {
     var sin = Math.sin(angle);
     var cos = Math.cos(angle);
@@ -152,12 +170,12 @@
 
   function atmosphere(dist) {
     var t = Math.min(1, dist / MAX_DIST);
-    var bright = Math.max(0.18, 1 - t * 0.82);
+    var bright = Math.max(0.14, 1 - t * 0.88);
     return { t: t, bright: bright };
   }
 
   function mixFog(r, g, b, fog) {
-    var f = fog.t * 0.55;
+    var f = fog.t * 0.72;
     return {
       r: Math.round(r * fog.bright * (1 - f) + FOG_COLOR.r * f),
       g: Math.round(g * fog.bright * (1 - f) + FOG_COLOR.g * f),
@@ -172,17 +190,34 @@
     var fy = wy - ty;
     var edge = 0.045;
     var onGrid = fx < edge || fy < edge || fx > 1 - edge || fy > 1 - edge;
-    var lightEvery = 3;
-    var lightSize = 0.34;
-    var inLightCell = (tx % lightEvery === 1) && (ty % lightEvery === 1);
-    var inLight = inLightCell
-      && fx > 0.5 - lightSize / 2 && fx < 0.5 + lightSize / 2
-      && fy > 0.5 - lightSize / 2 && fy < 0.5 + lightSize / 2;
 
-    if (inLight) {
-      var glow = Math.round(255 * (1 - fog.t * 0.4));
-      return { r: glow, g: glow, b: glow };
+    var checker = ((tx + ty) % 2) === 0;
+    var cx = fx - 0.5;
+    var cy = fy - 0.5;
+    var distCenter = Math.sqrt(cx * cx + cy * cy);
+    var core = 0.11;
+    var glow = 0.34;
+
+    if (checker) {
+      if (distCenter < core) {
+        var coreB = Math.round(255 * (1 - fog.t * 0.35));
+        return { r: coreB, g: coreB, b: coreB };
+      }
+      if (distCenter < glow) {
+        var t = (distCenter - core) / (glow - core);
+        var halo = Math.round(255 * (1 - t) * (1 - fog.t * 0.3));
+        var baseR = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
+        var baseG = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
+        var baseB = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
+        return mixFog(
+          Math.round(baseR + (255 - baseR) * (1 - t) * 0.85),
+          Math.round(baseG + (255 - baseG) * (1 - t) * 0.85),
+          Math.round(baseB + (255 - baseB) * (1 - t) * 0.85),
+          fog
+        );
+      }
     }
+
     var r = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
     var g = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
     var b = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
@@ -204,7 +239,7 @@
 
   function drawWallColumn(ctx, x, colW, y0, wallH, texU, fog, isExit, sideShade) {
     var shade = fog.bright * sideShade;
-    var alpha = shade * (1 - fog.t * 0.35);
+    var alpha = shade * (1 - fog.t * 0.4);
     if (isExit) {
       ctx.fillStyle = 'rgb('
         + Math.round(140 * shade) + ','
@@ -302,6 +337,56 @@
     }
   }
 
+  function startChickenScare(state, zone) {
+    state.chickenScarePhase = 'run';
+    state.chickenScareZone = zone;
+    state.chickenScareTimer = 0;
+    state.chickenScareAlpha = 1;
+    state.chickenScareFlip = zone.from > zone.to;
+    if (zone.axis === 'x') {
+      state.chickenScareX = zone.from;
+      state.chickenScareY = zone.fixed;
+    } else {
+      state.chickenScareX = zone.fixed;
+      state.chickenScareY = zone.from;
+    }
+    state.chickenScareCooldown = 420 + Math.floor(Math.random() * 360);
+  }
+
+  function updateChickenScare(state) {
+    if (state.chickenScareCooldown > 0) state.chickenScareCooldown -= 1;
+
+    if (state.chickenScarePhase === 'done' || state.chickenScarePhase === 'idle') {
+      if (state.chickenScareCooldown > 0 || state.escapePhase !== 'play') return;
+      if (Math.random() > 0.0035) return;
+      var zone = findScareZone(state.px, state.py);
+      if (zone && CHICKEN_IMG) startChickenScare(state, zone);
+      return;
+    }
+
+    if (state.chickenScarePhase === 'run') {
+      var zone = state.chickenScareZone;
+      var speed = 0.11;
+      state.chickenScareTimer += 1;
+      var t = state.chickenScareTimer / 28;
+      if (zone.axis === 'x') {
+        state.chickenScareX = zone.from + (zone.to - zone.from) * Math.min(1, t);
+        state.chickenScareY = zone.fixed;
+      } else {
+        state.chickenScareY = zone.from + (zone.to - zone.from) * Math.min(1, t);
+        state.chickenScareX = zone.fixed;
+      }
+      if (t >= 1) {
+        state.chickenScareAlpha = Math.max(0, 1 - (state.chickenScareTimer - 28) / 12);
+        if (state.chickenScareTimer >= 40) {
+          state.chickenScarePhase = 'done';
+          state.chickenScareAlpha = 0;
+          state.chickenScareCooldown = 480 + Math.floor(Math.random() * 420);
+        }
+      }
+    }
+  }
+
   function drawHud(state, w, h) {
     if (state.escapePhase !== 'play') return;
     var ctx = state.ctx;
@@ -362,15 +447,20 @@
       var hit = castRay(map, px, py, ang, MAX_DIST);
       var dist = hit.dist * Math.cos(ang - pa);
       if (dist < 0.001) dist = 0.001;
-      var wallH = Math.min(h, (h / dist) * 0.72);
-      var top = halfH - wallH / 2;
+      var wallH = Math.min(h, h / dist);
+      var top = Math.max(0, halfH - wallH / 2);
+      var drawH = Math.min(h - top, wallH);
       var fogWall = atmosphere(dist);
       var sideShade = hit.side === 'x' ? 0.82 : 1;
-      drawWallColumn(ctx, j * colW, colW, top, wallH, hit.texU, fogWall, hit.cell === 2, sideShade);
+      drawWallColumn(ctx, j * colW, colW, top, drawH, hit.texU, fogWall, hit.cell === 2, sideShade);
     }
 
     if (TOMATO_IMG && (state.tomatoPhase === 'peek' || state.tomatoPhase === 'scurry')) {
       drawBillboard(ctx, state, state.tomatoX, state.tomatoY, TOMATO_IMG, state.tomatoAlpha, state.tomatoFlip);
+    }
+
+    if (CHICKEN_IMG && state.chickenScarePhase === 'run' && state.chickenScareAlpha > 0) {
+      drawBillboard(ctx, state, state.chickenScareX, state.chickenScareY, CHICKEN_IMG, state.chickenScareAlpha, state.chickenScareFlip);
     }
 
     drawHud(state, w, h);
@@ -431,6 +521,7 @@
       state.pa = pa;
 
       updateTomato(state);
+      updateChickenScare(state);
 
       if (cell(state.map, nx, ny) === 2 && state.escapePhase === 'play') {
         state.escapePhase = 'fade';
@@ -481,6 +572,14 @@
       tomatoAlpha: 0,
       tomatoTimer: 0,
       tomatoCorridorId: null,
+      chickenScarePhase: 'idle',
+      chickenScareX: 0,
+      chickenScareY: 0,
+      chickenScareAlpha: 0,
+      chickenScareTimer: 0,
+      chickenScareFlip: false,
+      chickenScareZone: null,
+      chickenScareCooldown: 180,
       frame: null,
       resize: resize,
       onKeyDown: null,
@@ -514,6 +613,9 @@
   });
   loadImage('images/maze/tomato.png').then(function (img) {
     TOMATO_IMG = img;
+  });
+  loadImage('assets/game/rooster.gif').then(function (img) {
+    CHICKEN_IMG = img;
   });
 
   global.BackroomsMaze = { start: start, stop: stop };

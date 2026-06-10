@@ -173,8 +173,20 @@ a.header-rsvp-mobile {
   }
 }
 .fund-gif--mobile { display: none; }
+.funds-desktop-hint { display: none; }
 @media (max-width: 768px) {
   .fund-gif--mobile { display: block; margin: 0 auto 12px; line-height: 0; }
+  .funds-desktop-hint {
+    display: block;
+    text-align: center;
+    font-size: .72rem;
+    font-weight: 500;
+    font-style: italic;
+    color: var(--ink-soft);
+    opacity: .75;
+    margin: -6px 0 14px;
+    letter-spacing: .02em;
+  }
 }
 
 /* ---------- layout ---------- */
@@ -3276,6 +3288,7 @@ section:not(.hero) h2::after {
     <div class="wrap">
       <h2>Funds</h2>
       <p class="section-note">There's no registry. Pick a fund!</p>
+      <p class="funds-desktop-hint">On desktop, click a fund preview to play its mini game.</p>
       <div class="funds-grid">
         <!-- CONFIG: fund poll + pay links — see FUND_CONFIG in script -->
         <div class="fund">
@@ -3323,7 +3336,7 @@ section:not(.hero) h2::after {
             <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
           <div class="fund-gif fund-gif--mobile" aria-hidden="true">
-            <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
+            <img src="assets/game/hen-a.gif" alt="" width="120" height="80">
           </div>
           <h3>The Chickens</h3>
           <hr class="fund-rule">
