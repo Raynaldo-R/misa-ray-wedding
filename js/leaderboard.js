@@ -534,12 +534,14 @@
       defaultName: stored || opts.defaultName || '',
       submitLabel: opts.submitLabel || 'Set name',
       required: false,
-      onSubmit: function (name) {
+      onSubmit: function (name, submitBtn, reenable) {
         setStoredName(opts.category, name);
+        mountNameField(Object.assign({}, opts, { showStored: true }));
         if (typeof opts.onNameSet === 'function') opts.onNameSet(name);
-        mountNameField(opts);
+        if (reenable) reenable();
       },
       onSkip: function () {
+        mountNameField(Object.assign({}, opts, { showStored: !!getStoredName(opts.category) }));
         if (typeof opts.onSkip === 'function') opts.onSkip();
       }
     });

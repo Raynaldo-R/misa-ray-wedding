@@ -49,7 +49,8 @@
   var GUEST_LB_SUBMIT_MS = 45000;
   var HATCHLING_GIF = ASSET + 'hatchling.gif';
   var HATCHLING_AGE_MS = 25000;
-  var HATCHLING_MAX_FED = 20;
+  var HATCHLING_MAX_FED = 8;
+  var MAX_BROOD_VISUAL = 4;
   var WORM_COMBO_UNLOCK_FLOCK = 400;
   var WORM_COMBO_FILL_CAP = 6;
   var WORM_COMBO_DECAY_PER_TICK = 8;
@@ -499,10 +500,28 @@
   }
 
   function isHatchling(bird) {
-    if (!bird || bird.evolution) return false;
-    if (bird.fed != null && bird.fed < HATCHLING_MAX_FED) return true;
-    if (bird.bornAt && Date.now() - bird.bornAt < HATCHLING_AGE_MS) return true;
-    return false;
+    return isBroodBird(bird);
+  }
+
+  function isBroodBird(bird) {
+    if (!bird || bird.evolution || !bird.bornAt) return false;
+    if (Date.now() - bird.bornAt < HATCHLING_AGE_MS) return true;
+    return (bird.fed || 0) < HATCHLING_MAX_FED;
+  }
+
+  function partitionFlockForYard(flock) {
+    var adults = [];
+    var brood = [];
+    var i;
+    for (i = 0; i < flock.length; i++) {
+      if (isBroodBird(flock[i])) brood.push(flock[i]);
+      else adults.push(flock[i]);
+    }
+    return { adults: adults, brood: brood };
+  }
+
+  function feederUiUnlocked(state) {
+    return !!state.forageUnlocked && flockMilestoneMet(state, 'forage');
   }
 
   function migrateBirdEvolution(bird) {
@@ -563,7 +582,23 @@
       '.chicken-portrait-ring--silver{box-shadow:0 0 0 2px #a8b0c0}',
       '.chicken-portrait-ring--gold{box-shadow:0 0 0 2px #d4a84a}',
       '.chicken-portrait-ring--nuclear{box-shadow:0 0 0 2px #7fff7a}',
-      '.chicken-notify-stack{position:absolute;top:8px;right:8px;z-index:28;display:flex;flex-direction:column;gap:6px;max-width:min(220px,42%);pointer-events:none}',
+      '.chicken-notify-stack{position:absolute;top:52px;left:100%;margin-left:10px;z-index:35;display:flex;flex-direction:column;gap:6px;width:min(220px,38vw);pointer-events:none}',
+      '.chicken-notify-stack[hidden]{display:none!important}',
+      '#chicken-bird-detail-portrait{display:flex;justify-content:center;margin:0 0 12px}',
+      '#chicken-bird-detail-portrait .chicken-portrait--xl{width:min(240px,72vw);height:min(240px,72vw);object-fit:contain}',
+      '#chicken-bird-detail-portrait .chicken-quantum-box--lg{width:min(240px,72vw);height:min(240px,72vw)}',
+      '.chicken-brood-layer{position:absolute;inset:0;z-index:4;pointer-events:none}',
+      '.chicken-portrait--hof{width:52px;height:52px;object-fit:contain}',
+      '.chicken-notify{display:flex;align-items:center;gap:8px}',
+      '.chicken-notify-portrait{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center}',
+      '.chicken-notify-portrait .chicken-portrait{width:44px;height:44px}',
+      '.chicken-guest-lb-popover[hidden]{display:none!important}',
+      '.chicken-guest-lb-popover{position:absolute;left:0;right:0;bottom:100%;margin-bottom:6px;z-index:45;max-height:min(50vh,280px);overflow:auto;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--ivory);box-shadow:0 8px 24px rgba(0,0,0,.12)}',
+      '.chicken-guest-lb-toggle{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--stone);font:inherit;font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--ink-soft)}',
+      '.chicken-guest-lb-toggle[aria-expanded="true"]{border-color:var(--forest);color:var(--forest)}',
+      '.chicken-sidebar-footer{position:relative;flex-shrink:0;margin-top:auto;padding-top:8px}',
+      '.chicken-brood-slot{position:absolute;transform:translate(-50%,-50%) scale(var(--bird-scale,0.45))}',
+      '.chicken-feeder-bar[hidden]{display:none!important}',
       '.chicken-notify{pointer-events:auto;padding:8px 10px;border-radius:6px;background:rgba(250,249,246,.94);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:.68rem;line-height:1.35;animation:chicken-notify-in .25s ease}',
       '.chicken-notify--social{border-color:#e8a0b8}',
       '.chicken-notify--loss{border-color:#9a8a7a;opacity:.92}',
@@ -571,9 +606,9 @@
       '.chicken-notify--system{border-color:var(--sage)}',
       '.chicken-notify strong{display:block;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}',
       '@keyframes chicken-notify-in{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}',
-      '.chicken-bird-detail{position:absolute;inset:0;z-index:26;display:flex;align-items:center;justify-content:center;padding:16px;pointer-events:none}',
+      '.chicken-bird-detail{position:absolute;inset:0;z-index:26;display:flex;align-items:flex-start;justify-content:center;padding:10% 16px 16px;background:rgba(26,36,33,.28);pointer-events:auto}',
       '.chicken-bird-detail[hidden]{display:none!important}',
-      '.chicken-bird-detail-card{pointer-events:auto;max-width:280px;padding:16px;background:var(--ivory);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.15);text-align:center}',
+      '.chicken-bird-detail-card{pointer-events:auto;max-width:min(320px,92%);padding:16px;background:var(--ivory);border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.15);text-align:center}',
       '.chicken-feeder-bar{display:flex;align-items:center;gap:8px;margin:6px 0 4px;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}',
       '.chicken-feeder-track{flex:1;height:10px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden}',
       '.chicken-feeder-fill{height:100%;width:0;background:linear-gradient(90deg,#8b6914,#c9a060);transition:width .15s}',
@@ -923,7 +958,7 @@
     if (isQuantumBird(bird)) {
       return '<div class="chicken-quantum-box chicken-quantum-box--lg"><span>?</span><small>Schrödinger\'s chicken</small></div>';
     }
-    return '<img class="' + birdClass(bird) + ' chicken-portrait chicken-portrait--xl" src="' + birdGifFor(bird) + '" alt="" width="200" height="200" loading="lazy" decoding="async">';
+    return '<img class="' + birdClass(bird) + ' chicken-portrait chicken-portrait--xl" src="' + birdGifFor(bird) + '" alt="" width="240" height="240" loading="lazy" decoding="async">';
   }
 
   function portraitHtml(bird, small, large) {
@@ -933,7 +968,7 @@
       return '<div class="chicken-quantum-box chicken-portrait"><span>?</span></div>';
     }
     var cls = birdClass(bird) + ' chicken-portrait';
-    return '<img class="' + cls + '" src="' + birdGifFor(bird) + '" alt="" width="48" height="48" loading="lazy" decoding="async">';
+    return '<img class="' + cls + '" src="' + birdGifFor(bird) + '" alt="" width="52" height="52" loading="lazy" decoding="async">';
   }
 
   function loadState() {
@@ -1188,6 +1223,7 @@
     this.namingBirdId = null;
     this.particles = [];
     this.flockNodes = [];
+    this.broodNodes = [];
     this.eggNodes = [];
     this._hudCache = {};
     this._hudScheduled = false;
@@ -1875,6 +1911,7 @@
     this.els.stage = document.querySelector('#chicken-click-area .chicken-widget-stage');
     this.els.yardStage = this.els.stage;
     this.els.flockLayer = document.getElementById('chicken-flock-layer');
+    this.els.broodLayer = document.getElementById('chicken-brood-layer');
     this.els.eggLayer = document.getElementById('chicken-egg-layer');
     this.els.particleLayer = document.getElementById('chicken-particles');
     this.els.burstLayer = document.getElementById('chicken-click-burst');
@@ -1904,6 +1941,8 @@
     this.els.hofRetired = document.getElementById('chicken-hof-retired');
     this.els.guestName = document.getElementById('chicken-guest-name');
     this.els.guestLb = document.getElementById('chicken-guest-lb');
+    this.els.guestLbToggle = document.getElementById('chicken-guest-lb-toggle');
+    this.els.guestLbPopover = document.getElementById('chicken-guest-lb-popover');
     this.els.boostBanner = document.getElementById('chicken-boost-banner');
     this.els.boostBannerText = document.getElementById('chicken-boost-banner-text');
     this.els.boostBannerTime = document.getElementById('chicken-boost-banner-time');
@@ -2053,6 +2092,30 @@
         self.dismissBirdDetail();
       });
     }
+    if (this.els.birdDetail) {
+      this.els.birdDetail.addEventListener('click', function (e) {
+        if (e.target === self.els.birdDetail) self.dismissBirdDetail();
+      });
+      var detailCard = this.els.birdDetail.querySelector('.chicken-bird-detail-card');
+      if (detailCard) {
+        detailCard.addEventListener('click', function (e) { e.stopPropagation(); });
+      }
+    }
+    if (this.els.guestLbToggle && this.els.guestLbPopover) {
+      this.els.guestLbToggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = self.els.guestLbPopover.hidden;
+        self.els.guestLbPopover.hidden = !open;
+        self.els.guestLbToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) self.renderGuestLeaderboard();
+      });
+      document.addEventListener('click', function (e) {
+        if (!self.open || self.els.guestLbPopover.hidden) return;
+        if (self.els.guestLbPopover.contains(e.target) || self.els.guestLbToggle.contains(e.target)) return;
+        self.els.guestLbPopover.hidden = true;
+        self.els.guestLbToggle.setAttribute('aria-expanded', 'false');
+      });
+    }
     if (this.els.narrativeBtn) {
       this.els.narrativeBtn.addEventListener('click', function () { self.dismissNarrative(); });
     }
@@ -2126,7 +2189,12 @@
     this._notifications.forEach(function (n) {
       var el = document.createElement('div');
       el.className = 'chicken-notify chicken-notify--' + n.type;
-      var html = '<strong>' + n.title + '</strong>' + n.body;
+      var portrait = '';
+      if (n.birdId) {
+        var nb = self.findBird(n.birdId);
+        if (nb) portrait = '<div class="chicken-notify-portrait">' + portraitHtml(nb, false) + '</div>';
+      }
+      var html = portrait + '<div><strong>' + n.title + '</strong>' + n.body + '</div>';
       el.innerHTML = html;
       if (n.birdId) {
         el.style.cursor = 'pointer';
@@ -2175,7 +2243,7 @@
 
   ChickenClicker.prototype.renderFeederBar = function () {
     if (!this.els.feederBar) return;
-    var unlocked = this.state.forageUnlocked;
+    var unlocked = feederUiUnlocked(this.state);
     this.els.feederBar.hidden = !unlocked;
     if (!unlocked) return;
     var ch = Math.min(FEEDER_CHARGE_MAX, this.state.feederCharge || 0);
@@ -3238,12 +3306,18 @@
       if (this.state.flock[fi].bornAt && Date.now() - this.state.flock[fi].bornAt < 20000) growing = true;
     }
     if (!growing) return;
-    var samples = sampleVisualFlock(this.state.flock, MAX_VISUAL_BIRDS, this._visualSeed);
+    var yardParts = partitionFlockForYard(this.state.flock);
+    var adultFlock = yardParts.adults.length ? yardParts.adults : this.state.flock;
+    var samples = sampleVisualFlock(adultFlock, MAX_VISUAL_BIRDS, this._visualSeed);
     var total = samples.length;
     var rows = total <= 3 ? 1 : total <= 9 ? 2 : 3;
     var j;
     for (j = 0; j < this.flockNodes.length && j < samples.length; j++) {
       this.layoutBird(this.flockNodes[j].slot, j, total, 0, 0, rows, samples[j].bird);
+    }
+    if (this.broodNodes) {
+      var bt = this.broodNodes.length;
+      for (j = 0; j < bt; j++) this.layoutBroodBird(this.broodNodes[j].slot, j, bt);
     }
   };
 
@@ -3415,6 +3489,21 @@
     slot.style.zIndex = String(10 + rowIndex);
   };
 
+  ChickenClicker.prototype.layoutBroodBird = function (slot, i, total) {
+    var w = this.els.stage ? this.els.stage.clientWidth : 200;
+    var h = this.els.stage ? this.els.stage.clientHeight : 200;
+    var perRow = Math.min(total, 5);
+    var col = i % perRow;
+    var rowIndex = Math.floor(i / perRow);
+    var y = h * (0.84 + rowIndex * 0.05);
+    var xSpread = w * 0.62;
+    var x = w * 0.5 + (col - (perRow - 1) / 2) * (xSpread / Math.max(1, perRow - 1));
+    slot.style.left = x + 'px';
+    slot.style.top = y + 'px';
+    slot.style.setProperty('--bird-scale', (0.4 + Math.random() * 0.06).toFixed(3));
+    slot.style.zIndex = String(4 + rowIndex);
+  };
+
   ChickenClicker.prototype.renderYard = function (force) {
     if (!this.els.flockLayer || !this.els.stage) return;
     if (!force && !this.visualDirty) {
@@ -3435,9 +3524,14 @@
       }
     }
 
-    var samples = sampleVisualFlock(this.state.flock, MAX_VISUAL_BIRDS, this._visualSeed);
+    var yardParts = partitionFlockForYard(this.state.flock);
+    var adultFlock = yardParts.adults.length ? yardParts.adults : this.state.flock;
+    var broodFlock = yardParts.brood;
+    var samples = sampleVisualFlock(adultFlock, MAX_VISUAL_BIRDS, this._visualSeed);
     var total = samples.length;
     var rows = total <= 3 ? 1 : total <= 6 ? 2 : 3;
+    var broodTotal = Math.min(broodFlock.length, MAX_BROOD_VISUAL);
+    var broodSamples = broodFlock.slice(0, broodTotal);
 
     if (force || this.flockNodes.length !== total) {
       this.els.flockLayer.innerHTML = '';
@@ -3478,6 +3572,32 @@
           node.img.src = birdGifVisual(b, samples[j].skin);
         }
         this.layoutBird(node.slot, j, total, 0, 0, rows, b);
+      }
+    }
+
+    if (this.els.broodLayer) {
+      if (force || !this.broodNodes || this.broodNodes.length !== broodTotal) {
+        this.els.broodLayer.innerHTML = '';
+        this.broodNodes = [];
+        var bi;
+        for (bi = 0; bi < broodTotal; bi++) {
+          var broodBird = broodSamples[bi];
+          var broodSlot = document.createElement('div');
+          broodSlot.className = 'chicken-brood-slot';
+          var broodImg = document.createElement('img');
+          broodImg.className = birdClass(broodBird) + ' chicken-bird--hatchling';
+          broodImg.src = HATCHLING_GIF;
+          broodImg.alt = '';
+          broodImg.loading = 'lazy';
+          broodSlot.appendChild(broodImg);
+          this.layoutBroodBird(broodSlot, bi, broodTotal);
+          this.els.broodLayer.appendChild(broodSlot);
+          this.broodNodes.push({ slot: broodSlot, bird: broodBird });
+        }
+      } else {
+        for (var bk = 0; bk < this.broodNodes.length; bk++) {
+          this.layoutBroodBird(this.broodNodes[bk].slot, bk, broodTotal);
+        }
       }
     }
     this.renderEggs();
@@ -3708,7 +3828,7 @@
       var pct = nextDef ? Math.round(evoProgress(bird, s) * 100) : 100;
       var bonusLine = tier ? formatBirdBonus(bird) : '';
       html += '<div class="chicken-leaderboard-row' + (isChamp ? ' is-champion' : '') + '" data-bird-id="' + bird.id + '" role="button" tabindex="0" title="View ' + birdDisplayName(bird) + '">' +
-        '<div class="chicken-leaderboard-portrait">' + portraitHtml(bird, true) + '</div>' +
+        '<div class="chicken-leaderboard-portrait">' + portraitHtml(bird, false) + '</div>' +
         '<div class="chicken-leaderboard-tier">T' + tier + '</div>' +
         '<div class="chicken-leaderboard-main"><strong>' + birdDisplayName(bird) + '</strong>' +
         '<span>' + tierLabel + ' · ' + Math.floor(bird.fed) + ' fed</span>' +
@@ -3762,14 +3882,21 @@
   ChickenClicker.prototype.setupGuestNameField = function () {
     var self = this;
     if (!window.GuestLeaderboard || !this.els.guestName) return;
+    var stored = GuestLeaderboard.getStoredName('clicker');
+    if (stored && this.els.guestName.querySelector('.guest-lb-namebar--set')) return;
+    this.els.guestName.hidden = false;
     GuestLeaderboard.mountNameField({
       category: 'clicker',
       container: this.els.guestName,
       message: 'Your name for the guest leaderboard',
       onNameSet: function () {
+        self.els.guestName.hidden = false;
         self.renderGuestLeaderboard();
         self.startGuestLbSync();
         self.submitGuestScore(null, { toast: true });
+      },
+      onSkip: function () {
+        self.els.guestName.hidden = true;
       }
     });
   };
@@ -3890,6 +4017,8 @@
     this.stopAutoBurst();
     this.stopFeederAuto();
     this.dismissBirdDetail();
+    if (this.els.guestLbPopover) this.els.guestLbPopover.hidden = true;
+    if (this.els.guestLbToggle) this.els.guestLbToggle.setAttribute('aria-expanded', 'false');
     this.modal.hidden = true;
     this.open = false;
     document.body.style.overflow = '';

@@ -1436,10 +1436,18 @@ button[type=submit]:disabled {
   min-height: 0;
 }
 .chicken-game-center {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+}
+.chicken-sidebar-section--hof {
+  flex: 1;
+  min-height: 0;
+}
+.chicken-feeder-bar[hidden] {
+  display: none !important;
 }
 .chicken-game-sidebar {
   display: flex;
@@ -1954,20 +1962,24 @@ button[type=submit]:disabled {
 .chicken-leaderboard-row--retired { opacity: .75; font-style: italic; }
 .chicken-leaderboard-portrait {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 52px;
+  height: 52px;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 .chicken-portrait {
   display: block;
-  width: 28px;
-  height: auto;
+  width: 48px;
+  height: 48px;
   image-rendering: pixelated;
   object-fit: contain;
-  object-position: bottom;
+  object-position: center;
+}
+.chicken-leaderboard-portrait .chicken-portrait {
+  width: 52px;
+  height: 52px;
 }
 .chicken-portrait--sm { width: 24px; }
 .chicken-narrative-portrait {
@@ -3685,11 +3697,10 @@ section:not(.hero) h2::after {
   <div class="chicken-modal-backdrop" data-chicken-close></div>
   <div class="chicken-modal-panel chicken-modal-panel--game" id="chicken-game-panel">
     <button type="button" class="chicken-modal-close" data-chicken-close aria-label="Close">&times;</button>
-    <div class="chicken-notify-stack" id="chicken-notify-stack" aria-live="polite"></div>
     <div class="chicken-modal-title" id="chicken-modal-title">Chicken Fund Clicker</div>
     <div class="chicken-game-layout">
       <aside class="chicken-game-sidebar chicken-game-sidebar--left" aria-label="Hall of Fame">
-        <div class="chicken-sidebar-section">
+        <div class="chicken-sidebar-section chicken-sidebar-section--hof">
           <div class="chicken-sidebar-title">Hall of Fame</div>
           <div class="chicken-sidebar-scroll-wrap">
             <div class="chicken-sidebar-scroll" id="chicken-leaderboard"></div>
@@ -3697,12 +3708,15 @@ section:not(.hero) h2::after {
           </div>
           <div id="chicken-hof-retired"></div>
         </div>
-        <div class="chicken-sidebar-section">
-          <div class="chicken-sidebar-title">Guest leaderboard</div>
-          <div id="chicken-guest-lb" class="chicken-guest-lb" aria-label="Guest coop scores"></div>
+        <div class="chicken-sidebar-footer">
+          <button type="button" class="chicken-guest-lb-toggle" id="chicken-guest-lb-toggle" aria-expanded="false" aria-controls="chicken-guest-lb-popover">Guest leaderboard</button>
+          <div class="chicken-guest-lb-popover" id="chicken-guest-lb-popover" hidden>
+            <div id="chicken-guest-lb" class="chicken-guest-lb" aria-label="Guest coop scores"></div>
+          </div>
         </div>
       </aside>
       <div class="chicken-game-center">
+        <div class="chicken-notify-stack" id="chicken-notify-stack" aria-live="polite"></div>
         <div id="chicken-guest-name" class="chicken-guest-name-wrap" aria-label="Guest name for leaderboard"></div>
         <div class="chicken-game-hud" aria-live="polite">
           <div>Grains<span id="chicken-hud-grains">0</span></div>
@@ -3757,6 +3771,7 @@ section:not(.hero) h2::after {
               <div class="chicken-egg-layer" id="chicken-egg-layer"></div>
               <div class="chicken-widget-ground"></div>
               <div class="chicken-flock-layer" id="chicken-flock-layer"></div>
+              <div class="chicken-brood-layer" id="chicken-brood-layer"></div>
               <div class="chicken-click-burst" id="chicken-click-burst"></div>
             </div>
           </div>
