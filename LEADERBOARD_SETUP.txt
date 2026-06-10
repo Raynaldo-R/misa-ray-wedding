@@ -1,35 +1,188 @@
 Guest leaderboard — shared scores setup
 ======================================
 
-WHY: Browser localStorage only shows scores on that one device. For ALL wedding
-guests to see the same top-10 lists, scores are stored in your Google Sheet via
-the same Apps Script web app used for RSVPs.
+WHY
+---
+Browser localStorage only shows scores on that one device. For ALL wedding guests
+to see the same top-10 lists, scores are stored in your Google Sheet via the same
+Apps Script web app used for RSVPs.
 
-ONE-TIME SETUP (after pulling latest code)
-------------------------------------------
-1. Open your wedding Google Sheet → Extensions → Apps Script
-2. Replace Code.gs with google-apps-script.gs from this repo → Save
-3. Run setupLeaderboard once (authorize when prompted)
-4. Deploy → Manage deployments → Edit (pencil) → New version → Deploy
-   - Execute as: Me
-   - Who has access: Anyone
-5. Confirm index.html has LEADERBOARD_CONFIG.apiUrl set to the same URL as
-   RSVP_CONFIG.googleScriptUrl (also set early as WEDDING_API_URL in <head>)
+The wedding site reads scores with:
+  GET ?action=leaderboard&category=clicker|flappy|backrooms
 
-IMPORTANT: Redeploy after any google-apps-script.gs change. Score submits use
-GET ?action=leaderboard_submit (browser-safe); POST redirects break in browsers.
+It writes scores with:
+  GET ?action=leaderboard_submit&category=...&name=...&score=...
 
-If submits fail silently, the live deployment is stale. After redeploying, verify:
-  curl -sL 'YOUR_URL?action=leaderboard_submit&category=clicker&name=Test&score=5'
-should return {"ok":true,"apiVersion":2,"entries":[...]} — NOT the generic
-"Wedding API running" message.
+(Browsers cannot reliably POST to Apps Script — GET submit is intentional.)
 
-VERIFY
-------
-Open in two different browsers (or incognito + normal):
-  https://wedding.raynaldorusi.com/?...
-Submit a test score in Flappy Chicken or the clicker. The other browser should
-show "All guests · live scores" and the same name within ~30 seconds.
+
+================================================================================
+REDEPLOY APPS SCRIPT (do this after pulling latest google-apps-script.gs)
+================================================================================
+
+You only need to repeat the full "first-time setup" if you have never run
+setupLeaderboard before. If the GuestLeaderboard tab already exists in your
+sheet, skip straight to steps A–G below.
+
+
+--- A. Open the wedding Google Sheet ---
+
+1. Open the same Google Sheet you use for wedding RSVPs (the one connected to
+   the form / RSVP tab).
+2. You should see tabs like RSVP data at minimum. After setup you will also
+   have a tab named: GuestLeaderboard
+
+
+--- B. Open the Apps Script editor ---
+
+1. In the Sheet menu bar: Extensions → Apps Script
+2. A new browser tab opens (script.google.com) with a project tied to this
+   spreadsheet.
+3. In the left sidebar, click "Files" (or the file list). You should see
+   something like Code.gs — that is the file you will replace.
+
+
+--- C. Replace the script with the repo version ---
+
+1. On your computer, open this file from the wedding repo:
+     google-apps-script.gs
+2. Select all (Cmd+A) and copy the entire contents.
+3. In the Apps Script editor, open Code.gs, select all, paste, replacing
+   everything.
+4. Click the floppy-disk Save icon (or Cmd+S).
+5. Confirm the file includes leaderboard handlers near the bottom, e.g.:
+     - doGet with action === 'leaderboard'
+     - doGet with action === 'leaderboard_submit'
+     - var LB_API_VERSION = 2;
+
+
+--- D. First-time only: create the GuestLeaderboard sheet tab ---
+
+Skip this section if GuestLeaderboard already exists.
+
+1. In the Apps Script editor, at the top, open the function dropdown (it may
+   say "doGet" or "myFunction").
+2. Choose: setupLeaderboard
+3. Click Run (▶).
+4. Google will ask you to authorize the script:
+   - Click Review permissions → choose your Google account
+   - You may see "Google hasn't verified this app" — click Advanced
+   - Click "Go to [project name] (unsafe)" (this is your own script)
+   - Allow the requested access
+5. When the run finishes, switch back to your Google Sheet tab and refresh.
+6. You should see a new tab: GuestLeaderboard
+   with columns: Category | Name | Score | Timestamp
+
+
+--- E. Deploy a NEW version (critical — editing code is not enough) ---
+
+Apps Script serves whatever was last DEPLOYED, not whatever is in the editor.
+You must create a new deployment version every time you change the .gs file.
+
+1. In Apps Script, click Deploy (top right) → Manage deployments
+2. You should see an existing "Web app" deployment (Type: Web app).
+3. Click the pencil/edit icon on that deployment (not "New deployment" unless
+   you have no web app yet — see "First web app deployment" below).
+4. In the Version dropdown, choose: New version
+   (Do NOT leave it on an old version number.)
+5. Description (optional): e.g. "Leaderboard submit v2"
+6. Confirm settings:
+     Execute as:        Me (your Google account)
+     Who has access:    Anyone
+7. Click Deploy.
+8. Copy the Web app URL shown. It looks like:
+     https://script.google.com/macros/s/AKfycbw.../exec
+
+IMPORTANT: The /exec URL must stay the SAME as what is already in index.html
+unless you intentionally change the site. Redeploying a new *version* keeps the
+same URL. Creating a brand-new deployment would give a different URL and would
+require updating index.html.
+
+
+--- F. Confirm the site URL matches (usually no change needed) ---
+
+In index.html <head>, these should all point to the SAME /exec URL:
+
+  window.WEDDING_API_URL = 'https://script.google.com/macros/s/.../exec';
+  window.LEADERBOARD_CONFIG = { apiUrl: window.WEDDING_API_URL };
+
+Current production URL (as of last deploy):
+  https://script.google.com/macros/s/AKfycbwTqYd4l61WsxNyt4954cywDk9l6g2UKU9NbKG7zWXfyVoCcgoIefiEkE1VHXrP2VGZ/exec
+
+If your copied URL from step E is identical, you are done with URL config.
+If it differs, update index.html and push the site again.
+
+
+--- G. Verify submit works (2-minute test) ---
+
+Open Terminal and run (one line):
+
+  curl -sL 'https://script.google.com/macros/s/AKfycbwTqYd4l61WsxNyt4954cywDk9l6g2UKU9NbKG7zWXfyVoCcgoIefiEkE1VHXrP2VGZ/exec?action=leaderboard_submit&category=clicker&name=DeployTest&score=1000005'
+
+GOOD response (submit works):
+  {"ok":true,"apiVersion":2,"entries":[...]}
+
+BAD response (deployment still stale — repeat step E):
+  {"ok":true,"message":"Wedding API running.","actions":["rsvp","leaderboard"]}
+
+Also test read:
+
+  curl -sL 'https://script.google.com/macros/s/AKfycbwTqYd4l61WsxNyt4954cywDk9l6g2UKU9NbKG7zWXfyVoCcgoIefiEkE1VHXrP2VGZ/exec?action=leaderboard&category=clicker'
+
+Should return: {"ok":true,"apiVersion":2,"entries":[...],"shared":true}
+
+
+--- H. Verify in the browser (end-to-end) ---
+
+1. Open https://wedding.raynaldorusi.com in Chrome (hard refresh: Cmd+Shift+R).
+2. Open Chicken Fund Clicker (expand the chicken on the fund section).
+3. Set a guest name in the name field at the top of the modal.
+4. Play briefly, then close the modal.
+5. You should see a toast like: "Coop score saved — see you on the leaderboard!"
+6. In the left sidebar under "Top coops", status should say:
+     "All guests · live scores"
+7. Open the same page in an Incognito window — your name/score should appear
+   within ~30 seconds (leaderboard polls every 30s).
+
+Repeat for Flappy Chicken / Backrooms if you care about those boards too.
+
+
+================================================================================
+FIRST WEB APP DEPLOYMENT (only if you have never deployed before)
+================================================================================
+
+1. Deploy → New deployment
+2. Click the gear/select icon → Choose type: Web app
+3. Description: Wedding API
+4. Execute as: Me
+5. Who has access: Anyone
+6. Deploy → authorize if prompted → copy the /exec URL
+7. Paste that URL into index.html (WEDDING_API_URL) and push the site
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+"All guests · live scores" shows but my score never appears for other people
+  → Submit endpoint is stale. Redo section E and re-run the curl test in G.
+
+Site says "Cached on this device only" or "Server unreachable"
+  → Read may work but write failed, or Sheet is unreachable. Check curl tests.
+
+I edited Code.gs but nothing changed on the website
+  → You saved the editor but did not Deploy → New version. Editing ≠ live.
+
+Scores appear in Sheet but not on website
+  → Wait 30s for poll, or close/reopen the mini-game modal.
+
+Rate limit (15 seconds per name per game)
+  → Wait 15s between test submits with the same name.
+
+RSVP still works but leaderboard broke
+  → Unlikely if you only replaced Code.gs — RSVP and leaderboard share doGet.
+    If broken, restore from repo google-apps-script.gs and redeploy.
+
 
 SECURITY (built in)
 -------------------
@@ -39,7 +192,9 @@ SECURITY (built in)
 - Leaderboard UI uses textContent only (no HTML injection)
 - Sheet stores Category | Name | Score | Timestamp
 
+
 FALLBACK
 --------
-If Apps Script is unreachable, the site falls back to local-only scores on that
-device and shows a reconnecting message.
+If Apps Script is unreachable, the site saves scores locally on that device
+and shows an offline/cached message. After GAS is fixed, the next successful
+submit syncs to the shared sheet.
