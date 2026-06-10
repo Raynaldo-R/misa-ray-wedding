@@ -14,7 +14,10 @@ ONE-TIME SETUP (after pulling latest code)
    - Execute as: Me
    - Who has access: Anyone
 5. Confirm index.html has LEADERBOARD_CONFIG.apiUrl set to the same URL as
-   RSVP_CONFIG.googleScriptUrl
+   RSVP_CONFIG.googleScriptUrl (also set early as WEDDING_API_URL in <head>)
+
+IMPORTANT: Redeploy after any google-apps-script.gs change. Score submits use
+GET ?action=leaderboard_submit (browser-safe); POST redirects break in browsers.
 
 VERIFY
 ------

@@ -5,8 +5,9 @@
   var PREFIX = 'misa-ray-guest-lb-';
   var NAME_MAX = 24;
   var TOP_N = 10;
-  var FETCH_TIMEOUT_MS = 10000;
+  var FETCH_TIMEOUT_MS = 12000;
   var POLL_MS = 30000;
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwTqYd4l61WsxNyt4954cywDk9l6g2UKU9NbKG7zWXfyVoCcgoIefiEkE1VHXrP2VGZ/exec';
 
   var CATEGORIES = {
     flappy: {
@@ -34,7 +35,8 @@
 
   function apiUrl() {
     var cfg = global.LEADERBOARD_CONFIG || {};
-    return cfg.apiUrl || cfg.googleScriptUrl || '';
+    var rsvp = global.RSVP_CONFIG || {};
+    return cfg.apiUrl || cfg.googleScriptUrl || rsvp.googleScriptUrl || global.WEDDING_API_URL || GAS_URL;
   }
 
   function stripHtml(str) {
@@ -103,62 +105,86 @@
     });
   }
 
-  function fetchWithTimeout(url, options, timeoutMs) {
+  function gasFetchJson(url, options, timeoutMs) {
     return new Promise(function (resolve, reject) {
       var timer = setTimeout(function () {
         reject(new Error('timeout'));
       }, timeoutMs || FETCH_TIMEOUT_MS);
-      fetch(url, options).then(function (res) {
-        clearTimeout(timer);
-        return res.json();
-      }).then(resolve).catch(function (err) {
-        clearTimeout(timer);
-        reject(err);
-      });
+      fetch(url, Object.assign({
+        method: 'GET',
+        redirect: 'follow',
+        cache: 'no-store'
+      }, options || {}))
+        .then(function (res) { return res.text(); })
+        .then(function (text) {
+          clearTimeout(timer);
+          try {
+            resolve(JSON.parse(text));
+          } catch (err) {
+            reject(new Error('invalid_json'));
+          }
+        })
+        .catch(function (err) {
+          clearTimeout(timer);
+          reject(err);
+        });
     });
   }
 
-  function fetchRemoteScores(categoryId) {
+  function buildGasUrl(params) {
     var base = apiUrl();
-    if (!base) return Promise.resolve(null);
-    var url = base + (base.indexOf('?') >= 0 ? '&' : '?')
-      + 'action=leaderboard&category=' + encodeURIComponent(categoryId);
-    return fetchWithTimeout(url, { method: 'GET', cache: 'no-store' }, FETCH_TIMEOUT_MS)
+    if (!base) return '';
+    var qs = Object.keys(params).map(function (k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(String(params[k]));
+    }).join('&');
+    return base + (base.indexOf('?') >= 0 ? '&' : '?') + qs;
+  }
+
+  function fetchRemoteScores(categoryId) {
+    if (!apiUrl()) return Promise.resolve(null);
+    var url = buildGasUrl({ action: 'leaderboard', category: categoryId });
+    return gasFetchJson(url)
       .then(function (data) {
         if (!data || !data.ok || !Array.isArray(data.entries)) return null;
-        return normalizeRemoteEntries(data.entries);
+        return { ok: true, entries: normalizeRemoteEntries(data.entries) };
       })
       .catch(function () { return null; });
   }
 
   function submitRemote(categoryId, name, score) {
-    var base = apiUrl();
-    if (!base) return Promise.resolve(null);
-    return fetchWithTimeout(base, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'leaderboard_submit',
-        category: categoryId,
-        name: name,
-        score: score
-      })
-    }, FETCH_TIMEOUT_MS).then(function (data) {
-      if (!data || !data.ok) return { ok: false, error: data && data.error };
-      return { ok: true, entries: normalizeRemoteEntries(data.entries) };
-    }).catch(function () {
-      return { ok: false, error: 'network' };
+    if (!apiUrl()) return Promise.resolve(null);
+    var url = buildGasUrl({
+      action: 'leaderboard_submit',
+      category: categoryId,
+      name: name,
+      score: score
     });
+    return gasFetchJson(url)
+      .then(function (data) {
+        if (!data || !data.ok) return { ok: false, error: data && data.error };
+        return {
+          ok: true,
+          entries: normalizeRemoteEntries(data.entries || [])
+        };
+      })
+      .catch(function () {
+        return { ok: false, error: 'network' };
+      });
   }
 
   function getStoredName(categoryId) {
     var cat = getCategory(categoryId);
     if (!cat) return '';
     try {
-      return sanitizeName(localStorage.getItem(cat.nameKey) || '');
-    } catch (err) {
-      return '';
-    }
+      var stored = sanitizeName(localStorage.getItem(cat.nameKey) || '');
+      if (stored) return stored;
+      var entries = sortEntries(cat, loadLocalEntries(cat));
+      if (entries.length && entries[0].name) {
+        setStoredName(categoryId, entries[0].name);
+        return entries[0].name;
+      }
+    } catch (err) { /* ignore */ }
+    return '';
   }
 
   function setStoredName(categoryId, name) {
@@ -181,7 +207,19 @@
     if (validScore === null) return false;
     setStoredName(categoryId, safeName);
     var entries = loadLocalEntries(cat);
-    entries.push({ name: safeName, score: validScore, at: Date.now() });
+    var replaced = false;
+    var i;
+    for (i = 0; i < entries.length; i++) {
+      if (entries[i].name.toLowerCase() === safeName.toLowerCase()) {
+        if (cat.higherBetter ? validScore > entries[i].score : validScore < entries[i].score) {
+          entries[i].score = validScore;
+          entries[i].at = Date.now();
+        }
+        replaced = true;
+        break;
+      }
+    }
+    if (!replaced) entries.push({ name: safeName, score: validScore, at: Date.now() });
     entries = sortEntries(cat, entries).slice(0, TOP_N);
     saveLocalEntries(cat, entries);
     return true;
@@ -189,21 +227,20 @@
 
   function submitScore(categoryId, name, score) {
     var cat = getCategory(categoryId);
-    if (!cat) return Promise.resolve(false);
+    if (!cat) return Promise.resolve({ ok: false, shared: false });
     var safeName = sanitizeName(name);
-    if (!safeName) return Promise.resolve(false);
+    if (!safeName) return Promise.resolve({ ok: false, shared: false });
     var validScore = validateScore(score);
-    if (validScore === null) return Promise.resolve(false);
+    if (validScore === null) return Promise.resolve({ ok: false, shared: false });
     setStoredName(categoryId, safeName);
 
     return submitRemote(categoryId, safeName, validScore).then(function (result) {
       if (result && result.ok) {
-        if (result.entries && result.entries.length) {
-          saveLocalEntries(cat, result.entries);
-        }
-        return true;
+        saveLocalEntries(cat, result.entries.length ? result.entries : loadLocalEntries(cat));
+        return { ok: true, shared: true };
       }
-      return submitScoreLocal(categoryId, safeName, validScore);
+      var localOk = submitScoreLocal(categoryId, safeName, validScore);
+      return { ok: localOk, shared: false, error: result && result.error };
     });
   }
 
@@ -261,18 +298,18 @@
     }
   }
 
-  function paintEntries(container, categoryId, entries, opts, shared) {
+  function paintEntries(container, categoryId, entries, opts, mode) {
     clearEl(container);
     container.classList.add('guest-lb');
 
     textEl('div', 'guest-lb__title', container, opts.title || 'Guest leaderboard');
 
-    if (shared) {
+    if (mode === 'shared') {
       textEl('p', 'guest-lb__status guest-lb__status--shared', container, 'All guests · live scores');
-    } else if (apiUrl()) {
-      textEl('p', 'guest-lb__status guest-lb__status--offline', container, 'Showing cached scores — reconnecting…');
+    } else if (mode === 'offline') {
+      textEl('p', 'guest-lb__status guest-lb__status--offline', container, 'Server unreachable — showing cached scores');
     } else {
-      textEl('p', 'guest-lb__status guest-lb__status--local', container, 'This device only — redeploy Apps Script for shared scores');
+      textEl('p', 'guest-lb__status guest-lb__status--local', container, 'Cached on this device only');
     }
 
     if (!entries.length) {
@@ -308,10 +345,20 @@
     textEl('p', 'guest-lb__status', container, 'Loading scores…');
 
     function load() {
+      if (!apiUrl()) {
+        paintEntries(container, categoryId, getTopScores(categoryId, opts.limit), opts, 'local');
+        return Promise.resolve(false);
+      }
       return fetchRemoteScores(categoryId).then(function (remote) {
-        if (remote) {
-          saveLocalEntries(cat, remote);
-          paintEntries(container, categoryId, remote.slice(0, opts.limit || TOP_N), opts, true);
+        if (remote && remote.ok) {
+          saveLocalEntries(cat, remote.entries);
+          paintEntries(
+            container,
+            categoryId,
+            remote.entries.slice(0, opts.limit || TOP_N),
+            opts,
+            'shared'
+          );
           return true;
         }
         paintEntries(
@@ -319,7 +366,7 @@
           categoryId,
           getTopScores(categoryId, opts.limit),
           opts,
-          false
+          'offline'
         );
         return false;
       });
@@ -439,13 +486,13 @@
       submitLabel: opts.submitLabel || 'Submit score',
       skipLabel: opts.skipLabel || 'Skip',
       onSubmit: function (name, submitBtn, reenable) {
-        submitScore(opts.category, name, opts.score).then(function (ok) {
-          if (!ok && submitBtn) {
+        submitScore(opts.category, name, opts.score).then(function (result) {
+          if (!result.ok && submitBtn) {
             submitBtn.textContent = 'Try again';
             if (reenable) reenable();
             return;
           }
-          if (typeof opts.onSubmit === 'function') opts.onSubmit(ok, name);
+          if (typeof opts.onSubmit === 'function') opts.onSubmit(result.ok, name, result.shared);
         });
       },
       onSkip: opts.onSkip
@@ -457,26 +504,11 @@
     var container = opts.container;
     if (!container) return null;
 
+    var stored = getStoredName(opts.category);
+
     clearEl(container);
     container.className = 'guest-lb-namebar';
 
-    var built = buildPromptForm({
-      compact: true,
-      message: opts.message || 'Enter your name for the guest leaderboard',
-      defaultName: opts.defaultName || getStoredName(opts.category),
-      submitLabel: opts.submitLabel || 'Set name',
-      required: false,
-      onSubmit: function (name) {
-        setStoredName(opts.category, name);
-        if (typeof opts.onNameSet === 'function') opts.onNameSet(name);
-        mountNameField(opts);
-      },
-      onSkip: function () {
-        if (typeof opts.onSkip === 'function') opts.onSkip();
-      }
-    });
-
-    var stored = getStoredName(opts.category);
     if (stored && opts.showStored !== false) {
       container.className = 'guest-lb-namebar guest-lb-namebar--set';
       textEl('span', 'guest-lb-namebar__label', container, 'Playing as');
@@ -491,6 +523,22 @@
       });
       return { el: container, name: stored };
     }
+
+    var built = buildPromptForm({
+      compact: true,
+      message: opts.message || 'Enter your name for the guest leaderboard',
+      defaultName: stored || opts.defaultName || '',
+      submitLabel: opts.submitLabel || 'Set name',
+      required: false,
+      onSubmit: function (name) {
+        setStoredName(opts.category, name);
+        if (typeof opts.onNameSet === 'function') opts.onNameSet(name);
+        mountNameField(opts);
+      },
+      onSkip: function () {
+        if (typeof opts.onSkip === 'function') opts.onSkip();
+      }
+    });
 
     container.appendChild(built.wrap);
     return { el: container, input: built.input };

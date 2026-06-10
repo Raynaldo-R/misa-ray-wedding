@@ -3205,6 +3205,13 @@
       message: 'Your name for the guest leaderboard',
       onNameSet: function () {
         self.renderGuestLeaderboard();
+        self.submitGuestScore(function (result) {
+          if (result && result.shared) {
+            self.showToast('Score saved to guest leaderboard!');
+          } else if (result && result.ok) {
+            self.showToast('Score saved on this device — retry if sheet sync fails.');
+          }
+        });
       }
     });
   };
@@ -3212,22 +3219,22 @@
   ChickenClicker.prototype.submitGuestScore = function (callback) {
     var self = this;
     if (!window.GuestLeaderboard) {
-      if (callback) callback(false);
+      if (callback) callback({ ok: false, shared: false });
       return;
     }
     var score = this.getGuestClickerScore();
     if (score === null || score <= 0) {
-      if (callback) callback(false);
+      if (callback) callback({ ok: false, shared: false });
       return;
     }
     var name = GuestLeaderboard.getStoredName('clicker');
     if (!name) {
-      if (callback) callback(false);
+      if (callback) callback({ ok: false, shared: false });
       return;
     }
-    GuestLeaderboard.submitScore('clicker', name, score).then(function (ok) {
-      if (ok) self.renderGuestLeaderboard();
-      if (callback) callback(ok);
+    GuestLeaderboard.submitScore('clicker', name, score).then(function (result) {
+      if (result && result.ok) self.renderGuestLeaderboard();
+      if (callback) callback(result || { ok: false, shared: false });
     });
   };
 

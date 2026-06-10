@@ -88,7 +88,8 @@ function isBetterScore(category, a, b) {
   return false;
 }
 
-function readLeaderboard(category) {
+function readLeaderboard(category, limit) {
+  var maxN = limit || LB_TOP_N;
   var sheet = getLeaderboardSheet();
   var rows = sheet.getDataRange().getValues();
   var bestByName = {};
@@ -111,7 +112,7 @@ function readLeaderboard(category) {
     }
     return a.at - b.at;
   });
-  return entries.slice(0, LB_TOP_N);
+  return entries.slice(0, maxN);
 }
 
 function rewriteCategoryRows(category, entries) {
@@ -163,31 +164,10 @@ function submitLeaderboard(category, name, score) {
   var sheet = getLeaderboardSheet();
   sheet.appendRow([category, safeName, validScore, new Date()]);
 
-  var entries = readLeaderboard(category);
-  var found = false;
-  var j;
-  for (j = 0; j < entries.length; j++) {
-    if (entries[j].name === safeName) {
-      found = true;
-      if (!isBetterScore(category, validScore, entries[j].score)) {
-        entries[j] = { name: safeName, score: validScore, at: Date.now() };
-      }
-      break;
-    }
-  }
-  if (!found) {
-    entries.push({ name: safeName, score: validScore, at: Date.now() });
-  }
-  entries.sort(function (a, b) {
-    if (a.score !== b.score) {
-      return LB_CATEGORIES[category].higherBetter ? b.score - a.score : a.score - b.score;
-    }
-    return a.at - b.at;
-  });
-  entries = entries.slice(0, LB_STORE_N);
-  rewriteCategoryRows(category, entries);
+  var stored = readLeaderboard(category, LB_STORE_N);
+  rewriteCategoryRows(category, stored);
 
-  return { ok: true, entries: entries.slice(0, LB_TOP_N) };
+  return { ok: true, entries: stored.slice(0, LB_TOP_N) };
 }
 
 function doGet(e) {
@@ -199,6 +179,9 @@ function doGet(e) {
       return jsonOut({ ok: false, error: 'invalid_category' });
     }
     return jsonOut({ ok: true, entries: readLeaderboard(category), shared: true });
+  }
+  if (p.action === 'leaderboard_submit') {
+    return jsonOut(submitLeaderboard(p.category, p.name, p.score));
   }
   return jsonOut({ ok: true, message: 'Wedding API running.', actions: ['rsvp', 'leaderboard'] });
 }
