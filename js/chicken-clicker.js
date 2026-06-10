@@ -23,6 +23,18 @@
   var IMPOSTER_QTE_MS = 20000;
   var IDLE_AUTO_BURST_MS = 10000;
   var AUTO_BURST_CLICK_MS = 180;
+  var COMBO_BIG_CLICK = 1000;
+  var COMBO_METER_MAX = 100;
+  var COMBO_DECAY_PER_TICK = 3.5;
+  var COMBO_PERFECT_CHAINS = 3;
+  var MEGA_COMBO_MULT = 30;
+  var MEGA_COMBO_MS = 20000;
+  var SPECIAL_WORM_COUNT = 300;
+  var BURST_GRAIN_MULT = 30;
+  var BURST_WORM_MULT = 10;
+  var BURST_GIANT_MULT = 2;
+  var BURST_EGG_MULT = 1.5;
+  var BURST_FLOAT_MULT = 1.25;
   var HEN_GIFS = [ASSET + 'hen-a.gif', ASSET + 'hen-b.gif'];
   var OFFLINE_CAP_MS = 8 * 3600000;
   var FED_TRACK_CAP = 200;
@@ -238,6 +250,13 @@
       unlocks: { giantWorm: false, megaWorm: false, steroidWorm: false, loveStory: false, loveStorySeen: false },
       burstGiantUntil: 0,
       burstGiantCd: 0,
+      burstEggUntil: 0,
+      burstFloatUntil: 0,
+      megaComboUntil: 0,
+      comboMeter: 0,
+      comboSpecialReady: false,
+      comboPerfectChains: 0,
+      megaComboReady: false,
       flavorCd: 0,
       goalIndex: 0,
       feathers: 0,
@@ -466,7 +485,24 @@
       '.chicken-leaderboard-row[data-bird-id]{cursor:pointer}',
       '.chicken-leaderboard-row[data-bird-id]:hover{background:rgba(255,255,255,.06)}',
       '.chicken-widget-giant-worm--mega{width:22px!important;height:10px!important}',
-      '.chicken-widget-giant-worm--steroid{filter:drop-shadow(0 0 6px #39ff14) hue-rotate(70deg) saturate(2.5);width:28px!important;height:12px!important}'
+      '.chicken-widget-giant-worm--steroid{filter:drop-shadow(0 0 6px #39ff14) hue-rotate(70deg) saturate(2.5);width:28px!important;height:12px!important}',
+      '.chicken-combo-hud{position:absolute;top:8px;left:8px;right:8px;z-index:25;display:flex;align-items:center;gap:8px;pointer-events:none}',
+      '.chicken-combo-hud[hidden]{display:none!important}',
+      '.chicken-combo-label{font-family:Impact,Haettenschweiler,sans-serif;font-size:.72rem;letter-spacing:.12em;color:#ffec8b;text-shadow:0 1px 0 #8b4513,0 0 8px rgba(255,200,80,.6)}',
+      '.chicken-combo-track{flex:1;height:14px;background:rgba(0,0,0,.45);border:2px solid #c9a060;border-radius:3px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(0,0,0,.35)}',
+      '.chicken-combo-fill{height:100%;width:0;background:linear-gradient(90deg,#ff6b35,#ffd700,#fff8a0);transition:width .12s ease-out;box-shadow:0 0 10px rgba(255,200,80,.8)}',
+      '.chicken-combo-fill.is-full{animation:chicken-combo-flash .45s ease-in-out infinite alternate}',
+      '@keyframes chicken-combo-flash{from{filter:brightness(1)}to{filter:brightness(1.35)}}',
+      '.chicken-combo-special,.chicken-combo-mega{pointer-events:auto;font-family:Impact,Haettenschweiler,sans-serif;font-size:.7rem;letter-spacing:.08em;padding:4px 10px;border:2px solid #ffd700;border-radius:4px;cursor:pointer;animation:chicken-combo-pulse .5s ease-in-out infinite alternate}',
+      '.chicken-combo-special{background:linear-gradient(180deg,#ff4444,#aa1111);color:#fff}',
+      '.chicken-combo-mega{background:linear-gradient(180deg,#39ff14,#1a8f0a);color:#0a1a08}',
+      '@keyframes chicken-combo-pulse{from{transform:scale(1)}to{transform:scale(1.06)}}',
+      '.chicken-combo-cutscene{position:absolute;inset:0;z-index:40;background:rgba(10,8,6,.72);display:flex;align-items:center;justify-content:center;pointer-events:none}',
+      '.chicken-combo-cutscene[hidden]{display:none!important}',
+      '.chicken-combo-cutscene-title{font-family:Impact,Haettenschweiler,sans-serif;font-size:clamp(1.4rem,4vw,2.4rem);color:#ffd700;text-shadow:0 0 20px #ff6b35;letter-spacing:.15em}',
+      '.chicken-combo-deluge-worm{position:absolute;pointer-events:none;image-rendering:pixelated}',
+      '.chicken-boost-stack{position:absolute;top:42px;right:8px;z-index:24;font-size:.65rem;color:#ffe8b8;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:4px;border:1px solid rgba(255,200,100,.35)}',
+      '.chicken-boost-stack[hidden]{display:none!important}'
     ].join('');
     document.head.appendChild(css);
   }
@@ -555,6 +591,13 @@
     if (!s.hallOfFame) s.hallOfFame = [];
     if (!s.lastSeen) s.lastSeen = Date.now();
     if (s.milestones.sandbox == null) s.milestones.sandbox = false;
+    if (s.burstEggUntil == null) s.burstEggUntil = 0;
+    if (s.burstFloatUntil == null) s.burstFloatUntil = 0;
+    if (s.megaComboUntil == null) s.megaComboUntil = 0;
+    if (s.comboMeter == null) s.comboMeter = 0;
+    if (s.comboSpecialReady == null) s.comboSpecialReady = false;
+    if (s.comboPerfectChains == null) s.comboPerfectChains = 0;
+    if (s.megaComboReady == null) s.megaComboReady = false;
     if (!s.flockMilestoneFlags) s.flockMilestoneFlags = {};
     if (s.habitat == null) s.habitat = 0;
     if (!s.broodingBought) s.broodingBought = {};
@@ -976,6 +1019,8 @@
     this._idleBurstArmed = true;
     this._autoBurstId = null;
     this._awayAt = null;
+    this._comboCleanStart = false;
+    this._comboCutscene = false;
     injectTrackCStyles();
     this._bind();
     syncGoalIndex(this.state, this.stats);
@@ -1057,7 +1102,7 @@
         s.unlocks.giantWorm = true;
         s.milestones.giantWormStorm = true;
         var burstNow = Date.now();
-        s.burstGiantUntil = burstNow + 15000;
+        s.burstGiantUntil = Math.max(s.burstGiantUntil || 0, burstNow) + 15000;
         s.burstGiantCd = burstNow + 60000;
       }
       if (m.id === 'megaWorm') s.unlocks.megaWorm = true;
@@ -1158,78 +1203,131 @@
     });
   };
 
-  ChickenClicker.prototype.burstMult = function (type) {
+  ChickenClicker.prototype.getBurstStack = function () {
     var now = Date.now();
-    if (type === 'grain' && now < this.state.burstGrainUntil) return 30;
-    if (type === 'worm' && now < this.state.burstWormUntil) return 10;
+    var s = this.state;
+    var grain = now < s.burstGrainUntil ? BURST_GRAIN_MULT : 1;
+    var worm = now < s.burstWormUntil ? BURST_WORM_MULT : 1;
+    var giant = now < s.burstGiantUntil ? BURST_GIANT_MULT : 1;
+    var egg = now < s.burstEggUntil ? BURST_EGG_MULT : 1;
+    var fl = now < s.burstFloatUntil ? BURST_FLOAT_MULT : 1;
+    var mega = now < s.megaComboUntil ? MEGA_COMBO_MULT : 1;
+    var auto = now < s.autoBurstUntil ? 1.12 : 1;
+    var active = 0;
+    if (grain > 1) active++;
+    if (worm > 1) active++;
+    if (giant > 1) active++;
+    if (egg > 1) active++;
+    if (fl > 1) active++;
+    if (mega > 1) active++;
+    if (auto > 1) active++;
+    var synergy = active > 1 ? 1 + (active - 1) * 0.14 : 1;
+    return {
+      grain: grain,
+      worm: worm,
+      giant: giant,
+      egg: egg,
+      float: fl,
+      mega: mega,
+      auto: auto,
+      synergy: synergy,
+      active: active,
+      total: grain * worm * giant * egg * fl * mega * auto * synergy
+    };
+  };
+
+  ChickenClicker.prototype.stackMultForFeed = function (feedType) {
+    var st = this.getBurstStack();
+    var m = st.synergy * st.mega * st.float * st.egg * st.auto;
+    if (feedType === 'grain') {
+      m *= st.grain;
+      if (st.worm > 1) m *= 1 + (st.worm - 1) * 0.12;
+      if (st.giant > 1) m *= 1 + (st.giant - 1) * 0.25;
+    } else {
+      m *= st.worm * st.giant;
+      if (st.grain > 1) m *= 1 + (st.grain - 1) * 0.1;
+    }
+    return m;
+  };
+
+  ChickenClicker.prototype.burstMult = function (type) {
+    var st = this.getBurstStack();
+    if (type === 'grain') return st.grain;
+    if (type === 'worm') return st.worm;
     return 1;
+  };
+
+  ChickenClicker.prototype.extendBurst = function (key, durationMs) {
+    var now = Date.now();
+    var untilKey = key + 'Until';
+    this.state[untilKey] = Math.max(this.state[untilKey] || 0, now) + durationMs;
   };
 
   ChickenClicker.prototype.activateBurst = function (type) {
     var now = Date.now();
+    var s = this.state;
     if (type === 'grain') {
-      if (!this.state.milestones.grainStorm || now < this.state.burstGrainCd) return;
-      this.state.burstGrainUntil = now + 10000;
-      this.state.burstGrainCd = now + 45000;
-      this.setMode('grain');
+      if (!s.milestones.grainStorm || now < s.burstGrainCd) return;
+      this.extendBurst('burstGrain', 10000);
+      s.burstGrainCd = now + 45000;
     } else if (type === 'giant') {
-      if (!this.state.milestones.giantWormStorm || now < this.state.burstGiantCd) return;
-      this.state.burstGiantUntil = now + 15000;
-      this.state.burstGiantCd = now + 60000;
-      if (this.state.unlocks.giantWorm) this.setMode('giant');
+      if (!s.milestones.giantWormStorm || now < s.burstGiantCd) return;
+      this.extendBurst('burstGiant', 15000);
+      s.burstGiantCd = now + 60000;
     } else {
-      if (!this.state.milestones.wormStorm || now < this.state.burstWormCd) return;
-      this.state.burstWormUntil = now + 10000;
-      this.state.burstWormCd = now + 45000;
-      if (this.state.wormsUnlocked) this.setMode('worm');
+      if (!s.milestones.wormStorm || now < s.burstWormCd) return;
+      this.extendBurst('burstWorm', 10000);
+      s.burstWormCd = now + 45000;
     }
+    this.showToast('Boost stacked! (' + this.getBurstStack().active + ' active)');
     this.requestHud();
     this.upgradesDirty = true;
     this.renderUpgrades(true);
+    this.renderBoostBanner();
     this.scheduleSave();
   };
 
   ChickenClicker.prototype.renderBoostBanner = function () {
-    if (!this.els.boostBanner) return;
-    var now = Date.now();
-    var grain = now < this.state.burstGrainUntil;
-    var worm = now < this.state.burstWormUntil;
-    var giant = now < this.state.burstGiantUntil;
-    var auto = now < this.state.autoBurstUntil;
-    if (!grain && !worm && !giant && !auto) {
-      this.els.boostBanner.hidden = true;
-      return;
-    }
-    var until = this.state.burstGrainUntil;
-    var kind = 'grain';
-    if (worm && this.state.burstWormUntil > until) { until = this.state.burstWormUntil; kind = 'worm'; }
-    if (giant && this.state.burstGiantUntil > until) { until = this.state.burstGiantUntil; kind = 'giant'; }
-    if (auto && this.state.autoBurstUntil > until) { until = this.state.autoBurstUntil; kind = 'auto'; }
-    var secs = Math.max(1, Math.ceil((until - now) / 1000));
-    this.els.boostBanner.hidden = false;
-    this.els.boostBanner.className = 'chicken-boost-banner chicken-boost-banner--' + kind;
-    if (this.els.boostBannerText) {
-      if (kind === 'grain') this.els.boostBannerText.textContent = 'GRAIN STORM ×30';
-      else if (kind === 'worm') this.els.boostBannerText.textContent = 'WORM RAIN ×10';
-      else if (kind === 'giant') this.els.boostBannerText.textContent = 'GIANT WORM STORM';
-      else this.els.boostBannerText.textContent = 'AUTO FEEDER';
-    }
-    if (this.els.boostBannerTime) this.els.boostBannerTime.textContent = String(secs);
-  };
-
-  ChickenClicker.prototype.applyBoost = function (preferWorm) {
+    var st = this.getBurstStack();
     var now = Date.now();
     var s = this.state;
-    if (preferWorm && s.wormsUnlocked) {
-      s.burstWormUntil = now + 10000;
-      this.setMode('worm');
-      this.showToast('Worm rain — 10 seconds!');
-    } else {
-      s.burstGrainUntil = now + 10000;
-      this.setMode('grain');
-      this.showToast('Grain storm — 10 seconds!');
+    var auto = now < s.autoBurstUntil;
+    if (st.active < 1 && !auto) {
+      if (this.els.boostBanner) this.els.boostBanner.hidden = true;
+      if (this.els.boostStack) this.els.boostStack.hidden = true;
+      return;
     }
+    var parts = [];
+    if (st.grain > 1) parts.push('Grain×' + st.grain);
+    if (st.worm > 1) parts.push('Worm×' + st.worm);
+    if (st.giant > 1) parts.push('Giant×' + st.giant);
+    if (st.egg > 1) parts.push('Egg×' + st.egg);
+    if (st.float > 1) parts.push('Float×' + st.float);
+    if (st.mega > 1) parts.push('MEGA×' + st.mega);
+    if (auto) parts.push('Auto');
+    var until = Math.max(s.burstGrainUntil, s.burstWormUntil, s.burstGiantUntil, s.burstEggUntil, s.burstFloatUntil, s.megaComboUntil, s.autoBurstUntil);
+    var secs = Math.max(1, Math.ceil((until - now) / 1000));
+    if (this.els.boostBanner) {
+      this.els.boostBanner.hidden = false;
+      this.els.boostBanner.className = 'chicken-boost-banner chicken-boost-banner--grain';
+      if (this.els.boostBannerText) {
+        this.els.boostBannerText.textContent = st.active > 1 ? 'STACK ×' + Math.round(st.total) : parts[0] || 'BOOST';
+      }
+      if (this.els.boostBannerTime) this.els.boostBannerTime.textContent = String(secs);
+    }
+    if (this.els.boostStack) {
+      this.els.boostStack.hidden = st.active < 2;
+      this.els.boostStack.textContent = parts.join(' · ');
+    }
+  };
+
+  ChickenClicker.prototype.applyBoost = function () {
+    this.extendBurst('burstGrain', 10000);
+    this.extendBurst('burstWorm', 10000);
+    this.extendBurst('burstFloat', 12000);
+    this.showToast('Storm stacked! (' + this.getBurstStack().active + ' boosts active)');
     this.requestHud();
+    this.renderBoostBanner();
     this.scheduleSave();
   };
 
@@ -1280,15 +1378,20 @@
     if (el) el.remove();
     this._floatingEl = null;
     var s = this.state;
+    var now = Date.now();
     if (kind === 'egg') {
       s.eggs += 10;
-      var g = Math.max(35, Math.floor(this.state.grainPerClick * 22 * this.clickMult()));
+      this.extendBurst('burstEgg', 12000);
+      var g = Math.max(35, Math.floor(this.state.grainPerClick * 22 * this.clickMult() * this.stackMultForFeed('grain')));
       s.grains += g;
-      this.showToast('Bonus: +' + formatNum(g) + ' grains & 10 eggs!');
+      s.lifetimeGrains += g;
+      this.feedFlock(g);
+      this.showToast('Egg boost stacked! +' + formatNum(g) + ' grains & 10 eggs');
     } else {
-      this.applyBoost(s.wormsUnlocked && Math.random() < 0.55);
+      this.applyBoost();
     }
     this.requestHud();
+    this.renderBoostBanner();
     this.scheduleSave();
   };
 
@@ -1527,6 +1630,12 @@
     this.els.boostBanner = document.getElementById('chicken-boost-banner');
     this.els.boostBannerText = document.getElementById('chicken-boost-banner-text');
     this.els.boostBannerTime = document.getElementById('chicken-boost-banner-time');
+    this.els.boostStack = document.getElementById('chicken-boost-stack');
+    this.els.comboHud = document.getElementById('chicken-combo-hud');
+    this.els.comboFill = document.getElementById('chicken-combo-fill');
+    this.els.comboSpecial = document.getElementById('chicken-combo-special');
+    this.els.comboMega = document.getElementById('chicken-combo-mega');
+    this.els.cutscene = document.getElementById('chicken-combo-cutscene');
     this.els.imposter = document.getElementById('chicken-imposter');
     this.els.imposterZone = document.getElementById('chicken-imposter-zone');
     this.els.imposterMarker = document.getElementById('chicken-imposter-marker');
@@ -1625,6 +1734,18 @@
         self._awayAt = null;
       }
     });
+    if (this.els.comboSpecial) {
+      this.els.comboSpecial.addEventListener('click', function (e) {
+        e.stopPropagation();
+        self.triggerComboSpecial();
+      });
+    }
+    if (this.els.comboMega) {
+      this.els.comboMega.addEventListener('click', function (e) {
+        e.stopPropagation();
+        self.activateMegaCombo();
+      });
+    }
     if (this.els.narrativeBtn) {
       this.els.narrativeBtn.addEventListener('click', function () { self.dismissNarrative(); });
     }
@@ -1963,23 +2084,162 @@
 
   ChickenClicker.prototype.clickValue = function () {
     var mult = this.clickMult();
+    var feedType = 'grain';
+    var base = this.state.grainPerClick + (this.stats.grainPerClickBonus || 0);
+    var giant = false;
+    var mega = false;
+    var steroid = false;
     if (this.state.feedMode === 'steroid' && this.state.unlocks.steroidWorm) {
-      return { type: 'worm', amount: Math.max(1, Math.floor(200 * mult)), giant: true, steroid: true };
+      feedType = 'worm';
+      base = 200;
+      giant = true;
+      steroid = true;
+    } else if (this.state.feedMode === 'mega' && this.state.unlocks.megaWorm) {
+      feedType = 'worm';
+      base = 100;
+      giant = true;
+      mega = true;
+    } else if (this.state.feedMode === 'giant' && this.state.unlocks.giantWorm) {
+      feedType = 'worm';
+      base = 50;
+      giant = true;
+    } else if (this.state.feedMode === 'worm' && this.state.wormsUnlocked) {
+      feedType = 'worm';
+      base = this.state.wormPerClick;
     }
-    if (this.state.feedMode === 'mega' && this.state.unlocks.megaWorm) {
-      return { type: 'worm', amount: Math.max(1, Math.floor(100 * mult)), giant: true, mega: true };
+    mult *= this.stackMultForFeed(feedType);
+    var amount = Math.max(1, Math.floor(base * mult));
+    return {
+      type: feedType,
+      amount: amount,
+      giant: giant,
+      mega: mega,
+      steroid: steroid,
+      nutrition: amount * (feedType === 'worm' ? WORM_NUTRITION : 1)
+    };
+  };
+
+  ChickenClicker.prototype.renderComboBar = function () {
+    if (!this.els.comboHud) return;
+    var m = this.state.comboMeter || 0;
+    var show = m > 0 || this.state.comboSpecialReady || this.state.megaComboReady;
+    this.els.comboHud.hidden = !show;
+    if (this.els.comboFill) {
+      this.els.comboFill.style.width = Math.round(m) + '%';
+      this.els.comboFill.classList.toggle('is-full', m >= COMBO_METER_MAX - 0.5);
     }
-    if (this.state.feedMode === 'giant' && this.state.unlocks.giantWorm) {
-      if (Date.now() < this.state.burstGiantUntil) mult *= 2;
-      return { type: 'worm', amount: Math.max(1, Math.floor(50 * mult)), giant: true };
+    if (this.els.comboSpecial) {
+      this.els.comboSpecial.hidden = !this.state.comboSpecialReady;
     }
-    if (this.state.feedMode === 'worm' && this.state.wormsUnlocked) {
-      mult *= this.burstMult('worm');
-      return { type: 'worm', amount: Math.max(1, Math.floor(this.state.wormPerClick * mult)) };
+    if (this.els.comboMega) {
+      this.els.comboMega.hidden = !this.state.megaComboReady;
     }
-    mult *= this.burstMult('grain');
-    var grainBase = this.state.grainPerClick + (this.stats.grainPerClickBonus || 0);
-    return { type: 'grain', amount: Math.max(1, Math.floor(grainBase * mult)) };
+  };
+
+  ChickenClicker.prototype.tickComboDecay = function () {
+    if (!this.open || this.paused) return;
+    var s = this.state;
+    if (s.comboMeter <= 0) return;
+    s.comboMeter = Math.max(0, s.comboMeter - COMBO_DECAY_PER_TICK);
+    if (s.comboMeter < COMBO_METER_MAX - 2) s.comboSpecialReady = false;
+    if (s.comboMeter <= 0) this._comboCleanStart = false;
+    this.renderComboBar();
+  };
+
+  ChickenClicker.prototype.addComboFromClick = function (nutrition) {
+    if (nutrition < COMBO_BIG_CLICK) return;
+    var s = this.state;
+    var before = s.comboMeter || 0;
+    if (before < 8) this._comboCleanStart = true;
+    var fill = Math.min(COMBO_METER_MAX - before, (nutrition / COMBO_BIG_CLICK) * 9);
+    s.comboMeter = Math.min(COMBO_METER_MAX, before + fill);
+    if (s.comboMeter >= COMBO_METER_MAX) {
+      s.comboSpecialReady = true;
+      if (this._comboCleanStart) {
+        s.comboPerfectChains = (s.comboPerfectChains || 0) + 1;
+        if (s.comboPerfectChains >= COMBO_PERFECT_CHAINS) {
+          s.megaComboReady = true;
+          s.comboPerfectChains = 0;
+          this.showToast('MEGA COMBO READY — tap for 30×!');
+        } else {
+          this.showToast('Perfect combo! (' + s.comboPerfectChains + '/' + COMBO_PERFECT_CHAINS + ')');
+        }
+        this._comboCleanStart = false;
+      }
+    }
+    this.renderComboBar();
+  };
+
+  ChickenClicker.prototype.activateMegaCombo = function () {
+    if (!this.state.megaComboReady) return;
+    this.state.megaComboReady = false;
+    this.state.megaComboUntil = Date.now() + MEGA_COMBO_MS;
+    this.showToast('MEGA COMBO — 30× for 20 seconds!');
+    this.requestHud();
+    this.renderBoostBanner();
+    this.scheduleSave();
+  };
+
+  ChickenClicker.prototype.triggerComboSpecial = function () {
+    var self = this;
+    if (!this.state.comboSpecialReady || this._comboCutscene) return;
+    this.state.comboSpecialReady = false;
+    this.state.comboMeter = 0;
+    this._comboCleanStart = false;
+    this.renderComboBar();
+    this.runWormDelugeCutscene(function () {
+      self.requestHud();
+      self.scheduleSave();
+    });
+  };
+
+  ChickenClicker.prototype.runWormDelugeCutscene = function (onDone) {
+    var self = this;
+    if (!this.els.stage || !this.els.cutscene) return;
+    this._comboCutscene = true;
+    this.setPaused(true);
+    this.els.cutscene.hidden = false;
+    this.els.cutscene.innerHTML = '<div class="chicken-combo-cutscene-title">WORM DELUGE!</div>';
+    var spawned = 0;
+    var w = this.els.stage.clientWidth;
+    var h = this.els.stage.clientHeight;
+    var interval = setInterval(function () {
+      if (spawned >= SPECIAL_WORM_COUNT) {
+        clearInterval(interval);
+        return;
+      }
+      var batch = Math.min(12, SPECIAL_WORM_COUNT - spawned);
+      var b;
+      for (b = 0; b < batch; b++) {
+        var worm = document.createElement('img');
+        worm.className = 'chicken-combo-deluge-worm';
+        worm.src = WORM_IMG;
+        worm.alt = '';
+        var sz = 14 + Math.random() * 18;
+        worm.style.width = sz + 'px';
+        worm.style.left = (Math.random() * w) + 'px';
+        worm.style.top = (Math.random() * h * 0.85) + 'px';
+        worm.style.transform = 'rotate(' + ((Math.random() - 0.5) * 60).toFixed(0) + 'deg)';
+        self.els.stage.appendChild(worm);
+        spawned += 1;
+        (function (el) {
+          setTimeout(function () { if (el.parentNode) el.remove(); }, 2200);
+        })(worm);
+      }
+    }, 60);
+    var s = this.state;
+    var wormAmt = SPECIAL_WORM_COUNT * Math.max(50, Math.floor(50 * this.stackMultForFeed('worm')));
+    s.worms += wormAmt;
+    s.lifetimeWorms += wormAmt;
+    this.feedFlock(wormAmt * WORM_NUTRITION);
+    this.showToast('SPECIAL! +' + formatNum(wormAmt) + ' giant worms!');
+    setTimeout(function () {
+      self.els.cutscene.hidden = true;
+      self.els.cutscene.innerHTML = '';
+      self._comboCutscene = false;
+      self.setPaused(false);
+      if (onDone) onDone();
+    }, 2400);
   };
 
   ChickenClicker.prototype.addNutrition = function (nutrition) {
@@ -2034,14 +2294,15 @@
   };
 
   ChickenClicker.prototype.onClick = function (e) {
-    if (this.paused || this._imposter) return;
+    if (this.paused || this._imposter || this._comboCutscene) return;
     if (!e.auto) {
       this.state.lastClickAt = Date.now();
       this._idleBurstArmed = true;
     }
     var val = this.clickValue();
     var amount = val.amount;
-    var nutrition = amount * (val.type === 'worm' ? WORM_NUTRITION : 1);
+    var nutrition = val.nutrition != null ? val.nutrition : amount * (val.type === 'worm' ? WORM_NUTRITION : 1);
+    if (!e.auto) this.addComboFromClick(nutrition);
 
     if (val.type === 'worm') {
       this.state.worms += amount;
@@ -2408,6 +2669,7 @@
     }
     this.passiveTick();
     this.tickIdleAutoFeeder();
+    this.tickComboDecay();
     this.checkFlockMilestones();
     var died = this.deathTick();
     if (died) return;
@@ -2518,11 +2780,11 @@
       this.els.hudFlock.textContent = flockTxt;
       cache.flock = flockTxt;
     }
-    var burstG = this.burstMult('grain');
-    var burstW = this.burstMult('worm');
+    var stack = this.getBurstStack();
+    var stackNote = stack.active > 0 ? ' (stack ×' + Math.round(this.stackMultForFeed(val.type)) + ')' : '';
     var clickTxt = val.type === 'worm'
-      ? val.amount + ' worm' + (val.amount === 1 ? '' : 's') + ' / click' + (burstW > 1 ? ' ×' + burstW : '')
-      : val.amount + ' grain' + (val.amount === 1 ? '' : 's') + ' / click' + (burstG > 1 ? ' ×' + burstG : '');
+      ? val.amount + ' worm' + (val.amount === 1 ? '' : 's') + ' / click' + stackNote
+      : val.amount + ' grain' + (val.amount === 1 ? '' : 's') + ' / click' + stackNote;
     if (cache.click !== clickTxt && this.els.hudClick) {
       this.els.hudClick.textContent = clickTxt;
       cache.click = clickTxt;
@@ -2534,9 +2796,12 @@
     }
     var boostTxt = '';
     var now = Date.now();
-    if (now < this.state.burstGrainUntil) boostTxt = 'Grain storm!';
+    if (stack.active > 1) boostTxt = 'Stack ×' + Math.round(stack.total) + '!';
+    else if (now < this.state.megaComboUntil) boostTxt = 'MEGA 30×!';
+    else if (now < this.state.burstGrainUntil) boostTxt = 'Grain storm!';
     else if (now < this.state.burstWormUntil) boostTxt = 'Worm rain!';
     else if (now < this.state.burstGiantUntil) boostTxt = 'Giant worm storm!';
+    else if (now < this.state.burstEggUntil) boostTxt = 'Egg boost!';
     else if (now < this.state.autoBurstUntil) boostTxt = 'Auto feeder!';
     if (cache.boost !== boostTxt && this.els.hudBoost) {
       this.els.hudBoost.textContent = boostTxt || '—';
@@ -2579,7 +2844,7 @@
       else if (val.mega) label = 'Mega mealworm!';
       else if (val.giant) label = 'Giant mealworm!';
       else if (val.type === 'worm') label = 'Drop worms!';
-      if (burstG > 1 || burstW > 1) label += ' STORM';
+      if (stack.active > 0) label += ' STACK';
       this.els.clickLabel.textContent = label;
     }
     this.renderBoostBanner();
@@ -2909,6 +3174,8 @@
   ChickenClicker.prototype.render = function () {
     this.recompute();
     this.renderHud();
+    this.renderBoostBanner();
+    this.renderComboBar();
     this.renderYard(true);
     this.renderUpgrades(true);
     this.renderLeaderboard(true);
