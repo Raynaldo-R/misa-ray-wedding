@@ -5,7 +5,7 @@
  *  - Notification stack (deaths, dating, evolutions) — no blocking popups
  *  - Evolution rebalance: tier gates, top-3 past T12, Quantum = one post-game bird
  *  - Feeder charge bar + toggleable auto-feed burst (visible forage)
- *  - Worm combo bar @ 400 birds (parallel to grain combo)
+ *  - Grain combo after Grain Storm; worm combo after Worm Rain (sequential)
  *  - Hatchling sprite for new birds; weighted yard rotation favors evolved birds
  *  - Habitat decor layers (coop, fence, pasture); larger evolution portraits
  */
@@ -41,7 +41,6 @@
   var MEGA_COMBO_MULT = 8;             // was 30 — trivialized the game
   var MEGA_COMBO_MS = 12000;           // was 20s
   var SPECIAL_WORM_COUNT = 40;
-  var COMBO_UNLOCK_FLOCK = 700;        // combo bar opens mid-game
   var BURST_GRAIN_MULT = 30;
   var BURST_WORM_MULT = 10;
   var BURST_GIANT_MULT = 2;
@@ -53,7 +52,6 @@
   var HATCHLING_AGE_MS = 25000;
   var HATCHLING_MAX_FED = 8;
   var MAX_BROOD_VISUAL = 4;
-  var WORM_COMBO_UNLOCK_FLOCK = 400;
   var WORM_COMBO_FILL_CAP = 6;
   var WORM_COMBO_DECAY_PER_TICK = 8;
   var FEEDER_CHARGE_MAX = 100;
@@ -135,7 +133,6 @@
     { flock: 500, id: 'habitat', label: 'Habitat upgrades', desc: 'Upgrade the yard for passive bonuses.' },
     { flock: 600, id: 'loveStory', label: 'Love Story', desc: 'Eligible birds may find romance.' },
     { flock: 700, id: 'forage', label: 'Chicken forage', desc: 'Birds forage while you are away.' },
-    { flock: 700, id: 'combo', label: 'Combo bar', desc: 'Chain boosted grain clicks for worm specials!' },
     { flock: 5000, id: 'quantum', label: 'Quantum evolution', desc: 'The ultimate evolution awaits one champion.' },
     { flock: 900, id: 'almostThere', label: 'Almost There', desc: 'The flock is nearly legendary.' },
     { flock: 1000, id: 'giantWorm', label: 'Giant Worm mode', desc: 'Feed giant mealworms — storm unlocked!' },
@@ -265,13 +262,13 @@
     combo: {
       eyebrow: 'Skill',
       title: 'Combo bar',
-      body: 'During an active boost, grain clicks fill the combo meter at the top of the yard. Fill it for SPECIAL free worms, then chain perfect fills for MEGA multipliers.',
+      body: 'Grain Storm unlocked the combo meter at the top of the yard. While a boost is active, grain clicks fill it — tap SPECIAL for free worms, then chain perfect fills to earn MEGA multipliers.',
       btn: 'Stack clicks'
     },
     wormCombo: {
       eyebrow: 'Skill',
       title: 'Worm combo',
-      body: 'At 400 birds, worm clicks during storms fill a second combo bar. Max it out and tap EGGS! for a cascade of bonus eggs and grains.',
+      body: 'Worm Rain is live, so a second combo bar appears. Switch to Worms during a storm and click to fill it — tap EGGS! for a cascade of bonus eggs and grains.',
       btn: 'Worm wizard'
     },
     giantWorm: {
@@ -370,7 +367,6 @@
       habitat: 'habitatShop',
       loveStory: 'loveStory',
       forage: 'forage',
-      combo: 'combo',
       giantWorm: 'giantWorm',
       megaWorm: 'megaWorm',
       steroidWorm: 'steroidWorm',
@@ -887,13 +883,15 @@
     return state.flock.length >= BOONS_UNLOCK_FLOCK || !!(state.unlocks && state.unlocks.boons);
   }
 
-  // Combo bar opens at mid game (700 birds). Boons (egg/float/auto multipliers) stay late game.
+  // Grain combo follows Grain Storm; worm combo follows Worm Rain (after grain combo).
   function comboUnlocked(state) {
-    return state.flock.length >= COMBO_UNLOCK_FLOCK || comboBoonsUnlocked(state);
+    if (comboBoonsUnlocked(state)) return true;
+    return !!(state.milestones && state.milestones.grainStorm);
   }
 
   function wormComboUnlocked(state) {
-    return state.flock.length >= WORM_COMBO_UNLOCK_FLOCK || comboBoonsUnlocked(state);
+    if (comboBoonsUnlocked(state)) return true;
+    return comboUnlocked(state) && !!(state.milestones && state.milestones.wormStorm);
   }
 
   // Shared flock-size gate for upgrade defs that carry minFlock
@@ -1533,6 +1531,20 @@
       } else if (m.id !== 'worms') {
         this.showToast(m.label + ' — ' + m.desc);
       }
+      if (m.id === 'grainStorm') {
+        this.showFirstMoment('combo', {
+          fallback: function () {
+            self.pushNotification({ type: 'system', title: 'Combo bar', body: 'Chain boosted grain clicks during storms.', ms: 4500 });
+          }
+        });
+      }
+      if (m.id === 'wormStorm') {
+        this.showFirstMoment('wormCombo', {
+          fallback: function () {
+            self.pushNotification({ type: 'system', title: 'Worm combo', body: 'Chain worm clicks during storms for bonus eggs.', ms: 4500 });
+          }
+        });
+      }
       this.upgradesDirty = true;
     }
     if (changed) this.recompute();
@@ -1540,18 +1552,8 @@
 
   ChickenClicker.prototype.checkMilestones = function () {
     var s = this.state;
-    var seen = ensureStoriesSeen(s);
-    var wormComboBefore = !!seen.wormCombo;
     this.checkFlockMilestones();
     applyFlockScaleUnlocks(s);
-    if (wormComboUnlocked(s) && !wormComboBefore && !seen.wormCombo) {
-      var self = this;
-      this.showFirstMoment('wormCombo', {
-        fallback: function () {
-          self.pushNotification({ type: 'system', title: 'Worm combo', body: 'Worm clicks can fill a combo bar during storms.', ms: 4500 });
-        }
-      });
-    }
     if (s.lifetimeHens >= 1000 && !s.milestones.henThousand) {
       s.milestones.henThousand = true;
       s.wormPerClick = Math.max(s.wormPerClick, 3);
@@ -1649,7 +1651,8 @@
     this.onClick({
       clientX: rect.left + rect.width / 2,
       clientY: rect.top + rect.height / 2,
-      auto: true
+      auto: true,
+      devTurbo: !!this._devTurboHeld
     });
   };
 
@@ -3203,7 +3206,7 @@
     var val = this.clickValue();
     var amount = val.amount;
     var nutrition = val.nutrition != null ? val.nutrition : amount * (val.type === 'worm' ? WORM_NUTRITION : 1);
-    if (!e.auto) {
+    if (!e.auto || e.devTurbo) {
       this.addComboFromClick(val, nutrition);
       this.addWormComboFromClick(val);
     }
