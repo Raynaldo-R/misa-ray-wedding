@@ -1,5 +1,15 @@
 /**
- * Chicken Fund clicker — v5 "Auto Feeder Update"
+ * Chicken Fund clicker — v6 "Pacing & Stacking Update"
+ *
+ * v6 changes:
+ *  - Boosts auto-select their matching feed mode on activation
+ *  - Clicking any ready boost releases ALL ready boosts together (stack release)
+ *  - Flock-size gates ("need N birds") across grain/worm/coop/brooding/feeder upgrades
+ *  - Early game slowed: higher early costs, worms unlock ONLY at 25 birds (with story)
+ *  - Combo bar moved to 700 birds, rebalanced: grain-streak only, requires a live
+ *    storm boost, capped fill, faster decay, sane special rewards, mega 8x/12s
+ *  - Floating pickups tiered: easy/slow eggs, medium storm, fast/rare x300 jackpot
+ *  - Imposter QTE disabled pending rework (see openModal)
  */
 (function (global) {
   'use strict';
@@ -25,11 +35,13 @@
   var AUTO_BURST_CLICK_MS = 180;
   var COMBO_BIG_CLICK = 1000;
   var COMBO_METER_MAX = 100;
-  var COMBO_DECAY_PER_TICK = 3.5;
+  var COMBO_DECAY_PER_TICK = 7;        // drains fast — the streak must be sustained
+  var COMBO_FILL_CAP = 7;              // max meter gain per click (~15 clicks to fill)
   var COMBO_PERFECT_CHAINS = 3;
-  var MEGA_COMBO_MULT = 30;
-  var MEGA_COMBO_MS = 20000;
+  var MEGA_COMBO_MULT = 8;             // was 30 — trivialized the game
+  var MEGA_COMBO_MS = 12000;           // was 20s
   var SPECIAL_WORM_COUNT = 40;
+  var COMBO_UNLOCK_FLOCK = 700;        // combo bar opens mid-game
   var BURST_GRAIN_MULT = 30;
   var BURST_WORM_MULT = 10;
   var BURST_GIANT_MULT = 2;
@@ -108,6 +120,7 @@
     { flock: 500, id: 'habitat', label: 'Habitat upgrades', desc: 'Upgrade the yard for passive bonuses.' },
     { flock: 600, id: 'loveStory', label: 'Love Story', desc: 'Eligible birds may find romance.' },
     { flock: 700, id: 'forage', label: 'Chicken forage', desc: 'Birds forage while you are away.' },
+    { flock: 700, id: 'combo', label: 'Combo bar', desc: 'Chain boosted grain clicks for worm specials!' },
     { flock: 800, id: 'quantum', label: 'Quantum evolution', desc: 'Tier 16 evolutions unlocked.' },
     { flock: 900, id: 'almostThere', label: 'Almost There', desc: 'The flock is nearly legendary.' },
     { flock: 1000, id: 'giantWorm', label: 'Giant Worm mode', desc: 'Feed giant mealworms — storm unlocked!' },
@@ -116,7 +129,7 @@
     { flock: 4000, id: 'flock4k', label: 'Four thousand feathers', desc: 'Every nest box is spoken for.' },
     { flock: 5000, id: 'steroidWorm', label: 'Steroid Worm', desc: 'Glowing nuclear-green mega worms.' },
     { flock: 6000, id: 'flock6k', label: 'Six thousand birds', desc: 'Port Gamble has never seen a coop like this.' },
-    { flock: 7000, id: 'flock7k', label: 'Seven thousand birds', desc: 'Combo specials & boons unlocked!' },
+    { flock: 7000, id: 'flock7k', label: 'Seven thousand birds', desc: 'Boons unlocked!' },
     { flock: 8000, id: 'flock8k', label: 'Eight thousand birds', desc: 'Grain trucks arrive daily.' },
     { flock: 9000, id: 'flock9k', label: 'Nine thousand birds', desc: 'One more milestone before legend.' },
     { flock: 10000, id: 'sandbox', label: 'Sandbox mode', desc: 'The flock has reached legendary scale.' }
@@ -131,12 +144,12 @@
   ];
 
   var BROODING_UPGRADES = [
-    { id: 'straw', label: 'Straw bedding', desc: '+3% hatch rate', cost: 80, hatch: 0.03 },
-    { id: 'heat', label: 'Heat lamp', desc: '+5% hatch rate', cost: 200, hatch: 0.05 },
-    { id: 'decoy', label: 'Ceramic eggs (decoys)', desc: '+4% hatch, hens lay 10% more', cost: 600, hatch: 0.04, eggLay: 0.10 },
-    { id: 'brooder', label: 'Dedicated brooder', desc: '+8% hatch rate', cost: 1800, hatch: 0.08 },
-    { id: 'turner', label: 'Automated turner', desc: '+10% hatch rate', cost: 5000, hatch: 0.10 },
-    { id: 'climate', label: 'Climate-controlled room', desc: '+15% hatch rate', cost: 15000, hatch: 0.15 }
+    { id: 'straw', label: 'Straw bedding', desc: '+3% hatch rate', cost: 80, hatch: 0.03, minFlock: 10 },
+    { id: 'heat', label: 'Heat lamp', desc: '+5% hatch rate', cost: 200, hatch: 0.05, minFlock: 20 },
+    { id: 'decoy', label: 'Ceramic eggs (decoys)', desc: '+4% hatch, hens lay 10% more', cost: 600, hatch: 0.04, eggLay: 0.10, minFlock: 40 },
+    { id: 'brooder', label: 'Dedicated brooder', desc: '+8% hatch rate', cost: 1800, hatch: 0.08, minFlock: 80 },
+    { id: 'turner', label: 'Automated turner', desc: '+10% hatch rate', cost: 5000, hatch: 0.10, minFlock: 150 },
+    { id: 'climate', label: 'Climate-controlled room', desc: '+15% hatch rate', cost: 15000, hatch: 0.15, minFlock: 300 }
   ];
 
   var BROODING_BY_ID = Object.create(null);
@@ -168,36 +181,36 @@
   ];
 
   var GRAIN_CLICK_UPGRADES = [
-    { id: 'g2', label: 'Better scoop', desc: '2 grains per click', power: 2, cost: 8 },
-    { id: 'g3', label: 'Handful', desc: '3 grains per click', power: 3, cost: 20 },
-    { id: 'g5', label: 'Small bucket', desc: '5 grains per click', power: 5, cost: 70 },
-    { id: 'g8', label: 'Feed pail', desc: '8 grains per click', power: 8, cost: 280 },
-    { id: 'g12', label: 'Wheelbarrow', desc: '12 grains per click', power: 12, cost: 850 },
-    { id: 'g18', label: 'Silo tap', desc: '18 grains per click', power: 18, cost: 2400 },
-    { id: 'g25', label: 'Industrial auger', desc: '25 grains per click', power: 25, cost: 6500 },
-    { id: 'g35', label: 'Mega dispenser', desc: '35 grains per click', power: 35, cost: 16000 },
-    { id: 'g50', label: 'Grain tsunami', desc: '50 grains per click', power: 50, cost: 38000 }
+    { id: 'g2', label: 'Better scoop', desc: '2 grains per click', power: 2, cost: 25, minFlock: 3 },
+    { id: 'g3', label: 'Handful', desc: '3 grains per click', power: 3, cost: 75, minFlock: 6 },
+    { id: 'g5', label: 'Small bucket', desc: '5 grains per click', power: 5, cost: 200, minFlock: 12 },
+    { id: 'g8', label: 'Feed pail', desc: '8 grains per click', power: 8, cost: 550, minFlock: 25 },
+    { id: 'g12', label: 'Wheelbarrow', desc: '12 grains per click', power: 12, cost: 1400, minFlock: 60 },
+    { id: 'g18', label: 'Silo tap', desc: '18 grains per click', power: 18, cost: 3200, minFlock: 120 },
+    { id: 'g25', label: 'Industrial auger', desc: '25 grains per click', power: 25, cost: 7500, minFlock: 220 },
+    { id: 'g35', label: 'Mega dispenser', desc: '35 grains per click', power: 35, cost: 17000, minFlock: 350 },
+    { id: 'g50', label: 'Grain tsunami', desc: '50 grains per click', power: 50, cost: 38000, minFlock: 500 }
   ];
 
   var WORM_CLICK_UPGRADES = [
-    { id: 'w1', label: 'One worm', desc: '1 worm per click', power: 1, cost: 25, wormCost: 3 },
-    { id: 'w2', label: 'Worm pair', desc: '2 worms per click', power: 2, cost: 110, wormCost: 11 },
-    { id: 'w4', label: 'Worm trio', desc: '4 worms per click', power: 4, cost: 520, wormCost: 52 },
-    { id: 'w8', label: 'Worm handful', desc: '8 worms per click', power: 8, cost: 1800, wormCost: 180 },
-    { id: 'w15', label: 'Worm bucket', desc: '15 worms per click', power: 15, cost: 6000, wormCost: 600 },
-    { id: 'w25', label: 'Worm wheelbarrow', desc: '25 worms per click', power: 25, cost: 18000, wormCost: 1800 },
-    { id: 'w40', label: 'Worm silo', desc: '40 worms per click', power: 40, cost: 55000, wormCost: 5500 },
-    { id: 'w50', label: 'Worm apocalypse', desc: '50 worms per click', power: 50, cost: 150000, wormCost: 15000 }
+    { id: 'w1', label: 'One worm', desc: '1 worm per click', power: 1, cost: 25, wormCost: 3, minFlock: 25 },
+    { id: 'w2', label: 'Worm pair', desc: '2 worms per click', power: 2, cost: 110, wormCost: 11, minFlock: 40 },
+    { id: 'w4', label: 'Worm trio', desc: '4 worms per click', power: 4, cost: 520, wormCost: 52, minFlock: 60 },
+    { id: 'w8', label: 'Worm handful', desc: '8 worms per click', power: 8, cost: 1800, wormCost: 180, minFlock: 100 },
+    { id: 'w15', label: 'Worm bucket', desc: '15 worms per click', power: 15, cost: 6000, wormCost: 600, minFlock: 160 },
+    { id: 'w25', label: 'Worm wheelbarrow', desc: '25 worms per click', power: 25, cost: 18000, wormCost: 1800, minFlock: 260 },
+    { id: 'w40', label: 'Worm silo', desc: '40 worms per click', power: 40, cost: 55000, wormCost: 5500, minFlock: 400 },
+    { id: 'w50', label: 'Worm apocalypse', desc: '50 worms per click', power: 50, cost: 150000, wormCost: 15000, minFlock: 600 }
   ];
 
   var AUTO_FEEDER_TIERS = [
     { id: 'af1', label: 'Pebble dish', desc: '1 grain/min while away', rate: 1 / 60, cost: 0 },
-    { id: 'af2', label: 'Trough drip', desc: '1 grain every 10s', rate: 0.1, cost: 400 },
-    { id: 'af3', label: 'Gravity hopper', desc: '1 grain/s', rate: 1, cost: 2000 },
-    { id: 'af4', label: 'Spin feeder', desc: '5 grains/s', rate: 5, cost: 10000 },
-    { id: 'af5', label: 'Auger line', desc: '20 grains/s', rate: 20, cost: 50000 },
-    { id: 'af6', label: 'Silo pump', desc: '50 grains/s', rate: 50, cost: 200000 },
-    { id: 'af7', label: 'Mega auger', desc: '100 grains/s', rate: 100, cost: 600000 }
+    { id: 'af2', label: 'Trough drip', desc: '1 grain every 10s', rate: 0.1, cost: 400, minFlock: 700 },
+    { id: 'af3', label: 'Gravity hopper', desc: '1 grain/s', rate: 1, cost: 2000, minFlock: 850 },
+    { id: 'af4', label: 'Spin feeder', desc: '5 grains/s', rate: 5, cost: 10000, minFlock: 1100 },
+    { id: 'af5', label: 'Auger line', desc: '20 grains/s', rate: 20, cost: 50000, minFlock: 2200 },
+    { id: 'af6', label: 'Silo pump', desc: '50 grains/s', rate: 50, cost: 200000, minFlock: 4200 },
+    { id: 'af7', label: 'Mega auger', desc: '100 grains/s', rate: 100, cost: 600000, minFlock: 6500 }
   ];
 
   var AUTO_FEEDER_BY_ID = Object.create(null);
@@ -205,7 +218,7 @@
 
   var COOP_UPGRADES = [
     { id: 'hen', label: 'Adopt a hen', desc: 'Lays eggs when well fed', type: 'hen', cost: 35, scale: 1.38 },
-    { id: 'rooster', label: 'Adopt a rooster', desc: 'Helps eggs hatch', type: 'rooster', cost: 120, scale: 1.5 },
+    { id: 'rooster', label: 'Adopt a rooster', desc: 'Helps eggs hatch', type: 'rooster', cost: 120, scale: 1.5, minFlock: 4 },
     { id: 'nest', label: 'Extra nest box', desc: 'Eggs arrive sooner', type: 'nest', cost: 220, scale: 1.75, max: 10 },
     { id: 'incubator', label: 'Warm incubator', desc: '+4% hatch rate', type: 'incubator', cost: 480, scale: 1.9, max: 6 }
   ];
@@ -517,14 +530,22 @@
     return false;
   }
 
+  function hasWormUpgrade(state) {
+    var i;
+    for (i = 0; i < WORM_CLICK_UPGRADES.length; i++) {
+      if (state.bought[WORM_CLICK_UPGRADES[i].id]) return true;
+    }
+    return false;
+  }
+
   var GOALS = [
-    { label: 'Buy your first grain upgrade', check: hasGrainUpgrade, reward: { grains: 15 } },
-    { label: 'Raise 5 hens', progress: function (s, st) { return Math.min(1, st.hens / 5); }, check: function (s, st) { return st.hens >= 5; }, reward: { grains: 40 } },
-    { label: 'Unlock worms', check: function (s) { return s.wormsUnlocked; }, reward: { worms: 10 } },
-    { label: 'Adopt your first rooster', check: function (s, st) { return st.roosters >= 1; }, reward: { grains: 80 } },
+    { label: 'Buy your first grain upgrade', check: hasGrainUpgrade, reward: { grains: 25 } },
+    { label: 'Raise 5 hens', progress: function (s, st) { return Math.min(1, st.hens / 5); }, check: function (s, st) { return st.hens >= 5; }, reward: { grains: 60 } },
+    { label: 'Adopt your first rooster', check: function (s, st) { return st.roosters >= 1; }, reward: { grains: 100 } },
     { label: 'Hatch your first egg', check: hasHatchedBird, reward: { eggs: 3 } },
+    { label: 'Grow the flock to 25 birds — worms await', progress: function (s) { return Math.min(1, s.flock.length / 25); }, check: function (s) { return s.flock.length >= 25; }, reward: { grains: 200 } },
+    { label: 'Buy your first worm upgrade', check: hasWormUpgrade, reward: { worms: 25 } },
     { label: 'Evolve your first bird', check: hasAnyEvolution, reward: { worms: 30 } },
-    { label: 'Grow the flock to 25 birds', progress: function (s) { return Math.min(1, s.flock.length / 25); }, check: function (s) { return s.flock.length >= 25; }, reward: { grains: 200, worms: 50 } },
     { label: 'Name a Tier 3 champion', check: hasNamedTier3, reward: { worms: 80 } },
     { label: 'Unlock Giant Worm mode', check: function (s) { return s.unlocks.giantWorm; }, reward: { worms: 100 } },
     { label: 'Grow the flock to 100 birds', progress: function (s) { return Math.min(1, s.flock.length / 100); }, check: function (s) { return s.flock.length >= 100; }, reward: { grains: 2000, worms: 300 } },
@@ -534,6 +555,16 @@
 
   function comboBoonsUnlocked(state) {
     return state.flock.length >= BOONS_UNLOCK_FLOCK || !!(state.unlocks && state.unlocks.boons);
+  }
+
+  // Combo bar opens at mid game (700 birds). Boons (egg/float/auto multipliers) stay late game.
+  function comboUnlocked(state) {
+    return state.flock.length >= COMBO_UNLOCK_FLOCK || comboBoonsUnlocked(state);
+  }
+
+  // Shared flock-size gate for upgrade defs that carry minFlock
+  function flockGateOk(state, def) {
+    return !def.minFlock || state.flock.length >= def.minFlock;
   }
 
   function habitatTierAvailable(state, tier) {
@@ -953,10 +984,10 @@
     return formatNum(grainCost) + ' g · ' + formatNum(wormCost) + ' w';
   }
 
-  function upgradeRow(title, desc, grainCost, wormCost, afford, buyKey, horizon) {
+  function upgradeRow(title, desc, grainCost, wormCost, afford, buyKey, horizon, minFlock) {
     var cls = 'chicken-upgrade-row' + (afford ? ' can-afford' : '') + (horizon ? ' chicken-upgrade-row--horizon' : '');
     return '<button type="button" class="' + cls + '" data-buy="' + buyKey + '"' +
-      ' data-grain-cost="' + grainCost + '" data-worm-cost="' + wormCost + '"' + (afford ? '' : ' disabled') + '>' +
+      ' data-grain-cost="' + grainCost + '" data-worm-cost="' + wormCost + '" data-min-flock="' + (minFlock || 0) + '"' + (afford ? '' : ' disabled') + '>' +
       '<span class="chicken-upgrade-row-main"><strong>' + title + '</strong><span>' + desc + '</span></span>' +
       '<span class="chicken-upgrade-row-cost">' + costLabel(grainCost, wormCost) + '</span></button>';
   }
@@ -1099,11 +1130,7 @@
       if (s.flock.length < m.flock) continue;
       s.flockMilestoneFlags[m.id] = true;
       changed = true;
-      if (m.id === 'worms' && !s.wormsUnlocked) {
-        s.wormsUnlocked = true;
-        s.worms += 5;
-        this.upgradesDirty = true;
-      }
+      if (m.id === 'worms') this.unlockWorms(true);
       if (m.id === 'grainStorm') s.milestones.grainStorm = true;
       if (m.id === 'wormStorm') s.milestones.wormStorm = true;
       if (m.id === 'habitat') { /* shop row appears */ }
@@ -1199,6 +1226,10 @@
     return comboBoonsUnlocked(this.state);
   };
 
+  ChickenClicker.prototype.comboUnlocked = function () {
+    return comboUnlocked(this.state);
+  };
+
   ChickenClicker.prototype.tickIdleAutoFeeder = function () {
     if (!this.comboBoonsUnlocked()) return;
     if (!this.open || this.paused || this._imposter) return;
@@ -1227,12 +1258,13 @@
     var now = Date.now();
     var s = this.state;
     var boons = comboBoonsUnlocked(s);
+    var combo = comboUnlocked(s);
     var grain = now < s.burstGrainUntil ? BURST_GRAIN_MULT : 1;
     var worm = now < s.burstWormUntil ? BURST_WORM_MULT : 1;
     var giant = now < s.burstGiantUntil ? BURST_GIANT_MULT : 1;
     var egg = boons && now < s.burstEggUntil ? BURST_EGG_MULT : 1;
     var fl = boons && now < s.burstFloatUntil ? BURST_FLOAT_MULT : 1;
-    var mega = boons && now < s.megaComboUntil ? MEGA_COMBO_MULT : 1;
+    var mega = combo && now < s.megaComboUntil ? MEGA_COMBO_MULT : 1;
     var auto = boons && now < s.autoBurstUntil ? 1.08 : 1;
     var active = 0;
     if (grain > 1) active++;
@@ -1262,6 +1294,7 @@
     var now = Date.now();
     var s = this.state;
     var boons = comboBoonsUnlocked(s);
+    var combo = comboUnlocked(s);
     var grain = now < s.burstGrainUntil ? BURST_GRAIN_MULT : 1;
     var worm = now < s.burstWormUntil ? BURST_WORM_MULT : 1;
     var giant = now < s.burstGiantUntil ? BURST_GIANT_MULT : 1;
@@ -1275,20 +1308,20 @@
       if (giant > 1) m *= giant;
       if (grain > 1) m *= 1 + (grain - 1) * 0.06;
     }
+    if (combo && now < s.megaComboUntil) m *= MEGA_COMBO_MULT;
     if (boons) {
       if (now < s.burstEggUntil) m *= 1 + (BURST_EGG_MULT - 1) * 0.5;
       if (now < s.burstFloatUntil) m *= BURST_FLOAT_MULT;
-      if (now < s.megaComboUntil) m *= MEGA_COMBO_MULT;
       if (now < s.autoBurstUntil) m *= 1.08;
     }
     var active = 0;
     if (grain > 1) active++;
     if (worm > 1) active++;
     if (giant > 1) active++;
+    if (combo && now < s.megaComboUntil) active++;
     if (boons) {
       if (now < s.burstEggUntil) active++;
       if (now < s.burstFloatUntil) active++;
-      if (now < s.megaComboUntil) active++;
       if (now < s.autoBurstUntil) active++;
     }
     if (active > 1) m *= 1 + (active - 1) * 0.06;
@@ -1308,23 +1341,53 @@
     this.state[untilKey] = Math.max(this.state[untilKey] || 0, now) + durationMs;
   };
 
+  // When a boost fires, snap the cursor to the matching feed so the player
+  // doesn't burn boost time switching modes by hand. Never downgrades from a
+  // stronger worm variant (giant/mega/steroid) to plain worm.
+  ChickenClicker.prototype.autoSelectFeedForBoost = function (kind) {
+    var s = this.state;
+    var m = s.feedMode;
+    var inWormMode = m === 'worm' || m === 'giant' || m === 'mega' || m === 'steroid';
+    if (kind === 'grain') {
+      this.setMode('grain');
+    } else if (kind === 'giant') {
+      if (s.unlocks.steroidWorm && m === 'steroid') return;
+      if (s.unlocks.megaWorm && m === 'mega') return;
+      if (s.unlocks.giantWorm) this.setMode('giant');
+      else if (s.wormsUnlocked) this.setMode('worm');
+    } else {
+      // worm-flavored boost: move into a worm mode if not already in one
+      if (!inWormMode && s.wormsUnlocked) this.setMode('worm');
+    }
+  };
+
   ChickenClicker.prototype.activateBurst = function (type) {
     var now = Date.now();
     var s = this.state;
-    if (type === 'grain') {
-      if (!s.milestones.grainStorm || now < s.burstGrainCd) return;
+    var released = [];
+    // Stack release: one click fires EVERY boost that's off cooldown, so when
+    // grain + worm reload together the player loads them both onto the cursor
+    // in a single click instead of activating them separately.
+    if (s.milestones.grainStorm && now >= s.burstGrainCd) {
       this.extendBurst('burstGrain', 10000);
       s.burstGrainCd = now + 45000;
-    } else if (type === 'giant') {
-      if (!s.milestones.giantWormStorm || now < s.burstGiantCd) return;
-      this.extendBurst('burstGiant', 15000);
-      s.burstGiantCd = now + 60000;
-    } else {
-      if (!s.milestones.wormStorm || now < s.burstWormCd) return;
+      released.push('Grain Storm');
+    }
+    if (s.milestones.wormStorm && now >= s.burstWormCd) {
       this.extendBurst('burstWorm', 10000);
       s.burstWormCd = now + 45000;
+      released.push('Worm Rain');
     }
-    this.showToast('Boost stacked! (' + this.getBurstStack().active + ' active)');
+    if (s.milestones.giantWormStorm && now >= s.burstGiantCd) {
+      this.extendBurst('burstGiant', 15000);
+      s.burstGiantCd = now + 60000;
+      released.push('Giant Worm Storm');
+    }
+    if (!released.length) return;
+    // Feed follows the button the player actually tapped
+    this.autoSelectFeedForBoost(type);
+    if (released.length > 1) this.showToast(released.join(' + ') + ' released together!');
+    else this.showToast(released[0] + ' released! (' + this.getBurstStack().active + ' active)');
     this.requestHud();
     this.upgradesDirty = true;
     this.renderUpgrades(true);
@@ -1371,6 +1434,7 @@
     this.extendBurst('burstGrain', 10000);
     this.extendBurst('burstWorm', 10000);
     this.extendBurst('burstFloat', 12000);
+    this.autoSelectFeedForBoost('worm');
     this.showToast('Storm stacked! (' + this.getBurstStack().active + ' boosts active)');
     this.requestHud();
     this.renderBoostBanner();
@@ -1392,15 +1456,25 @@
     }
     if (this._floatingEl) return;
     var self = this;
-    var kind = Math.random() < 0.55 ? 'egg' : 'boost';
+    // Tiered floaters: value scales inversely with catchability.
+    //   egg     — low value, slow drift, lingers (easy catch)
+    //   boost   — storm stack, medium speed
+    //   jackpot — ×300 worm click, fast and gone quick (hard catch)
+    var roll = Math.random();
+    var kind;
+    if (!this.state.wormsUnlocked) kind = roll < 0.7 ? 'egg' : 'boost';
+    else kind = roll < 0.5 ? 'egg' : roll < 0.85 ? 'boost' : 'jackpot';
+    var lifeMs = kind === 'egg' ? 9500 : kind === 'boost' ? 6500 : 3200;
+    var animDur = kind === 'egg' ? '9.5s' : kind === 'boost' ? '6.5s' : '3s';
     var el = document.createElement('button');
     el.type = 'button';
     el.className = 'chicken-floating-worm chicken-floating-worm--' + kind + (REDUCED_MOTION ? ' chicken-floating-worm--still' : '');
     el.setAttribute('data-worm-kind', kind);
-    el.setAttribute('aria-label', kind === 'egg' ? 'Bonus eggs worm' : 'Storm boost worm');
+    el.setAttribute('aria-label', kind === 'egg' ? 'Bonus eggs worm' : kind === 'boost' ? 'Storm boost worm' : 'Jackpot worm — 300x worm click');
+    if (!REDUCED_MOTION) el.style.animationDuration = animDur;
     var label = document.createElement('span');
     label.className = 'chicken-floating-worm-label';
-    label.textContent = kind === 'egg' ? '+ eggs' : 'storm!';
+    label.textContent = kind === 'egg' ? '+ eggs' : kind === 'boost' ? 'storm!' : '\u00d7300!';
     var body = document.createElement('span');
     body.className = 'chicken-floating-worm-body';
     el.appendChild(label);
@@ -1411,7 +1485,7 @@
     });
     this.els.stage.appendChild(el);
     this._floatingEl = el;
-    setTimeout(function () { self.removeFloatingWorm(); }, 8000);
+    setTimeout(function () { self.removeFloatingWorm(); }, lifeMs);
     this.scheduleFloatingWorm();
   };
 
@@ -1433,6 +1507,13 @@
       s.lifetimeGrains += g;
       this.feedFlock(g);
       this.showToast('Egg boost stacked! +' + formatNum(g) + ' grains & 10 eggs');
+    } else if (kind === 'jackpot') {
+      var per = Math.max(1, s.wormPerClick || 1);
+      var w = Math.floor(per * 300 * this.clickMult());
+      s.worms += w;
+      s.lifetimeWorms += w;
+      this.feedFlock(w * WORM_NUTRITION);
+      this.showToast('JACKPOT! +' + formatNum(w) + ' worms (\u00d7300 worm click)');
     } else {
       this.applyBoost();
     }
@@ -2167,7 +2248,7 @@
 
   ChickenClicker.prototype.renderComboBar = function () {
     if (!this.els.comboHud) return;
-    if (!this.comboBoonsUnlocked()) {
+    if (!this.comboUnlocked()) {
       this.els.comboHud.hidden = true;
       return;
     }
@@ -2187,7 +2268,7 @@
   };
 
   ChickenClicker.prototype.tickComboDecay = function () {
-    if (!this.comboBoonsUnlocked()) return;
+    if (!this.comboUnlocked()) return;
     if (!this.open || this.paused) return;
     var s = this.state;
     if (s.comboMeter <= 0) return;
@@ -2197,13 +2278,26 @@
     this.renderComboBar();
   };
 
-  ChickenClicker.prototype.addComboFromClick = function (nutrition) {
-    if (!this.comboBoonsUnlocked()) return;
-    if (nutrition < COMBO_BIG_CLICK) return;
+  // Combo rules (balanced so it doesn't trivialize the game):
+  //   1. Only GRAIN clicks build the meter — the streak is a grain streak.
+  //   2. The meter only charges while a storm boost is live, so the streak is
+  //      sustained by the stacking function and rationed by boost cooldowns.
+  //   3. Fill per click is capped, and the threshold scales with click power,
+  //      so a full bar always takes a real flurry of boosted clicks.
+  ChickenClicker.prototype.addComboFromClick = function (val, nutrition) {
+    if (!this.comboUnlocked()) return;
+    if (val.type !== 'grain') return;
     var s = this.state;
+    var now = Date.now();
+    var stormLive = now < s.burstGrainUntil || now < s.burstWormUntil || now < s.burstGiantUntil;
+    if (!stormLive) return;
+    var basePerClick = s.grainPerClick + (this.stats.grainPerClickBonus || 0);
+    var threshold = Math.max(COMBO_BIG_CLICK, basePerClick * BURST_GRAIN_MULT * 0.4);
+    if (nutrition < threshold) return;
     var before = s.comboMeter || 0;
     if (before < 8) this._comboCleanStart = true;
-    var fill = Math.min(COMBO_METER_MAX - before, (nutrition / COMBO_BIG_CLICK) * 9);
+    var fill = Math.min(COMBO_FILL_CAP, (nutrition / threshold) * 5);
+    fill = Math.min(COMBO_METER_MAX - before, fill);
     s.comboMeter = Math.min(COMBO_METER_MAX, before + fill);
     if (s.comboMeter >= COMBO_METER_MAX) {
       s.comboSpecialReady = true;
@@ -2212,7 +2306,7 @@
         if (s.comboPerfectChains >= COMBO_PERFECT_CHAINS) {
           s.megaComboReady = true;
           s.comboPerfectChains = 0;
-          this.showToast('MEGA COMBO READY — tap for 30×!');
+          this.showToast('MEGA COMBO READY — tap for ' + MEGA_COMBO_MULT + '×!');
         } else {
           this.showToast('Perfect combo! (' + s.comboPerfectChains + '/' + COMBO_PERFECT_CHAINS + ')');
         }
@@ -2223,11 +2317,11 @@
   };
 
   ChickenClicker.prototype.activateMegaCombo = function () {
-    if (!this.comboBoonsUnlocked()) return;
+    if (!this.comboUnlocked()) return;
     if (!this.state.megaComboReady) return;
     this.state.megaComboReady = false;
     this.state.megaComboUntil = Date.now() + MEGA_COMBO_MS;
-    this.showToast('MEGA COMBO — 30× for 20 seconds!');
+    this.showToast('MEGA COMBO — ' + MEGA_COMBO_MULT + '× for ' + Math.round(MEGA_COMBO_MS / 1000) + ' seconds!');
     this.requestHud();
     this.renderBoostBanner();
     this.scheduleSave();
@@ -2235,7 +2329,7 @@
 
   ChickenClicker.prototype.triggerComboSpecial = function () {
     var self = this;
-    if (!this.comboBoonsUnlocked()) return;
+    if (!this.comboUnlocked()) return;
     if (!this.state.comboSpecialReady || this._comboCutscene) return;
     this.state.comboSpecialReady = false;
     this.state.comboMeter = 0;
@@ -2282,11 +2376,14 @@
       }
     }, 60);
     var s = this.state;
-    var wormAmt = SPECIAL_WORM_COUNT * Math.max(50, Math.floor(50 * this.stackMultForFeed('worm')));
+    // Reward = a deluge of free worm clicks, scaled to current worm click power.
+    // (Old formula multiplied by the live boost stack and broke the economy.)
+    var perClick = Math.max(1, s.wormPerClick || 1);
+    var wormAmt = Math.floor(SPECIAL_WORM_COUNT * perClick * this.clickMult());
     s.worms += wormAmt;
     s.lifetimeWorms += wormAmt;
     this.feedFlock(wormAmt * WORM_NUTRITION);
-    this.showToast('SPECIAL! +' + formatNum(wormAmt) + ' giant worms!');
+    this.showToast('SPECIAL! +' + formatNum(wormAmt) + ' free worms!');
     setTimeout(function () {
       self.els.cutscene.hidden = true;
       self.els.cutscene.innerHTML = '';
@@ -2356,7 +2453,7 @@
     var val = this.clickValue();
     var amount = val.amount;
     var nutrition = val.nutrition != null ? val.nutrition : amount * (val.type === 'worm' ? WORM_NUTRITION : 1);
-    if (!e.auto) this.addComboFromClick(nutrition);
+    if (!e.auto) this.addComboFromClick(val, nutrition);
 
     if (val.type === 'worm') {
       this.state.worms += amount;
@@ -2482,18 +2579,19 @@
 
   ChickenClicker.prototype.buyGrainUpgrade = function (def) {
     if (this.state.bought[def.id]) return;
+    if (!flockGateOk(this.state, def)) return;
     var wc = wormCostForGrain(def.cost);
     if (!canPay(this.state, def.cost, wc)) return;
     payCost(this.state, def.cost, wc);
     this.state.bought[def.id] = 1;
     this.state.grainPerClick = def.power;
-    if (def.power >= 3) this.unlockWorms(false);
     this.upgradesDirty = true;
     this.afterPurchase('grains');
   };
 
   ChickenClicker.prototype.buyWormUpgrade = function (def) {
     if (!this.state.wormsUnlocked || this.state.bought[def.id]) return;
+    if (!flockGateOk(this.state, def)) return;
     var wc = def.wormCost || wormCostForGrain(def.cost);
     if (!canPay(this.state, def.cost, wc)) return;
     payCost(this.state, def.cost, wc);
@@ -2506,6 +2604,7 @@
   ChickenClicker.prototype.buyCoopUpgrade = function (def) {
     var count = this.state.bought[def.id] || 0;
     if (def.max && count >= def.max) return;
+    if (!flockGateOk(this.state, def)) return;
     var cost = coopUpgradeCost(def, this.state);
     var wc = wormCostForGrain(cost);
     if (!canPay(this.state, cost, wc)) return;
@@ -2551,6 +2650,7 @@
   ChickenClicker.prototype.buyAutoFeeder = function (def) {
     var s = this.state;
     if (!s.forageUnlocked || s.autoFeederBought[def.id]) return;
+    if (!flockGateOk(s, def)) return;
     var idx = AUTO_FEEDER_TIERS.indexOf(def);
     if (idx > 0 && !s.autoFeederBought[AUTO_FEEDER_TIERS[idx - 1].id]) return;
     if (def.cost > 0 && s.grains < def.cost) return;
@@ -2566,6 +2666,7 @@
     var s = this.state;
     if (!hasHatchedBird(s)) return;
     if (s.broodingBought[def.id]) return;
+    if (!flockGateOk(s, def)) return;
     var idx = BROODING_UPGRADES.indexOf(def);
     if (idx > 0 && !s.broodingBought[BROODING_UPGRADES[idx - 1].id]) return;
     if (s.grains < def.cost) return;
@@ -2852,7 +2953,7 @@
     var boostTxt = '';
     var now = Date.now();
     if (stack.active > 1) boostTxt = 'Stack ×' + Math.round(this.stackMultForFeed(val.type)) + '!';
-    else if (this.comboBoonsUnlocked() && now < this.state.megaComboUntil) boostTxt = 'MEGA 30×!';
+    else if (this.comboUnlocked() && now < this.state.megaComboUntil) boostTxt = 'MEGA ' + MEGA_COMBO_MULT + '×!';
     else if (now < this.state.burstGrainUntil) boostTxt = 'Grain storm!';
     else if (now < this.state.burstWormUntil) boostTxt = 'Worm rain!';
     else if (now < this.state.burstGiantUntil) boostTxt = 'Giant worm storm!';
@@ -3048,7 +3149,8 @@
       }
       var gc = Number(btn.getAttribute('data-grain-cost'));
       var wc = Number(btn.getAttribute('data-worm-cost'));
-      var afford = canPay(s, gc, wc);
+      var mf = Number(btn.getAttribute('data-min-flock') || 0);
+      var afford = canPay(s, gc, wc) && s.flock.length >= mf;
       btn.disabled = !afford;
       btn.classList.toggle('can-afford', afford);
     });
@@ -3093,7 +3195,9 @@
         if (s.autoFeederBought[def.id]) return;
         if (idx > 0 && !s.autoFeederBought[AUTO_FEEDER_TIERS[idx - 1].id]) return;
         if (def.cost === 0) return;
-        feeder += upgradeRow(def.label, def.desc, def.cost, 0, s.grains >= def.cost, 'feeder:' + def.id, false);
+        var fOk = flockGateOk(s, def);
+        var fDesc = def.desc + (fOk ? '' : ' · need ' + formatNum(def.minFlock) + ' birds');
+        feeder += upgradeRow(def.label, fDesc, def.cost, 0, fOk && s.grains >= def.cost, 'feeder:' + def.id, false, def.minFlock);
       });
       if (feeder) html += '<h4 class="chicken-shop-head">Auto feeder</h4>' + feeder;
     }
@@ -3101,11 +3205,15 @@
     var clicking = '';
     nextGrainUpgrades(s, 2).forEach(function (g, idx) {
       var gwc = wormCostForGrain(g.cost);
-      clicking += upgradeRow(g.label, g.desc, g.cost, gwc, canPay(s, g.cost, gwc), 'grain:' + g.id, idx > 0);
+      var gOk = flockGateOk(s, g);
+      var gDesc = g.desc + (gOk ? '' : ' · need ' + formatNum(g.minFlock) + ' birds');
+      clicking += upgradeRow(g.label, gDesc, g.cost, gwc, gOk && canPay(s, g.cost, gwc), 'grain:' + g.id, idx > 0, g.minFlock);
     });
     nextWormUpgrades(s, 2).forEach(function (w, idx) {
       var wwc = w.wormCost || wormCostForGrain(w.cost);
-      clicking += upgradeRow(w.label, w.desc, w.cost, wwc, canPay(s, w.cost, wwc), 'worm:' + w.id, idx > 0);
+      var wOk = flockGateOk(s, w);
+      var wDesc = w.desc + (wOk ? '' : ' · need ' + formatNum(w.minFlock) + ' birds');
+      clicking += upgradeRow(w.label, wDesc, w.cost, wwc, wOk && canPay(s, w.cost, wwc), 'worm:' + w.id, idx > 0, w.minFlock);
     });
     if (clicking) html += '<h4 class="chicken-shop-head">Clicking</h4>' + clicking;
 
@@ -3117,9 +3225,11 @@
       if (def.id === 'incubator' && !flockMilestoneMet(s, 'incubator')) return;
       var cost = coopUpgradeCost(def, s);
       var wc = wormCostForGrain(cost);
+      var cOk = flockGateOk(s, def);
       var desc = def.desc;
       if (count) desc += ' (' + count + (def.max ? '/' + def.max : '') + ')';
-      coop += upgradeRow(def.label, desc, cost, wc, canPay(s, cost, wc), 'coop:' + def.id, false);
+      if (!cOk) desc += ' · need ' + formatNum(def.minFlock) + ' birds';
+      coop += upgradeRow(def.label, desc, cost, wc, cOk && canPay(s, cost, wc), 'coop:' + def.id, false, def.minFlock);
     });
     if (flockMilestoneMet(s, 'habitat')) {
       var habTier = s.habitat || 0;
@@ -3135,7 +3245,7 @@
         var minFlock = HABITAT_MIN_FLOCK[nextHab.tier];
         if (minFlock > 0 && s.flock.length < minFlock) habDesc += ' · need ' + formatNum(minFlock) + ' birds';
         var canHab = s.grains >= nextHab.cost && habitatTierAvailable(s, nextHab.tier);
-        coop += upgradeRow('Upgrade habitat', habDesc, nextHab.cost, wormCostForGrain(nextHab.cost), canHab, 'habitat', false);
+        coop += upgradeRow('Upgrade habitat', habDesc, nextHab.cost, wormCostForGrain(nextHab.cost), canHab, 'habitat', false, minFlock);
       }
     }
     if (coop) html += '<h4 class="chicken-shop-head">Coop</h4>' + coop;
@@ -3145,7 +3255,9 @@
       BROODING_UPGRADES.forEach(function (def, idx) {
         if (s.broodingBought[def.id]) return;
         if (idx > 0 && !s.broodingBought[BROODING_UPGRADES[idx - 1].id]) return;
-        brood += upgradeRow(def.label, def.desc, def.cost, wormCostForGrain(def.cost), s.grains >= def.cost, 'brood:' + def.id, false);
+        var bOk = flockGateOk(s, def);
+        var bDesc = def.desc + (bOk ? '' : ' · need ' + formatNum(def.minFlock) + ' birds');
+        brood += upgradeRow(def.label, bDesc, def.cost, wormCostForGrain(def.cost), bOk && s.grains >= def.cost, 'brood:' + def.id, false, def.minFlock);
       });
       if (brood) html += '<h4 class="chicken-shop-head">Brooding</h4>' + brood;
     }
@@ -3313,7 +3425,7 @@
     this.renderGuestLeaderboard();
     this.startLoops();
     this.scheduleFloatingWorm();
-    this.scheduleImposter();
+    // this.scheduleImposter(); // DISABLED: imposter QTE is too hard — rework pending. Re-enable by uncommenting.
     this.scheduleLoveStoryCheck();
     this.modal.querySelector('.chicken-modal-close').focus();
   };
