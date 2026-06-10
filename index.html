@@ -1810,6 +1810,10 @@ button[type=submit]:disabled {
 .chicken-boost-banner--grain .chicken-boost-banner-text { color: #f0ddb8; }
 .chicken-boost-banner--worm { border-color: #7eb8d8; }
 .chicken-boost-banner--worm .chicken-boost-banner-text { color: #b8e0f8; }
+.chicken-boost-banner--giant { border-color: #c9a060; }
+.chicken-boost-banner--giant .chicken-boost-banner-text { color: #ffe8b8; }
+.chicken-boost-banner--auto { border-color: #8ab87a; }
+.chicken-boost-banner--auto .chicken-boost-banner-text { color: #d4f0c8; }
 .chicken-imposter {
   position: absolute;
   inset: 0;
@@ -1837,7 +1841,7 @@ button[type=submit]:disabled {
   text-align: center;
 }
 .chicken-imposter-img {
-  width: 72px;
+  width: 96px;
   height: auto;
   image-rendering: pixelated;
   margin-bottom: 8px;
@@ -1959,6 +1963,8 @@ button[type=submit]:disabled {
   overflow: hidden;
 }
 .chicken-narrative-portrait .chicken-portrait { width: 56px; }
+.chicken-narrative-portrait .chicken-portrait--lg { width: 120px; height: 120px; }
+.chicken-narrative-portrait .chicken-quantum-box--lg { margin: 0 auto; }
 .chicken-narrative-portrait[hidden] { display: none; }
 .chicken-widget-giant-worm {
   position: absolute;
@@ -3434,7 +3440,9 @@ section:not(.hero) h2::after {
         <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
           <button type="button" class="chicken-feed-btn is-active" id="chicken-mode-grain" aria-pressed="true">Grain</button>
           <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlocks at 3 grains/click or 5 hens" aria-pressed="false">Worms</button>
-          <button type="button" class="chicken-feed-btn" id="chicken-mode-giant" hidden title="Unlocked by a Rainbow hen">Giant</button>
+          <button type="button" class="chicken-feed-btn" id="chicken-mode-giant" hidden title="Unlocked at 1000 hens">Giant</button>
+          <button type="button" class="chicken-feed-btn" id="chicken-mode-mega" hidden title="Unlocked at 2000 hens">Mega</button>
+          <button type="button" class="chicken-feed-btn" id="chicken-mode-steroid" hidden title="Unlocked at 5000 hens">Steroid</button>
         </div>
         <div class="chicken-game-main">
           <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
@@ -3483,7 +3491,7 @@ section:not(.hero) h2::after {
     <div class="chicken-imposter" id="chicken-imposter" hidden>
       <div class="chicken-imposter-backdrop"></div>
       <div class="chicken-imposter-card">
-        <img class="chicken-imposter-img" src="assets/game/imposter.gif" alt="" width="72" height="72">
+        <img class="chicken-imposter-img" src="assets/game/imposter.gif" alt="" width="96" height="96">
         <h3>There's an imposter!</h3>
         <p>Hold click to raise the green zone. Keep the imposter inside it long enough to kick him out.</p>
         <div class="chicken-imposter-track" id="chicken-imposter-track">
@@ -3491,7 +3499,7 @@ section:not(.hero) h2::after {
           <div class="chicken-imposter-marker" id="chicken-imposter-marker"></div>
         </div>
         <div class="chicken-imposter-progress"><div class="chicken-imposter-progress-fill" id="chicken-imposter-progress-fill"></div></div>
-        <div class="chicken-imposter-timer" id="chicken-imposter-timer">14s left</div>
+        <div class="chicken-imposter-timer" id="chicken-imposter-timer">20s left</div>
       </div>
     </div>
   </div>

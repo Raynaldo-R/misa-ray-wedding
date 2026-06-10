@@ -192,30 +192,33 @@
     var onGrid = fx < edge || fy < edge || fx > 1 - edge || fy > 1 - edge;
 
     var checker = ((tx + ty) % 2) === 0;
-    var cx = fx - 0.5;
-    var cy = fy - 0.5;
-    var distCenter = Math.sqrt(cx * cx + cy * cy);
-    var core = 0.11;
-    var glow = 0.34;
+    var lightPad = 0.22;
+    var glowPad = 0.38;
+    var inCore = checker
+      && fx > 0.5 - lightPad && fx < 0.5 + lightPad
+      && fy > 0.5 - lightPad && fy < 0.5 + lightPad;
+    var inGlow = checker
+      && fx > 0.5 - glowPad && fx < 0.5 + glowPad
+      && fy > 0.5 - glowPad && fy < 0.5 + glowPad;
 
-    if (checker) {
-      if (distCenter < core) {
-        var coreB = Math.round(255 * (1 - fog.t * 0.35));
-        return { r: coreB, g: coreB, b: coreB };
-      }
-      if (distCenter < glow) {
-        var t = (distCenter - core) / (glow - core);
-        var halo = Math.round(255 * (1 - t) * (1 - fog.t * 0.3));
-        var baseR = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
-        var baseG = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
-        var baseB = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
-        return mixFog(
-          Math.round(baseR + (255 - baseR) * (1 - t) * 0.85),
-          Math.round(baseG + (255 - baseG) * (1 - t) * 0.85),
-          Math.round(baseB + (255 - baseB) * (1 - t) * 0.85),
-          fog
-        );
-      }
+    if (inCore) {
+      var coreB = Math.round(255 * (1 - fog.t * 0.35));
+      return { r: coreB, g: coreB, b: coreB };
+    }
+    if (inGlow) {
+      var gx = Math.max(fx, 1 - fx, 0.5) - 0.5;
+      var gy = Math.max(fy, 1 - fy, 0.5) - 0.5;
+      var edgeDist = Math.max(gx / glowPad, gy / glowPad);
+      var t = Math.min(1, edgeDist);
+      var baseR = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
+      var baseG = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
+      var baseB = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
+      return mixFog(
+        Math.round(baseR + (255 - baseR) * (1 - t) * 0.9),
+        Math.round(baseG + (255 - baseG) * (1 - t) * 0.9),
+        Math.round(baseB + (255 - baseB) * (1 - t) * 0.9),
+        fog
+      );
     }
 
     var r = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
@@ -350,7 +353,7 @@
       state.chickenScareX = zone.fixed;
       state.chickenScareY = zone.from;
     }
-    state.chickenScareCooldown = 420 + Math.floor(Math.random() * 360);
+    state.chickenScareCooldown = 180 + Math.floor(Math.random() * 200);
   }
 
   function updateChickenScare(state) {
@@ -358,7 +361,7 @@
 
     if (state.chickenScarePhase === 'done' || state.chickenScarePhase === 'idle') {
       if (state.chickenScareCooldown > 0 || state.escapePhase !== 'play') return;
-      if (Math.random() > 0.0035) return;
+      if (Math.random() > 0.014) return;
       var zone = findScareZone(state.px, state.py);
       if (zone && CHICKEN_IMG) startChickenScare(state, zone);
       return;
@@ -381,7 +384,7 @@
         if (state.chickenScareTimer >= 40) {
           state.chickenScarePhase = 'done';
           state.chickenScareAlpha = 0;
-          state.chickenScareCooldown = 480 + Math.floor(Math.random() * 420);
+          state.chickenScareCooldown = 200 + Math.floor(Math.random() * 240);
         }
       }
     }
@@ -579,7 +582,7 @@
       chickenScareTimer: 0,
       chickenScareFlip: false,
       chickenScareZone: null,
-      chickenScareCooldown: 180,
+      chickenScareCooldown: 90,
       frame: null,
       resize: resize,
       onKeyDown: null,
