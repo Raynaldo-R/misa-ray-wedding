@@ -18,6 +18,7 @@
   var ASSET = 'assets/game/';
   var TICK_MS = 1200;
   var SAVE_DEBOUNCE_MS = 450;
+  var AUTOSAVE_LOOP_TICKS = 25;
   var WORM_NUTRITION = 10;
   var MAX_PARTICLES = 24;
   var MAX_VISUAL_BIRDS = 10;
@@ -193,6 +194,190 @@
     { t: 'The yard glows faintly green. The chickens seem fine.', nuclear: true }
   ];
 
+  var FIRST_MOMENTS = {
+    worms: {
+      eyebrow: 'Discovery',
+      title: 'Worms!',
+      body: 'Digging near the fence, a hen pulls up something wriggling. The flock crowds in. Switch to Worms mode to feed them — wriggly treats cost worms but grow birds faster.',
+      btn: 'Gross — continue'
+    },
+    firstHatch: {
+      eyebrow: 'New life',
+      title: 'A chick hatches!',
+      body: 'An egg cracked in the nest. Hatched birds start as peeping hatchlings in the brood area until they grow. Raise your Hatch % with brooding upgrades and habitat tiers.',
+      btn: 'Welcome, little one'
+    },
+    firstRooster: {
+      eyebrow: 'The yard',
+      title: 'A rooster joins',
+      body: 'Whether adopted or hatched, a rooster now struts the coop. Roosters balance the flock — and occasionally form committees. You will see more as eggs hatch or from the Coop shop.',
+      btn: 'He knows'
+    },
+    nest: {
+      eyebrow: 'Coop upgrade',
+      title: 'Nest boxes',
+      body: 'Nest boxes are now in the Upgrades shop. Each box helps hens lay and store more eggs — eggs hatch into new birds when your Hatch % triggers.',
+      btn: 'More nests'
+    },
+    incubator: {
+      eyebrow: 'Coop upgrade',
+      title: 'Incubators',
+      body: 'Warm incubators are available to buy. They raise your Hatch % so eggs turn into chicks more often. Pair them with brooding upgrades for a real hatchery.',
+      btn: 'Warm them up'
+    },
+    phase2: {
+      eyebrow: 'Evolution',
+      title: 'Material evolutions',
+      body: 'Bronze, silver, and beyond can now be purchased in Hall of Fame. Evolve your top birds with worms — higher tiers unlock rarer forms and bonuses.',
+      btn: 'Forge ahead'
+    },
+    grainStorm: {
+      eyebrow: 'Boost',
+      title: 'Grain Storm',
+      body: 'A 30× grain burst is ready in Upgrades. Tap the boost button while it is off cooldown — storms stack if several are ready at once. Stay on Grain mode to ride the storm.',
+      btn: 'Let it rain'
+    },
+    wormStorm: {
+      eyebrow: 'Boost',
+      title: 'Worm Rain',
+      body: '10× worm clicks unlock next. When the storm hits, switch to Worms and tap the boost. Grain Storm and Worm Rain can fire together for a double stack.',
+      btn: 'Dig in'
+    },
+    habitatShop: {
+      eyebrow: 'Yard',
+      title: 'Habitat upgrades',
+      body: 'The yard can level up — coops, fences, and pasture tiers passively boost egg laying and hatch rates. Look for Habitat in Upgrades once you can afford it.',
+      btn: 'Expand the yard'
+    },
+    loveStory: {
+      eyebrow: 'Romance',
+      title: 'Love Story',
+      body: 'Eligible hens and roosters may pair up on their own. Paired birds can earn nest bonuses. Keep evolving your champions — only the finest fall in love.',
+      btn: 'How sweet'
+    },
+    forage: {
+      eyebrow: 'Passive play',
+      title: 'Chicken forage',
+      body: 'Birds now forage while you are away — grains (and a trickle of worms) accumulate offline. While you play, the Feeder bar charges; tap AUTO when full for a burst of free clicks.',
+      btn: 'Free range'
+    },
+    combo: {
+      eyebrow: 'Skill',
+      title: 'Combo bar',
+      body: 'During an active boost, grain clicks fill the combo meter at the top of the yard. Fill it for SPECIAL free worms, then chain perfect fills for MEGA multipliers.',
+      btn: 'Stack clicks'
+    },
+    wormCombo: {
+      eyebrow: 'Skill',
+      title: 'Worm combo',
+      body: 'At 400 birds, worm clicks during storms fill a second combo bar. Max it out and tap EGGS! for a cascade of bonus eggs and grains.',
+      btn: 'Worm wizard'
+    },
+    giantWorm: {
+      eyebrow: 'Feed mode',
+      title: 'Giant Worm',
+      body: 'Giant mealworms unlock at 1,000 birds. A new feed button appears — enormous worms, enormous click power, plus a Giant Worm Storm boost.',
+      btn: 'Supersize'
+    },
+    megaWorm: {
+      eyebrow: 'Feed mode',
+      title: 'Mega Worm',
+      body: 'Mega Worm mode feeds 100 worms per click with bigger sprites. Switch feed modes with the buttons above the yard — stronger modes unlock at higher flock sizes.',
+      btn: 'Mega munch'
+    },
+    steroidWorm: {
+      eyebrow: 'Feed mode',
+      title: 'Steroid Worm',
+      body: 'Glowing nuclear-green steroid worms — the ultimate worm click. Use during storms and combos for absurd gains. The yard may glow. The chickens are fine.',
+      btn: 'Glowing'
+    },
+    boons: {
+      eyebrow: 'Endgame',
+      title: 'Boons',
+      body: 'Seven thousand birds unlock boons: egg boosts, floating worms, and auto bursts that stack with your storms. Check Upgrades — the coop has become an industry.',
+      btn: 'Industrial scale'
+    },
+    firstHabitat: {
+      eyebrow: 'Yard',
+      title: 'Habitat improved',
+      body: 'You upgraded the yard! Each habitat tier passively boosts egg laying and hatch rate. Higher tiers need a larger flock — keep growing to unlock the next.',
+      btn: 'Home sweet coop'
+    },
+    firstBoost: {
+      eyebrow: 'How to play',
+      title: 'Stack your boosts',
+      body: 'You just fired a storm boost. Boosts off cooldown release together in one click. The banner shows what is active and for how long — click fast while stacks are live.',
+      btn: 'Storm chaser'
+    },
+    firstLoveDate: {
+      eyebrow: 'Love story',
+      title: 'A match!',
+      body: 'Two of your champions are now paired. Paired birds can raise nest bonuses and may appear in notifications. More dates can happen as the flock grows.',
+      btn: 'Ship it'
+    },
+    quantum: {
+      eyebrow: 'Post-game',
+      title: 'Quantum Hen',
+      body: 'One bird in ten thousand collapses into legend. The box opens — or does it? Name your singular quantum champion.',
+      btn: 'Witness'
+    }
+  };
+
+  function ensureStoriesSeen(state) {
+    if (!state.storiesSeen) state.storiesSeen = {};
+    return state.storiesSeen;
+  }
+
+  function backfillStoriesSeen(s) {
+    var seen = ensureStoriesSeen(s);
+    if (s.wormsUnlocked) seen.worms = true;
+    if (hasHatchedBird(s)) seen.firstHatch = true;
+    if (s.lifetimeRoosters > 0) seen.firstRooster = true;
+    if ((s.habitat || 0) > 0) seen.firstHabitat = true;
+    if (s.milestones.grainStorm) seen.grainStorm = true;
+    if (s.milestones.wormStorm) seen.wormStorm = true;
+    if (s.unlocks.giantWorm) seen.giantWorm = true;
+    if (s.unlocks.megaWorm) seen.megaWorm = true;
+    if (s.unlocks.steroidWorm) seen.steroidWorm = true;
+    if (s.forageUnlocked) seen.forage = true;
+    if (comboUnlocked(s)) seen.combo = true;
+    if (wormComboUnlocked(s)) seen.wormCombo = true;
+    if (s.unlocks.loveStory) seen.loveStory = true;
+    if (s.unlocks.boons) seen.boons = true;
+    if (s.flockMilestoneFlags && s.flockMilestoneFlags.phase2) seen.phase2 = true;
+    if (s.flockMilestoneFlags && s.flockMilestoneFlags.nest) seen.nest = true;
+    if (s.flockMilestoneFlags && s.flockMilestoneFlags.incubator) seen.incubator = true;
+    if (s.flockMilestoneFlags && s.flockMilestoneFlags.habitat) seen.habitatShop = true;
+    if (seen.grainStorm || seen.wormStorm) seen.firstBoost = true;
+    if (s.firstQuantumSeen) seen.quantum = true;
+    var i;
+    for (i = 0; i < s.flock.length; i++) {
+      if (s.flock[i].paired) {
+        seen.firstLoveDate = true;
+        break;
+      }
+    }
+  }
+
+  function milestoneMomentId(id) {
+    var map = {
+      grainStorm: 'grainStorm',
+      wormStorm: 'wormStorm',
+      phase2: 'phase2',
+      nest: 'nest',
+      incubator: 'incubator',
+      habitat: 'habitatShop',
+      loveStory: 'loveStory',
+      forage: 'forage',
+      combo: 'combo',
+      giantWorm: 'giantWorm',
+      megaWorm: 'megaWorm',
+      steroidWorm: 'steroidWorm',
+      flock7k: 'boons'
+    };
+    return map[id] || null;
+  }
+
   var GRAIN_CLICK_UPGRADES = [
     { id: 'g2', label: 'Better scoop', desc: '2 grains per click', power: 2, cost: 25, minFlock: 3 },
     { id: 'g3', label: 'Handful', desc: '3 grains per click', power: 3, cost: 75, minFlock: 6 },
@@ -297,8 +482,15 @@
       farmNumber: 1,
       hallOfFame: [],
       lastSeen: Date.now(),
-      flock: [{ id: 1, sex: 'hen', fed: 0, evolution: null, name: null, paired: false }]
+      storiesSeen: {},
+      flock: [{ id: 1, sex: 'hen', fed: 0, evolution: null, name: null, paired: false, bornAt: Date.now() }]
     };
+  }
+
+  function yardAdultFlock(flock) {
+    var parts = partitionFlockForYard(flock);
+    if (parts.adults.length) return parts.adults;
+    return parts.brood.length ? [] : flock;
   }
 
   function hasHatchedBird(state) {
@@ -835,6 +1027,7 @@
     if (s.flock.length < 5000 && !s.quantumBirdId) {
       s.flockMilestoneFlags.quantum = false;
     }
+    backfillStoriesSeen(s);
     return s;
   }
 
@@ -1244,6 +1437,7 @@
     this._comboCleanStart = false;
     this._comboCutscene = false;
     this._guestLbSubmitId = null;
+    this._autosaveTick = 0;
     this._notifications = [];
     this._birdDetailTimer = null;
     this._feederAutoId = null;
@@ -1289,11 +1483,7 @@
     this.upgradesDirty = true;
     if (showStory) {
       var self = this;
-      this.showNarrative({
-        eyebrow: 'Discovery',
-        title: 'Worms!',
-        body: 'Digging near the fence, a hen pulls up something wriggling. The flock crowds in. Worms have entered the economy.',
-        btn: 'Gross — continue',
+      this.showFirstMoment('worms', {
         onDismiss: function () { self.checkGoals(); }
       });
     }
@@ -1331,7 +1521,14 @@
       if (m.id === 'steroidWorm') s.unlocks.steroidWorm = true;
       if (m.id === 'flock7k') s.unlocks.boons = true;
       if (m.id === 'sandbox') s.milestones.sandbox = true;
-      this.showToast(m.label + ' — ' + m.desc);
+      var momentId = milestoneMomentId(m.id);
+      if (momentId) {
+        this.showFirstMoment(momentId, {
+          fallback: function () { self.showToast(m.label + ' — ' + m.desc); }
+        });
+      } else if (m.id !== 'worms') {
+        this.showToast(m.label + ' — ' + m.desc);
+      }
       this.upgradesDirty = true;
     }
     if (changed) this.recompute();
@@ -1339,8 +1536,18 @@
 
   ChickenClicker.prototype.checkMilestones = function () {
     var s = this.state;
+    var seen = ensureStoriesSeen(s);
+    var wormComboBefore = !!seen.wormCombo;
     this.checkFlockMilestones();
     applyFlockScaleUnlocks(s);
+    if (wormComboUnlocked(s) && !wormComboBefore && !seen.wormCombo) {
+      var self = this;
+      this.showFirstMoment('wormCombo', {
+        fallback: function () {
+          self.pushNotification({ type: 'system', title: 'Worm combo', body: 'Worm clicks can fill a combo bar during storms.', ms: 4500 });
+        }
+      });
+    }
     if (s.lifetimeHens >= 1000 && !s.milestones.henThousand) {
       s.milestones.henThousand = true;
       s.wormPerClick = Math.max(s.wormPerClick, 3);
@@ -1574,8 +1781,15 @@
     if (!released.length) return;
     // Feed follows the button the player actually tapped
     this.autoSelectFeedForBoost(type);
-    if (released.length > 1) this.showToast(released.join(' + ') + ' released together!');
-    else this.showToast(released[0] + ' released! (' + this.getBurstStack().active + ' active)');
+    var self = this;
+    var toastBurst = function () {
+      if (released.length > 1) self.showToast(released.join(' + ') + ' released together!');
+      else self.showToast(released[0] + ' released! (' + self.getBurstStack().active + ' active)');
+    };
+    this.showFirstMoment('firstBoost', {
+      fallback: toastBurst,
+      onDismiss: toastBurst
+    });
     this.requestHud();
     this.upgradesDirty = true;
     this.renderUpgrades(true);
@@ -2132,6 +2346,11 @@
     if (this.els.saveImport) {
       this.els.saveImport.addEventListener('click', function () { self.importSave(); });
     }
+    window.addEventListener('pagehide', function () { self.flushSave(); });
+    window.addEventListener('beforeunload', function () { self.flushSave(); });
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') self.flushSave();
+    });
   };
 
   ChickenClicker.prototype.setMode = function (mode) {
@@ -2413,6 +2632,52 @@
     this._narrativeOnDismiss = opts.onDismiss || null;
   };
 
+  ChickenClicker.prototype.showFirstMoment = function (id, opts) {
+    opts = opts || {};
+    var def = FIRST_MOMENTS[id];
+    if (!def) {
+      if (opts.fallback) opts.fallback();
+      if (opts.onDismiss) opts.onDismiss();
+      return false;
+    }
+    var seen = ensureStoriesSeen(this.state);
+    if (seen[id]) {
+      if (opts.fallback) opts.fallback();
+      if (opts.onDismiss) opts.onDismiss();
+      return false;
+    }
+    var self = this;
+    var present = function () {
+      seen[id] = true;
+      self.showNarrative({
+        eyebrow: opts.eyebrow || def.eyebrow,
+        title: opts.title || def.title,
+        body: opts.body || def.body,
+        btn: opts.btn || def.btn || 'Got it',
+        bird: opts.bird,
+        portraitLarge: opts.portraitLarge,
+        nameFor: opts.nameFor,
+        onDismiss: function () {
+          if (opts.onDismiss) opts.onDismiss();
+          self.flushNarrativeQueue();
+        }
+      });
+    };
+    if (this.els.narrative && !this.els.narrative.hidden) {
+      this.narrativeQueue.push({ id: id, opts: opts });
+      return true;
+    }
+    present();
+    return true;
+  };
+
+  ChickenClicker.prototype.flushNarrativeQueue = function () {
+    if (!this.narrativeQueue.length) return;
+    if (this.els.narrative && !this.els.narrative.hidden) return;
+    var next = this.narrativeQueue.shift();
+    this.showFirstMoment(next.id, next.opts);
+  };
+
   ChickenClicker.prototype.dismissNarrative = function () {
     if (this.namingBirdId && this.els.narrativeInput) {
       var name = this.els.narrativeInput.value.trim();
@@ -2431,6 +2696,7 @@
     this.requestHud();
     this.checkGoals();
     this.scheduleSave();
+    this.flushNarrativeQueue();
   };
 
   ChickenClicker.prototype.findBird = function (id) {
@@ -2490,11 +2756,17 @@
     var self = this;
     var henName = birdDisplayName(hen);
     var rooName = birdDisplayName(roo);
-    this.pushNotification({
-      type: 'social',
-      title: 'Love story',
-      body: henName + ' and ' + rooName + ' are dating! 🌸',
-      ms: 5500
+    var notifyDate = function () {
+      self.pushNotification({
+        type: 'social',
+        title: 'Love story',
+        body: henName + ' and ' + rooName + ' are dating! 🌸',
+        ms: 5500
+      });
+    };
+    this.showFirstMoment('firstLoveDate', {
+      fallback: notifyDate,
+      onDismiss: notifyDate
     });
 
     hen.paired = true;
@@ -2553,14 +2825,10 @@
 
     if (next.tier === 16 && !this.state.firstQuantumSeen) {
       this.state.firstQuantumSeen = true;
-      this.showNarrative({
-        eyebrow: 'Post-game',
-        title: 'Quantum Hen',
-        body: 'One bird in ten thousand collapses into legend. The box opens — or does it? Name your singular quantum champion.',
+      this.showFirstMoment('quantum', {
         bird: bird,
         portraitLarge: true,
         nameFor: bird.id,
-        btn: 'Witness',
         onDismiss: after
       });
       return;
@@ -3060,6 +3328,12 @@
     } else if (def.type === 'rooster') {
       this.state.flock.push({ id: this.state.nextId++, sex: 'rooster', fed: 0, evolution: null, name: null, paired: false, bornAt: Date.now() });
       this.state.lifetimeRoosters += 1;
+      if (this.state.lifetimeRoosters === 1) {
+        var self = this;
+        this.showFirstMoment('firstRooster', {
+          fallback: function () { self.pushNotification({ type: 'story', title: 'Rooster adopted', body: 'A rooster struts into the yard.', ms: 4000 }); }
+        });
+      }
     } else if (def.type === 'nest') {
       this.state.nestBonus += 1;
     } else if (def.type === 'incubator') {
@@ -3086,7 +3360,15 @@
     this.recompute();
     this.visualDirty = true;
     this.upgradesDirty = true;
-    this.showToast('Habitat: ' + def.name);
+    var self = this;
+    if (nextTier === 1) {
+      this.showFirstMoment('firstHabitat', {
+        fallback: function () { self.showToast('Habitat: ' + def.name); },
+        onDismiss: function () { self.showToast('Habitat: ' + def.name); }
+      });
+    } else {
+      this.showToast('Habitat: ' + def.name);
+    }
     this.afterPurchase('grains');
   };
 
@@ -3172,7 +3454,11 @@
     var maxHatch = flockN < 20 ? 1 : flockN < 70 ? 2 : 3;
     var changed = false;
     var hatched = 0;
+    var seen = ensureStoriesSeen(this.state);
+    var needHatchMoment = !seen.firstHatch;
+    var needRoosterMoment = !seen.firstRooster;
     var attempts = Math.min(this.state.eggs, Math.max(1, Math.ceil(this.state.eggs * rate * 0.035)));
+    var self = this;
     var i;
     for (i = 0; i < attempts; i++) {
       if (!this.state.eggs || hatched >= maxHatch) break;
@@ -3192,7 +3478,33 @@
       if (isRooster) this.state.lifetimeRoosters += 1;
       else this.state.lifetimeHens += 1;
       this.spawnHatchPop(isRooster);
-      this.pushNotification({ type: 'story', title: 'Hatch!', body: (isRooster ? 'A rooster' : 'A hen') + ' joins the flock.', ms: 4000 });
+      if (needHatchMoment) {
+        needHatchMoment = false;
+        var hatchedRoo = isRooster;
+        this.showFirstMoment('firstHatch', {
+          fallback: function () {
+            self.pushNotification({ type: 'story', title: 'Hatch!', body: (hatchedRoo ? 'A rooster' : 'A hen') + ' joins the flock.', ms: 4000 });
+          },
+          onDismiss: function () {
+            if (hatchedRoo && needRoosterMoment && self.state.lifetimeRoosters >= 1) {
+              self.showFirstMoment('firstRooster', {
+                fallback: function () {
+                  self.pushNotification({ type: 'story', title: 'Hatch!', body: 'A rooster joins the flock.', ms: 4000 });
+                }
+              });
+            }
+          }
+        });
+      } else if (isRooster && needRoosterMoment && this.state.lifetimeRoosters === 1) {
+        needRoosterMoment = false;
+        this.showFirstMoment('firstRooster', {
+          fallback: function () {
+            self.pushNotification({ type: 'story', title: 'Hatch!', body: 'A rooster joins the flock.', ms: 4000 });
+          }
+        });
+      } else {
+        this.pushNotification({ type: 'story', title: 'Hatch!', body: (isRooster ? 'A rooster' : 'A hen') + ' joins the flock.', ms: 4000 });
+      }
       changed = true;
     }
     if (changed) {
@@ -3298,6 +3610,12 @@
     }
     this._layoutTick += 1;
     if (this._layoutTick % 5 === 0) this.updateBirdLayouts();
+    this._autosaveTick += 1;
+    if (this._autosaveTick >= AUTOSAVE_LOOP_TICKS) {
+      this._autosaveTick = 0;
+      this.state.lastSeen = Date.now();
+      this.flushSave();
+    }
   };
 
   ChickenClicker.prototype.updateBirdLayouts = function () {
@@ -3308,8 +3626,7 @@
       if (this.state.flock[fi].bornAt && Date.now() - this.state.flock[fi].bornAt < 20000) growing = true;
     }
     if (!growing) return;
-    var yardParts = partitionFlockForYard(this.state.flock);
-    var adultFlock = yardParts.adults.length ? yardParts.adults : this.state.flock;
+    var adultFlock = yardAdultFlock(this.state.flock);
     var samples = sampleVisualFlock(adultFlock, MAX_VISUAL_BIRDS, this._visualSeed);
     var total = samples.length;
     var rows = total <= 3 ? 1 : total <= 9 ? 2 : 3;
@@ -3527,7 +3844,7 @@
     }
 
     var yardParts = partitionFlockForYard(this.state.flock);
-    var adultFlock = yardParts.adults.length ? yardParts.adults : this.state.flock;
+    var adultFlock = yardAdultFlock(this.state.flock);
     var broodFlock = yardParts.brood;
     var samples = sampleVisualFlock(adultFlock, MAX_VISUAL_BIRDS, this._visualSeed);
     var total = samples.length;
@@ -3953,6 +4270,7 @@
     if (!this.modal) return;
     this.modal.hidden = false;
     this.open = true;
+    this._autosaveTick = 0;
     document.body.style.overflow = 'hidden';
     this.applyOfflineCatchup();
     this.state.lastClickAt = Date.now();
