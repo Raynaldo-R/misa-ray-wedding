@@ -19,6 +19,7 @@
   var TICK_MS = 1200;
   var SAVE_DEBOUNCE_MS = 450;
   var AUTOSAVE_LOOP_TICKS = 25;
+  var DEV_TURBO_CLICK_MS = 1;
   var WORM_NUTRITION = 10;
   var MAX_PARTICLES = 24;
   var MAX_VISUAL_BIRDS = 10;
@@ -483,7 +484,7 @@
       hallOfFame: [],
       lastSeen: Date.now(),
       storiesSeen: {},
-      flock: [{ id: 1, sex: 'hen', fed: 0, evolution: null, name: null, paired: false, bornAt: Date.now() }]
+      flock: [{ id: 1, sex: 'hen', fed: 0, evolution: null, name: null, paired: false }]
     };
   }
 
@@ -793,6 +794,7 @@
       '.chicken-sidebar-footer{position:relative;flex-shrink:0;margin-top:auto;padding-top:8px}',
       '.chicken-brood-slot{position:absolute;transform:translate(-50%,-50%) scale(var(--bird-scale,0.45))}',
       '.chicken-feeder-bar[hidden]{display:none!important}',
+      '#chicken-click-area.is-dev-turbo{outline:2px dashed rgba(196,212,106,.65);outline-offset:-2px}',
       '.chicken-notify{pointer-events:auto;padding:8px 10px;border-radius:6px;background:rgba(250,249,246,.94);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:.68rem;line-height:1.35;animation:chicken-notify-in .25s ease}',
       '.chicken-notify--social{border-color:#e8a0b8}',
       '.chicken-notify--loss{border-color:#9a8a7a;opacity:.92}',
@@ -1438,6 +1440,8 @@
     this._comboCutscene = false;
     this._guestLbSubmitId = null;
     this._autosaveTick = 0;
+    this._devTurboHeld = false;
+    this._devTurboId = null;
     this._notifications = [];
     this._birdDetailTimer = null;
     this._feederAutoId = null;
@@ -1647,6 +1651,32 @@
       clientY: rect.top + rect.height / 2,
       auto: true
     });
+  };
+
+  ChickenClicker.prototype._devTurboModifiersHeld = function (e) {
+    return !!(e && e.shiftKey && (e.ctrlKey || e.metaKey));
+  };
+
+  ChickenClicker.prototype.startDevTurbo = function () {
+    if (this._devTurboId || !this.open || this.paused) return;
+    var self = this;
+    if (this.els.clickArea) this.els.clickArea.classList.add('is-dev-turbo');
+    this._devTurboId = setInterval(function () {
+      if (!self._devTurboHeld || !self.open || self.paused) {
+        self.stopDevTurbo();
+        return;
+      }
+      self.autoClick();
+    }, DEV_TURBO_CLICK_MS);
+  };
+
+  ChickenClicker.prototype.stopDevTurbo = function () {
+    this._devTurboHeld = false;
+    if (this._devTurboId) {
+      clearInterval(this._devTurboId);
+      this._devTurboId = null;
+    }
+    if (this.els.clickArea) this.els.clickArea.classList.remove('is-dev-turbo');
   };
 
   ChickenClicker.prototype.getBurstStack = function () {
@@ -2194,6 +2224,18 @@
     }
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && self.open) self.closeModal();
+      if (!self.open || self._devTurboHeld) return;
+      if (self._devTurboModifiersHeld(e) && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        self._devTurboHeld = true;
+        self.startDevTurbo();
+      }
+    });
+    document.addEventListener('keyup', function (e) {
+      if (!self._devTurboHeld) return;
+      if (e.key === 'd' || e.key === 'D' || e.key === 'Shift' || e.key === 'Control' || e.key === 'Meta') {
+        if (!self._devTurboModifiersHeld(e)) self.stopDevTurbo();
+      }
     });
     if (this.els.clickArea) {
       this.els.clickArea.setAttribute('role', 'button');
@@ -4337,6 +4379,7 @@
     this.stopAutoBurst();
     this.stopFeederAuto();
     this.dismissBirdDetail();
+    this.stopDevTurbo();
     if (this.els.guestLbPopover) this.els.guestLbPopover.hidden = true;
     if (this.els.guestLbToggle) this.els.guestLbToggle.setAttribute('aria-expanded', 'false');
     this.modal.hidden = true;
