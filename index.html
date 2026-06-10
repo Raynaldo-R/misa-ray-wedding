@@ -1760,6 +1760,19 @@ button[type=submit]:disabled {
 .chicken-floating-worm--boost .chicken-floating-worm-body {
   background: linear-gradient(145deg, #b8dff5, #5a9fd4);
 }
+.chicken-floating-worm--jackpot {
+  filter: drop-shadow(0 0 8px #ff44aa) drop-shadow(0 0 12px #ffd700);
+  z-index: 6;
+}
+.chicken-floating-worm--jackpot .chicken-floating-worm-body {
+  background: linear-gradient(145deg, #ff6ec7, #7b2fff);
+  box-shadow: 0 0 6px rgba(255, 100, 200, 0.9);
+}
+.chicken-floating-worm--jackpot .chicken-floating-worm-label {
+  background: linear-gradient(90deg, #ffe566, #ff6b35);
+  color: #1a0a00;
+  font-weight: 800;
+}
 .chicken-floating-worm-label {
   font-family: var(--sans);
   font-size: .5rem;
@@ -2000,7 +2013,7 @@ button[type=submit]:disabled {
     border: none;
     border-top: 1px solid var(--line);
     padding: 10px 0 0;
-    max-height: 200px;
+    max-height: min(42vh, 320px);
   }
 }
 .chicken-game-hud {
@@ -3704,7 +3717,7 @@ section:not(.hero) h2::after {
         </div>
         <div class="chicken-feed-toggle" role="group" aria-label="Feed type">
           <button type="button" class="chicken-feed-btn is-active" id="chicken-mode-grain" aria-pressed="true">Grain</button>
-          <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlocks at 3 grains/click or 5 hens" aria-pressed="false">Worms</button>
+          <button type="button" class="chicken-feed-btn" id="chicken-mode-worm" disabled title="Unlocks at 25 birds" aria-pressed="false">Worms</button>
           <button type="button" class="chicken-feed-btn" id="chicken-mode-giant" hidden title="Unlocked at 1000 birds">Giant</button>
           <button type="button" class="chicken-feed-btn" id="chicken-mode-mega" hidden title="Unlocked at 2000 birds">Mega</button>
           <button type="button" class="chicken-feed-btn" id="chicken-mode-steroid" hidden title="Unlocked at 5000 birds">Steroid</button>
@@ -3716,7 +3729,7 @@ section:not(.hero) h2::after {
               <span class="chicken-combo-label">COMBO</span>
               <div class="chicken-combo-track"><div class="chicken-combo-fill" id="chicken-combo-fill"></div></div>
               <button type="button" class="chicken-combo-special" id="chicken-combo-special" hidden>SPECIAL!</button>
-              <button type="button" class="chicken-combo-mega" id="chicken-combo-mega" hidden>MEGA ×30</button>
+              <button type="button" class="chicken-combo-mega" id="chicken-combo-mega" hidden>MEGA ×8</button>
             </div>
             <div class="chicken-boost-stack" id="chicken-boost-stack" hidden></div>
             <div class="chicken-boost-banner" id="chicken-boost-banner" hidden>

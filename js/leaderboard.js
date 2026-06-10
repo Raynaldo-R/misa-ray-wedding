@@ -161,10 +161,13 @@
     });
     return gasFetchJson(url)
       .then(function (data) {
-        if (!data || !data.ok) return { ok: false, error: data && data.error };
+        // Reject stale GAS deploys that return the generic doGet payload without entries.
+        if (!data || !data.ok || !Array.isArray(data.entries)) {
+          return { ok: false, error: (data && data.error) || 'sync_failed' };
+        }
         return {
           ok: true,
-          entries: normalizeRemoteEntries(data.entries || [])
+          entries: normalizeRemoteEntries(data.entries)
         };
       })
       .catch(function () {
@@ -276,7 +279,8 @@
     var flock = validateScore(flockSize);
     var g = validateScore(grains);
     if (flock === null || g === null) return null;
-    return flock * 1000000 + Math.floor(g);
+    // Grains live in the low 6 digits so flock size decodes cleanly on the leaderboard.
+    return flock * 1000000 + Math.min(999999, Math.floor(g));
   }
 
   function clearEl(el) {

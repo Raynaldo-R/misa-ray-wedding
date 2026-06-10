@@ -19,6 +19,11 @@ ONE-TIME SETUP (after pulling latest code)
 IMPORTANT: Redeploy after any google-apps-script.gs change. Score submits use
 GET ?action=leaderboard_submit (browser-safe); POST redirects break in browsers.
 
+If submits fail silently, the live deployment is stale. After redeploying, verify:
+  curl -sL 'YOUR_URL?action=leaderboard_submit&category=clicker&name=Test&score=5'
+should return {"ok":true,"apiVersion":2,"entries":[...]} — NOT the generic
+"Wedding API running" message.
+
 VERIFY
 ------
 Open in two different browsers (or incognito + normal):

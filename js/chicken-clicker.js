@@ -48,6 +48,7 @@
   var BURST_EGG_MULT = 1.5;
   var BURST_FLOAT_MULT = 1.25;
   var BOONS_UNLOCK_FLOCK = 7000;
+  var GUEST_LB_SUBMIT_MS = 45000;
   var HABITAT_MIN_FLOCK = [0, 500, 1100, 2200, 4500];
   var HEN_GIFS = [ASSET + 'hen-a.gif', ASSET + 'hen-b.gif'];
   var OFFLINE_CAP_MS = 8 * 3600000;
@@ -1066,6 +1067,7 @@
     this._awayAt = null;
     this._comboCleanStart = false;
     this._comboCutscene = false;
+    this._guestLbSubmitId = null;
     injectTrackCStyles();
     this._bind();
     syncGoalIndex(this.state, this.stats);
@@ -2264,6 +2266,7 @@
     }
     if (this.els.comboMega) {
       this.els.comboMega.hidden = !this.state.megaComboReady;
+      this.els.comboMega.textContent = 'MEGA ×' + MEGA_COMBO_MULT;
     }
   };
 
@@ -3375,18 +3378,14 @@
       message: 'Your name for the guest leaderboard',
       onNameSet: function () {
         self.renderGuestLeaderboard();
-        self.submitGuestScore(function (result) {
-          if (result && result.shared) {
-            self.showToast('Score saved to guest leaderboard!');
-          } else if (result && result.ok) {
-            self.showToast('Score saved on this device — retry if sheet sync fails.');
-          }
-        });
+        self.startGuestLbSync();
+        self.submitGuestScore(null, { toast: true });
       }
     });
   };
 
-  ChickenClicker.prototype.submitGuestScore = function (callback) {
+  ChickenClicker.prototype.submitGuestScore = function (callback, opts) {
+    opts = opts || {};
     var self = this;
     if (!window.GuestLeaderboard) {
       if (callback) callback({ ok: false, shared: false });
@@ -3403,9 +3402,32 @@
       return;
     }
     GuestLeaderboard.submitScore('clicker', name, score).then(function (result) {
-      if (result && result.ok) self.renderGuestLeaderboard();
+      if (result && result.ok && result.shared) self.renderGuestLeaderboard();
+      if (opts.toast) {
+        if (result && result.shared) self.showToast('Score synced to guest leaderboard!');
+        else if (result && result.ok) self.showToast('Score saved on this device — redeploy Apps Script to share live.');
+      }
       if (callback) callback(result || { ok: false, shared: false });
     });
+  };
+
+  ChickenClicker.prototype.startGuestLbSync = function () {
+    var self = this;
+    this.stopGuestLbSync();
+    if (!window.GuestLeaderboard || !GuestLeaderboard.getStoredName('clicker')) return;
+    setTimeout(function () {
+      if (self.open) self.submitGuestScore();
+    }, 2500);
+    this._guestLbSubmitId = setInterval(function () {
+      if (self.open) self.submitGuestScore();
+    }, GUEST_LB_SUBMIT_MS);
+  };
+
+  ChickenClicker.prototype.stopGuestLbSync = function () {
+    if (this._guestLbSubmitId) {
+      clearInterval(this._guestLbSubmitId);
+      this._guestLbSubmitId = null;
+    }
   };
 
   ChickenClicker.prototype.openModal = function () {
@@ -3423,6 +3445,7 @@
     this.render();
     this.setupGuestNameField();
     this.renderGuestLeaderboard();
+    this.startGuestLbSync();
     this.startLoops();
     this.scheduleFloatingWorm();
     // this.scheduleImposter(); // DISABLED: imposter QTE is too hard — rework pending. Re-enable by uncommenting.
@@ -3456,11 +3479,15 @@
         return;
       }
     }
-    this.submitGuestScore(finishClose);
+    this.submitGuestScore(function (result) {
+      if (result && result.shared) self.showToast('Coop score saved — see you on the leaderboard!');
+      finishClose();
+    });
   };
 
   ChickenClicker.prototype._finishCloseModal = function () {
     if (!this.modal) return;
+    this.stopGuestLbSync();
     if (this.els.guestLb && window.GuestLeaderboard) GuestLeaderboard.stopPolling(this.els.guestLb);
     var now = Date.now();
     if (this._awayAt) {

@@ -13,6 +13,7 @@
  *    - LEADERBOARD_CONFIG.apiUrl (same URL)
  */
 
+var LB_API_VERSION = 2;
 var LB_SHEET_NAME = 'GuestLeaderboard';
 var LB_TOP_N = 10;
 var LB_STORE_N = 80;
@@ -167,7 +168,7 @@ function submitLeaderboard(category, name, score) {
   var stored = readLeaderboard(category, LB_STORE_N);
   rewriteCategoryRows(category, stored);
 
-  return { ok: true, entries: stored.slice(0, LB_TOP_N) };
+  return { ok: true, apiVersion: LB_API_VERSION, entries: stored.slice(0, LB_TOP_N) };
 }
 
 function doGet(e) {
@@ -178,7 +179,7 @@ function doGet(e) {
     if (!LB_CATEGORIES[category]) {
       return jsonOut({ ok: false, error: 'invalid_category' });
     }
-    return jsonOut({ ok: true, entries: readLeaderboard(category), shared: true });
+    return jsonOut({ ok: true, apiVersion: LB_API_VERSION, entries: readLeaderboard(category), shared: true });
   }
   if (p.action === 'leaderboard_submit') {
     return jsonOut(submitLeaderboard(p.category, p.name, p.score));
