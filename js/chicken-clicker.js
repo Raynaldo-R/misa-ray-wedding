@@ -29,12 +29,14 @@
   var COMBO_PERFECT_CHAINS = 3;
   var MEGA_COMBO_MULT = 30;
   var MEGA_COMBO_MS = 20000;
-  var SPECIAL_WORM_COUNT = 300;
+  var SPECIAL_WORM_COUNT = 40;
   var BURST_GRAIN_MULT = 30;
   var BURST_WORM_MULT = 10;
   var BURST_GIANT_MULT = 2;
   var BURST_EGG_MULT = 1.5;
   var BURST_FLOAT_MULT = 1.25;
+  var BOONS_UNLOCK_FLOCK = 7000;
+  var HABITAT_MIN_FLOCK = [0, 500, 1100, 2200, 4500];
   var HEN_GIFS = [ASSET + 'hen-a.gif', ASSET + 'hen-b.gif'];
   var OFFLINE_CAP_MS = 8 * 3600000;
   var FED_TRACK_CAP = 200;
@@ -114,7 +116,7 @@
     { flock: 4000, id: 'flock4k', label: 'Four thousand feathers', desc: 'Every nest box is spoken for.' },
     { flock: 5000, id: 'steroidWorm', label: 'Steroid Worm', desc: 'Glowing nuclear-green mega worms.' },
     { flock: 6000, id: 'flock6k', label: 'Six thousand birds', desc: 'Port Gamble has never seen a coop like this.' },
-    { flock: 7000, id: 'flock7k', label: 'Seven thousand birds', desc: 'The roosters have unionized.' },
+    { flock: 7000, id: 'flock7k', label: 'Seven thousand birds', desc: 'Combo specials & boons unlocked!' },
     { flock: 8000, id: 'flock8k', label: 'Eight thousand birds', desc: 'Grain trucks arrive daily.' },
     { flock: 9000, id: 'flock9k', label: 'Nine thousand birds', desc: 'One more milestone before legend.' },
     { flock: 10000, id: 'sandbox', label: 'Sandbox mode', desc: 'The flock has reached legendary scale.' }
@@ -122,10 +124,10 @@
 
   var HABITAT_TIERS = [
     { tier: 0, name: 'Bare yard', cost: 0 },
-    { tier: 1, name: 'Small coop', cost: 500, eggLay: 0.05 },
-    { tier: 2, name: 'Large coop', cost: 2000, eggLay: 0.10, hatch: 0.02 },
-    { tier: 3, name: 'Fenced run', cost: 8000, eggLay: 0.15, hatch: 0.05 },
-    { tier: 4, name: 'Open pasture', cost: 30000, eggLay: 0.25, hatch: 0.10, nutritionTrickle: 0.2 }
+    { tier: 1, name: 'Small coop', cost: 2500, eggLay: 0.05 },
+    { tier: 2, name: 'Large coop', cost: 12000, eggLay: 0.10, hatch: 0.02 },
+    { tier: 3, name: 'Fenced run', cost: 55000, eggLay: 0.15, hatch: 0.05 },
+    { tier: 4, name: 'Open pasture', cost: 200000, eggLay: 0.25, hatch: 0.10, nutritionTrickle: 0.2 }
   ];
 
   var BROODING_UPGRADES = [
@@ -247,7 +249,7 @@
       habitat: 0,
       broodingBought: {},
       pairedNestBonus: 0,
-      unlocks: { giantWorm: false, megaWorm: false, steroidWorm: false, loveStory: false, loveStorySeen: false },
+      unlocks: { giantWorm: false, megaWorm: false, steroidWorm: false, loveStory: false, loveStorySeen: false, boons: false },
       burstGiantUntil: 0,
       burstGiantCd: 0,
       burstEggUntil: 0,
@@ -530,6 +532,15 @@
     { label: 'Complete the Nuclear pair', check: hasNuclearPair, reward: { worms: 1000, grains: 5000 } }
   ];
 
+  function comboBoonsUnlocked(state) {
+    return state.flock.length >= BOONS_UNLOCK_FLOCK || !!(state.unlocks && state.unlocks.boons);
+  }
+
+  function habitatTierAvailable(state, tier) {
+    if (tier < 1 || tier >= HABITAT_TIERS.length) return false;
+    return state.flock.length >= HABITAT_MIN_FLOCK[tier];
+  }
+
   function applyFlockScaleUnlocks(state) {
     var n = state.flock.length;
     if (!state.flockMilestoneFlags) state.flockMilestoneFlags = {};
@@ -548,6 +559,7 @@
       state.unlocks.steroidWorm = true;
       state.flockMilestoneFlags.steroidWorm = true;
     }
+    if (n >= BOONS_UNLOCK_FLOCK) state.unlocks.boons = true;
     if (n >= 10000) {
       state.milestones.sandbox = true;
       state.flockMilestoneFlags.sandbox = true;
@@ -608,6 +620,7 @@
     if (s.autoBurstUntil == null) s.autoBurstUntil = 0;
     if (!s.unlocks.megaWorm) s.unlocks.megaWorm = false;
     if (!s.unlocks.steroidWorm) s.unlocks.steroidWorm = false;
+    if (s.unlocks.boons == null) s.unlocks.boons = false;
     if (s.milestones.giantWormStorm == null) s.milestones.giantWormStorm = false;
     s.flock.forEach(function (b) {
       migrateBirdEvolution(b);
@@ -631,6 +644,7 @@
         }
         if (m.id === 'megaWorm') s.unlocks.megaWorm = true;
         if (m.id === 'steroidWorm') s.unlocks.steroidWorm = true;
+        if (m.id === 'flock7k') s.unlocks.boons = true;
         if (m.id === 'sandbox') s.milestones.sandbox = true;
       }
     });
@@ -1107,6 +1121,7 @@
       }
       if (m.id === 'megaWorm') s.unlocks.megaWorm = true;
       if (m.id === 'steroidWorm') s.unlocks.steroidWorm = true;
+      if (m.id === 'flock7k') s.unlocks.boons = true;
       if (m.id === 'sandbox') s.milestones.sandbox = true;
       this.showToast(m.label + ' — ' + m.desc);
       this.upgradesDirty = true;
@@ -1180,7 +1195,12 @@
     this._idleBurstArmed = true;
   };
 
+  ChickenClicker.prototype.comboBoonsUnlocked = function () {
+    return comboBoonsUnlocked(this.state);
+  };
+
   ChickenClicker.prototype.tickIdleAutoFeeder = function () {
+    if (!this.comboBoonsUnlocked()) return;
     if (!this.open || this.paused || this._imposter) return;
     var now = Date.now();
     if (!this.state.lastClickAt) this.state.lastClickAt = now;
@@ -1206,13 +1226,14 @@
   ChickenClicker.prototype.getBurstStack = function () {
     var now = Date.now();
     var s = this.state;
+    var boons = comboBoonsUnlocked(s);
     var grain = now < s.burstGrainUntil ? BURST_GRAIN_MULT : 1;
     var worm = now < s.burstWormUntil ? BURST_WORM_MULT : 1;
     var giant = now < s.burstGiantUntil ? BURST_GIANT_MULT : 1;
-    var egg = now < s.burstEggUntil ? BURST_EGG_MULT : 1;
-    var fl = now < s.burstFloatUntil ? BURST_FLOAT_MULT : 1;
-    var mega = now < s.megaComboUntil ? MEGA_COMBO_MULT : 1;
-    var auto = now < s.autoBurstUntil ? 1.12 : 1;
+    var egg = boons && now < s.burstEggUntil ? BURST_EGG_MULT : 1;
+    var fl = boons && now < s.burstFloatUntil ? BURST_FLOAT_MULT : 1;
+    var mega = boons && now < s.megaComboUntil ? MEGA_COMBO_MULT : 1;
+    var auto = boons && now < s.autoBurstUntil ? 1.08 : 1;
     var active = 0;
     if (grain > 1) active++;
     if (worm > 1) active++;
@@ -1221,7 +1242,8 @@
     if (fl > 1) active++;
     if (mega > 1) active++;
     if (auto > 1) active++;
-    var synergy = active > 1 ? 1 + (active - 1) * 0.14 : 1;
+    var synergy = active > 1 ? 1 + (active - 1) * 0.06 : 1;
+    var stormCore = grain * worm * giant;
     return {
       grain: grain,
       worm: worm,
@@ -1232,21 +1254,44 @@
       auto: auto,
       synergy: synergy,
       active: active,
-      total: grain * worm * giant * egg * fl * mega * auto * synergy
+      total: Math.min(stormCore * synergy * egg * fl * mega * auto, stormCore * synergy * 4)
     };
   };
 
   ChickenClicker.prototype.stackMultForFeed = function (feedType) {
-    var st = this.getBurstStack();
-    var m = st.synergy * st.mega * st.float * st.egg * st.auto;
+    var now = Date.now();
+    var s = this.state;
+    var boons = comboBoonsUnlocked(s);
+    var grain = now < s.burstGrainUntil ? BURST_GRAIN_MULT : 1;
+    var worm = now < s.burstWormUntil ? BURST_WORM_MULT : 1;
+    var giant = now < s.burstGiantUntil ? BURST_GIANT_MULT : 1;
+    var m = 1;
     if (feedType === 'grain') {
-      m *= st.grain;
-      if (st.worm > 1) m *= 1 + (st.worm - 1) * 0.12;
-      if (st.giant > 1) m *= 1 + (st.giant - 1) * 0.25;
+      if (grain > 1) m *= grain;
+      if (worm > 1) m *= 1 + (worm - 1) * 0.08;
+      if (giant > 1) m *= 1 + (giant - 1) * 0.15;
     } else {
-      m *= st.worm * st.giant;
-      if (st.grain > 1) m *= 1 + (st.grain - 1) * 0.1;
+      if (worm > 1) m *= worm;
+      if (giant > 1) m *= giant;
+      if (grain > 1) m *= 1 + (grain - 1) * 0.06;
     }
+    if (boons) {
+      if (now < s.burstEggUntil) m *= 1 + (BURST_EGG_MULT - 1) * 0.5;
+      if (now < s.burstFloatUntil) m *= BURST_FLOAT_MULT;
+      if (now < s.megaComboUntil) m *= MEGA_COMBO_MULT;
+      if (now < s.autoBurstUntil) m *= 1.08;
+    }
+    var active = 0;
+    if (grain > 1) active++;
+    if (worm > 1) active++;
+    if (giant > 1) active++;
+    if (boons) {
+      if (now < s.burstEggUntil) active++;
+      if (now < s.burstFloatUntil) active++;
+      if (now < s.megaComboUntil) active++;
+      if (now < s.autoBurstUntil) active++;
+    }
+    if (active > 1) m *= 1 + (active - 1) * 0.06;
     return m;
   };
 
@@ -1291,7 +1336,7 @@
     var st = this.getBurstStack();
     var now = Date.now();
     var s = this.state;
-    var auto = now < s.autoBurstUntil;
+    var auto = this.comboBoonsUnlocked() && now < s.autoBurstUntil;
     if (st.active < 1 && !auto) {
       if (this.els.boostBanner) this.els.boostBanner.hidden = true;
       if (this.els.boostStack) this.els.boostStack.hidden = true;
@@ -1311,7 +1356,8 @@
       this.els.boostBanner.hidden = false;
       this.els.boostBanner.className = 'chicken-boost-banner chicken-boost-banner--grain';
       if (this.els.boostBannerText) {
-        this.els.boostBannerText.textContent = st.active > 1 ? 'STACK ×' + Math.round(st.total) : parts[0] || 'BOOST';
+        var feedKey = this.state.feedMode === 'worm' || this.state.feedMode === 'giant' || this.state.feedMode === 'mega' || this.state.feedMode === 'steroid' ? 'worm' : 'grain';
+        this.els.boostBannerText.textContent = st.active > 1 ? 'STACK ×' + Math.round(this.stackMultForFeed(feedKey)) : parts[0] || 'BOOST';
       }
       if (this.els.boostBannerTime) this.els.boostBannerTime.textContent = String(secs);
     }
@@ -2121,6 +2167,10 @@
 
   ChickenClicker.prototype.renderComboBar = function () {
     if (!this.els.comboHud) return;
+    if (!this.comboBoonsUnlocked()) {
+      this.els.comboHud.hidden = true;
+      return;
+    }
     var m = this.state.comboMeter || 0;
     var show = m > 0 || this.state.comboSpecialReady || this.state.megaComboReady;
     this.els.comboHud.hidden = !show;
@@ -2137,6 +2187,7 @@
   };
 
   ChickenClicker.prototype.tickComboDecay = function () {
+    if (!this.comboBoonsUnlocked()) return;
     if (!this.open || this.paused) return;
     var s = this.state;
     if (s.comboMeter <= 0) return;
@@ -2147,6 +2198,7 @@
   };
 
   ChickenClicker.prototype.addComboFromClick = function (nutrition) {
+    if (!this.comboBoonsUnlocked()) return;
     if (nutrition < COMBO_BIG_CLICK) return;
     var s = this.state;
     var before = s.comboMeter || 0;
@@ -2171,6 +2223,7 @@
   };
 
   ChickenClicker.prototype.activateMegaCombo = function () {
+    if (!this.comboBoonsUnlocked()) return;
     if (!this.state.megaComboReady) return;
     this.state.megaComboReady = false;
     this.state.megaComboUntil = Date.now() + MEGA_COMBO_MS;
@@ -2182,6 +2235,7 @@
 
   ChickenClicker.prototype.triggerComboSpecial = function () {
     var self = this;
+    if (!this.comboBoonsUnlocked()) return;
     if (!this.state.comboSpecialReady || this._comboCutscene) return;
     this.state.comboSpecialReady = false;
     this.state.comboMeter = 0;
@@ -2482,6 +2536,7 @@
     if (!flockMilestoneMet(s, 'habitat')) return;
     var nextTier = (s.habitat || 0) + 1;
     if (nextTier >= HABITAT_TIERS.length) return;
+    if (!habitatTierAvailable(s, nextTier)) return;
     var def = HABITAT_TIERS[nextTier];
     if (s.grains < def.cost) return;
     s.grains -= def.cost;
@@ -2796,13 +2851,13 @@
     }
     var boostTxt = '';
     var now = Date.now();
-    if (stack.active > 1) boostTxt = 'Stack ×' + Math.round(stack.total) + '!';
-    else if (now < this.state.megaComboUntil) boostTxt = 'MEGA 30×!';
+    if (stack.active > 1) boostTxt = 'Stack ×' + Math.round(this.stackMultForFeed(val.type)) + '!';
+    else if (this.comboBoonsUnlocked() && now < this.state.megaComboUntil) boostTxt = 'MEGA 30×!';
     else if (now < this.state.burstGrainUntil) boostTxt = 'Grain storm!';
     else if (now < this.state.burstWormUntil) boostTxt = 'Worm rain!';
     else if (now < this.state.burstGiantUntil) boostTxt = 'Giant worm storm!';
     else if (now < this.state.burstEggUntil) boostTxt = 'Egg boost!';
-    else if (now < this.state.autoBurstUntil) boostTxt = 'Auto feeder!';
+    else if (this.comboBoonsUnlocked() && now < this.state.autoBurstUntil) boostTxt = 'Auto feeder!';
     if (cache.boost !== boostTxt && this.els.hudBoost) {
       this.els.hudBoost.textContent = boostTxt || '—';
       cache.boost = boostTxt;
@@ -3077,7 +3132,10 @@
         if (habBonus.hatch) habParts.push('+' + Math.round(habBonus.hatch * 100) + '% hatch');
         if (habBonus.nutritionTrickle) habParts.push('+' + habBonus.nutritionTrickle + ' nutrition/tick');
         if (habParts.length) habDesc += ' · ' + habParts.join(', ');
-        coop += upgradeRow('Upgrade habitat', habDesc, nextHab.cost, wormCostForGrain(nextHab.cost), s.grains >= nextHab.cost, 'habitat', false);
+        var minFlock = HABITAT_MIN_FLOCK[nextHab.tier];
+        if (minFlock > 0 && s.flock.length < minFlock) habDesc += ' · need ' + formatNum(minFlock) + ' birds';
+        var canHab = s.grains >= nextHab.cost && habitatTierAvailable(s, nextHab.tier);
+        coop += upgradeRow('Upgrade habitat', habDesc, nextHab.cost, wormCostForGrain(nextHab.cost), canHab, 'habitat', false);
       }
     }
     if (coop) html += '<h4 class="chicken-shop-head">Coop</h4>' + coop;
