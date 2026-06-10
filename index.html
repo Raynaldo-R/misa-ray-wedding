@@ -123,8 +123,8 @@ nav a:focus-visible {
   outline-offset: 3px;
   border-radius: 2px;
 }
-.header-rsvp-mobile {
-  display: none;
+a.header-rsvp-mobile {
+  display: none !important;
 }
 @media (max-width: 768px) {
   :root { --header-h: 72px; }
@@ -145,15 +145,15 @@ nav a:focus-visible {
     transform-origin: center bottom;
     transition: font-size .25s ease, width .25s ease;
   }
-  header.is-compact {
+  #site-header.is-compact {
     box-shadow: 0 1px 0 var(--line);
   }
-  header.is-compact .nav-inner {
+  #site-header.is-compact .nav-inner {
     justify-content: space-between;
     align-items: center;
     padding: 8px 14px 10px;
   }
-  header.is-compact .brand {
+  #site-header.is-compact .brand {
     font-size: clamp(1.35rem, 6.5vw, 1.85rem);
     width: auto;
     margin: 0;
@@ -161,8 +161,8 @@ nav a:focus-visible {
     line-height: 1;
     white-space: nowrap;
   }
-  header.is-compact .header-rsvp-mobile {
-    display: inline-block;
+  #site-header.is-compact a.header-rsvp-mobile {
+    display: inline-block !important;
     flex-shrink: 0;
     font-size: .68rem;
     padding: 10px 16px;
@@ -2363,77 +2363,103 @@ button[type=submit]:disabled {
   height: 100%;
   border-radius: 3px;
   outline: none;
+  cursor: pointer;
 }
-.wave-game {
+.flappy-game {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #1a6b8a;
+  background: linear-gradient(180deg, #8fd4ea 0%, #5eb8d8 42%, #3a9ec4 100%);
 }
-.wave-game__sky {
+.flappy-game__bg {
   position: absolute;
-  inset: 0 0 42% 0;
-  background: #c8e6f0;
-  background-size: 100% 120px;
+  inset: -12px;
+  background: linear-gradient(180deg, #b8e8f4 0%, #6ec4e0 38%, #48a8cc 72%, #2e8eb8 100%);
+  filter: blur(5px);
+  z-index: 0;
+  pointer-events: none;
 }
-.wave-game__water {
+.flappy-game__cloud {
   position: absolute;
-  inset: 58% 0 0 0;
-  background: #1a6b8a;
-  background-size: 100% 80px;
+  background: rgba(255, 255, 255, .82);
+  border-radius: 999px;
+  filter: blur(1px);
 }
-.wave-game__rings {
+.flappy-game__cloud--1 { width: 88px; height: 34px; top: 12%; left: 8%; }
+.flappy-game__cloud--2 { width: 120px; height: 42px; top: 22%; right: 10%; opacity: .9; }
+.flappy-game__cloud--3 { width: 72px; height: 28px; top: 8%; left: 46%; opacity: .75; }
+.flappy-game__palms {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
 }
-.wave-ring {
+.flappy-palm {
   position: absolute;
-  left: 0;
-  right: 0;
-  height: 14px;
+  top: 0;
+  bottom: 0;
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-.wave-ring__post {
-  height: 100%;
-  background: #ffe566;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+.flappy-palm__top,
+.flappy-palm__bottom {
+  width: 100%;
+  background: linear-gradient(90deg, #5a3d22 0%, #7a5230 35%, #4a3220 100%);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12);
+  position: relative;
 }
-.wave-ring__gap { flex-shrink: 0; }
-.wave-ring--passed .wave-ring__post { opacity: .35; }
-.wave-game__player {
+.flappy-palm__top::after,
+.flappy-palm__bottom::before {
+  content: "";
   position: absolute;
-  transform: translate(-50%, -50%);
-  z-index: 4;
-  pointer-events: none;
-}
-.wave-game__sprite {
-  width: 48px;
+  left: 50%;
+  width: 76px;
   height: 28px;
-  border-radius: 3px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+  margin-left: -38px;
+  background: radial-gradient(ellipse at center, #3d9a48 0%, #2d7a38 70%);
+  border-radius: 50% 50% 40% 40%;
 }
-.wave-game__sprite--straight { background: #4a9eff; }
-.wave-game__sprite--lean-left {
-  background: #ff9f4a;
-  transform: skewX(-14deg);
-}
-.wave-game__sprite--lean-right {
-  background: #ff9f4a;
-  transform: skewX(14deg);
-}
-.wave-game__hud {
+.flappy-palm__top::after { bottom: -10px; }
+.flappy-palm__bottom::before { top: -10px; }
+.flappy-game__player {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .2));
+}
+.flappy-game__chicken {
+  display: block;
+  width: 46px;
+  height: auto;
+  image-rendering: pixelated;
+}
+.flappy-game__hud {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 5;
-  padding: 6px 10px;
-  font: 600 11px/1.3 Tahoma, sans-serif;
+  padding: 6px 14px;
+  font: 700 18px/1 Tahoma, sans-serif;
   color: #fff;
-  background: rgba(8, 28, 48, .55);
-  border: 1px solid rgba(255, 255, 255, .2);
-  border-radius: 3px;
+  text-shadow: 0 1px 3px rgba(0, 40, 60, .45);
+}
+.flappy-game__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  font: 600 13px/1.45 Tahoma, sans-serif;
+  color: #fff;
+  background: rgba(8, 40, 58, .45);
 }
 .fund h3 {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
@@ -2936,7 +2962,6 @@ section:not(.hero) h2::after {
 <header id="site-header">
   <div class="nav-inner">
     <a href="#top" class="brand">Misa <span class="amp">&amp;</span> Ray</a>
-    <a href="#rsvp" class="btn btn-primary header-rsvp-mobile">RSVP</a>
     <nav>
       <a href="#couple">The Couple</a>
       <a href="#details">Details</a>
@@ -2946,6 +2971,7 @@ section:not(.hero) h2::after {
       <a href="#funds">Funds</a>
       <a href="share-photos.html" class="nav-photos">Share Photos ↗</a>
     </nav>
+    <a href="#rsvp" class="btn btn-primary header-rsvp-mobile">RSVP</a>
   </div>
 </header>
 
@@ -3253,7 +3279,7 @@ section:not(.hero) h2::after {
       <div class="funds-grid">
         <!-- CONFIG: fund poll + pay links — see FUND_CONFIG in script -->
         <div class="fund">
-          <button type="button" class="fund-wave-hitbox" id="wave-fund-hitbox" aria-label="Expand oasis ring run mini game">
+          <button type="button" class="fund-wave-hitbox" id="wave-fund-hitbox" aria-label="Expand flappy chicken mini game">
             <div class="fund-gif" aria-hidden="true">
               <img src="https://blob.gifcities.org/gifcities/AYCMRLJPZIJOZEKFE7G7DG7VE5M2HRYT.gif" alt="" width="120" height="80">
             </div>
@@ -3473,14 +3499,14 @@ section:not(.hero) h2::after {
   <div class="wave-modal-backdrop" data-wave-close></div>
   <div class="wave-modal-panel" id="wave-modal-panel">
     <button type="button" class="wave-modal-close" data-wave-close aria-label="Close">&times;</button>
-    <div class="wave-modal-title" id="wave-modal-title">Honeymoon Vacation — Oasis Ring Run</div>
+    <div class="wave-modal-title" id="wave-modal-title">Honeymoon Vacation — Flappy Chicken</div>
     <div class="wave-intro" id="wave-intro">
-      <p class="wave-intro-lead">Wave Race through the honeymoon oasis. Pass every ring before you dock.</p>
-      <p class="wave-intro-keys">↑ accelerate &nbsp;·&nbsp; ← → steer</p>
-      <button type="button" class="wave-start-btn" id="wave-start-btn">Start engine</button>
+      <p class="wave-intro-lead">Flap through the oasis. Dodge the palm trees on your way to paradise.</p>
+      <p class="wave-intro-keys">Space to flap &nbsp;·&nbsp; click to flap</p>
+      <button type="button" class="wave-start-btn" id="wave-start-btn">Take flight</button>
     </div>
     <div class="wave-play" id="wave-play" hidden>
-      <div id="wave-game-root" class="wave-game-root" aria-label="Oasis ring run — use arrow keys or WASD"></div>
+      <div id="wave-game-root" class="wave-game-root" aria-label="Flappy chicken — press space to flap"></div>
     </div>
   </div>
 </div>
