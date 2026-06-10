@@ -1981,6 +1981,7 @@ button[type=submit]:disabled {
 }
 .chicken-narrative-portrait .chicken-portrait { width: 56px; }
 .chicken-narrative-portrait .chicken-portrait--lg { width: 120px; height: 120px; }
+.chicken-narrative-portrait .chicken-portrait--xl { width: 200px; height: 200px; }
 .chicken-narrative-portrait .chicken-quantum-box--lg { margin: 0 auto; }
 .chicken-narrative-portrait[hidden] { display: none; }
 .chicken-widget-giant-worm {
@@ -3684,6 +3685,7 @@ section:not(.hero) h2::after {
   <div class="chicken-modal-backdrop" data-chicken-close></div>
   <div class="chicken-modal-panel chicken-modal-panel--game" id="chicken-game-panel">
     <button type="button" class="chicken-modal-close" data-chicken-close aria-label="Close">&times;</button>
+    <div class="chicken-notify-stack" id="chicken-notify-stack" aria-live="polite"></div>
     <div class="chicken-modal-title" id="chicken-modal-title">Chicken Fund Clicker</div>
     <div class="chicken-game-layout">
       <aside class="chicken-game-sidebar chicken-game-sidebar--left" aria-label="Hall of Fame">
@@ -3726,10 +3728,23 @@ section:not(.hero) h2::after {
           <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
             <div class="chicken-toast" id="chicken-toast" hidden></div>
             <div class="chicken-combo-hud" id="chicken-combo-hud" hidden>
-              <span class="chicken-combo-label">COMBO</span>
+              <span class="chicken-combo-label">GRAIN</span>
               <div class="chicken-combo-track"><div class="chicken-combo-fill" id="chicken-combo-fill"></div></div>
               <button type="button" class="chicken-combo-special" id="chicken-combo-special" hidden>SPECIAL!</button>
               <button type="button" class="chicken-combo-mega" id="chicken-combo-mega" hidden>MEGA ×8</button>
+            </div>
+            <div class="chicken-worm-combo-hud" id="chicken-worm-combo-hud" hidden>
+              <span class="chicken-combo-label">WORM</span>
+              <div class="chicken-worm-combo-track"><div class="chicken-worm-combo-fill" id="chicken-worm-combo-fill"></div></div>
+              <button type="button" class="chicken-worm-combo-special" id="chicken-worm-combo-special" hidden>EGGS!</button>
+            </div>
+            <div class="chicken-bird-detail" id="chicken-bird-detail" hidden>
+              <div class="chicken-bird-detail-card">
+                <div id="chicken-bird-detail-portrait"></div>
+                <h4 id="chicken-bird-detail-title"></h4>
+                <p id="chicken-bird-detail-body"></p>
+                <button type="button" class="chicken-narrative-btn" id="chicken-bird-detail-close">Close</button>
+              </div>
             </div>
             <div class="chicken-boost-stack" id="chicken-boost-stack" hidden></div>
             <div class="chicken-boost-banner" id="chicken-boost-banner" hidden>
@@ -3744,6 +3759,11 @@ section:not(.hero) h2::after {
               <div class="chicken-flock-layer" id="chicken-flock-layer"></div>
               <div class="chicken-click-burst" id="chicken-click-burst"></div>
             </div>
+          </div>
+          <div class="chicken-feeder-bar" id="chicken-feeder-bar" hidden>
+            <span>Feeder</span>
+            <div class="chicken-feeder-track"><div class="chicken-feeder-fill" id="chicken-feeder-fill"></div></div>
+            <button type="button" class="chicken-feeder-btn" id="chicken-feeder-btn">Charging</button>
           </div>
           <p class="chicken-click-label" id="chicken-click-label">Scatter feed! (+1 per click)</p>
         </div>
