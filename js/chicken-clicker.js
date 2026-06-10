@@ -96,7 +96,16 @@
     { flock: 700, id: 'forage', label: 'Chicken forage', desc: 'Birds forage while you are away.' },
     { flock: 800, id: 'quantum', label: 'Quantum evolution', desc: 'Tier 16 evolutions unlocked.' },
     { flock: 900, id: 'almostThere', label: 'Almost There', desc: 'The flock is nearly legendary.' },
-    { flock: 1000, id: 'ending', label: 'The flock ascends', desc: 'Your coop story reaches its peak.', ending: true }
+    { flock: 1000, id: 'giantWorm', label: 'Giant Worm mode', desc: 'Feed giant mealworms — storm unlocked!' },
+    { flock: 2000, id: 'megaWorm', label: 'Mega Worm', desc: '100 worms per click — bigger mealworms.' },
+    { flock: 3000, id: 'flock3k', label: 'Three thousand strong', desc: 'The yard barely contains them.' },
+    { flock: 4000, id: 'flock4k', label: 'Four thousand feathers', desc: 'Every nest box is spoken for.' },
+    { flock: 5000, id: 'steroidWorm', label: 'Steroid Worm', desc: 'Glowing nuclear-green mega worms.' },
+    { flock: 6000, id: 'flock6k', label: 'Six thousand birds', desc: 'Port Gamble has never seen a coop like this.' },
+    { flock: 7000, id: 'flock7k', label: 'Seven thousand birds', desc: 'The roosters have unionized.' },
+    { flock: 8000, id: 'flock8k', label: 'Eight thousand birds', desc: 'Grain trucks arrive daily.' },
+    { flock: 9000, id: 'flock9k', label: 'Nine thousand birds', desc: 'One more milestone before legend.' },
+    { flock: 10000, id: 'sandbox', label: 'Sandbox mode', desc: 'The flock has reached legendary scale.' }
   ];
 
   var HABITAT_TIERS = [
@@ -216,7 +225,7 @@
       burstWormUntil: 0,
       burstGrainCd: 0,
       burstWormCd: 0,
-      milestones: { grainStorm: false, wormStorm: false, henThousand: false, giantWormStorm: false },
+      milestones: { grainStorm: false, wormStorm: false, henThousand: false, giantWormStorm: false, sandbox: false },
       forageUnlocked: false,
       autoFeederBought: {},
       autoFeederLevel: 0,
@@ -231,7 +240,6 @@
       burstGiantCd: 0,
       flavorCd: 0,
       goalIndex: 0,
-      prestigeUnlocked: false,
       feathers: 0,
       farmNumber: 1,
       hallOfFame: [],
@@ -483,8 +491,35 @@
     { label: 'Unlock Giant Worm mode', check: function (s) { return s.unlocks.giantWorm; }, reward: { worms: 100 } },
     { label: 'Grow the flock to 100 birds', progress: function (s) { return Math.min(1, s.flock.length / 100); }, check: function (s) { return s.flock.length >= 100; }, reward: { grains: 2000, worms: 300 } },
     { label: 'Raise a Nuclear Hen', check: hasNuclearHen, reward: { worms: 500 } },
-    { label: 'Complete the Nuclear pair', check: hasNuclearPair, final: true, reward: {} }
+    { label: 'Complete the Nuclear pair', check: hasNuclearPair, reward: { worms: 1000, grains: 5000 } }
   ];
+
+  function applyFlockScaleUnlocks(state) {
+    var n = state.flock.length;
+    if (!state.flockMilestoneFlags) state.flockMilestoneFlags = {};
+    if (!state.milestones) state.milestones = defaultState().milestones;
+    if (!state.unlocks) state.unlocks = defaultState().unlocks;
+    if (n >= 1000) {
+      state.unlocks.giantWorm = true;
+      state.milestones.giantWormStorm = true;
+      state.flockMilestoneFlags.giantWorm = true;
+    }
+    if (n >= 2000) {
+      state.unlocks.megaWorm = true;
+      state.flockMilestoneFlags.megaWorm = true;
+    }
+    if (n >= 5000) {
+      state.unlocks.steroidWorm = true;
+      state.flockMilestoneFlags.steroidWorm = true;
+    }
+    if (n >= 10000) {
+      state.milestones.sandbox = true;
+      state.flockMilestoneFlags.sandbox = true;
+    }
+    if (state.flockMilestoneFlags.ending) {
+      delete state.flockMilestoneFlags.ending;
+    }
+  }
 
   function formatNum(n) {
     if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
@@ -519,7 +554,7 @@
     if (s.farmNumber == null) s.farmNumber = 1;
     if (!s.hallOfFame) s.hallOfFame = [];
     if (!s.lastSeen) s.lastSeen = Date.now();
-    if (s.prestigeUnlocked == null) s.prestigeUnlocked = false;
+    if (s.milestones.sandbox == null) s.milestones.sandbox = false;
     if (!s.flockMilestoneFlags) s.flockMilestoneFlags = {};
     if (s.habitat == null) s.habitat = 0;
     if (!s.broodingBought) s.broodingBought = {};
@@ -547,9 +582,16 @@
           s.forageUnlocked = true;
           s.autoFeederBought.af1 = 1;
         }
-        if (m.id === 'ending') s.prestigeUnlocked = true;
+        if (m.id === 'giantWorm') {
+          s.unlocks.giantWorm = true;
+          s.milestones.giantWormStorm = true;
+        }
+        if (m.id === 'megaWorm') s.unlocks.megaWorm = true;
+        if (m.id === 'steroidWorm') s.unlocks.steroidWorm = true;
+        if (m.id === 'sandbox') s.milestones.sandbox = true;
       }
     });
+    applyFlockScaleUnlocks(s);
     return s;
   }
 
@@ -1011,12 +1053,17 @@
         s.forageUnlocked = true;
         s.autoFeederBought.af1 = 1;
       }
-      if (m.id === 'ending') {
-        s.prestigeUnlocked = true;
-        setTimeout(function () { self.showEndingCard(); }, 400);
-      } else {
-        this.showToast(m.label + ' — ' + m.desc);
+      if (m.id === 'giantWorm') {
+        s.unlocks.giantWorm = true;
+        s.milestones.giantWormStorm = true;
+        var burstNow = Date.now();
+        s.burstGiantUntil = burstNow + 15000;
+        s.burstGiantCd = burstNow + 60000;
       }
+      if (m.id === 'megaWorm') s.unlocks.megaWorm = true;
+      if (m.id === 'steroidWorm') s.unlocks.steroidWorm = true;
+      if (m.id === 'sandbox') s.milestones.sandbox = true;
+      this.showToast(m.label + ' — ' + m.desc);
       this.upgradesDirty = true;
     }
     if (changed) this.recompute();
@@ -1024,33 +1071,11 @@
 
   ChickenClicker.prototype.checkMilestones = function () {
     var s = this.state;
-    var st = this.stats;
     this.checkFlockMilestones();
+    applyFlockScaleUnlocks(s);
     if (s.lifetimeHens >= 1000 && !s.milestones.henThousand) {
       s.milestones.henThousand = true;
       s.wormPerClick = Math.max(s.wormPerClick, 3);
-      this.upgradesDirty = true;
-    }
-    if (st.hens >= 1000 && !s.unlocks.giantWorm) {
-      s.unlocks.giantWorm = true;
-      this.upgradesDirty = true;
-    }
-    if (st.hens >= 1000 && !s.milestones.giantWormStorm) {
-      s.milestones.giantWormStorm = true;
-      var now = Date.now();
-      s.burstGiantUntil = now + 15000;
-      s.burstGiantCd = now + 60000;
-      this.showToast('Giant worm storm — 1000 hens!');
-      this.upgradesDirty = true;
-    }
-    if (st.hens >= 2000 && !s.unlocks.megaWorm) {
-      s.unlocks.megaWorm = true;
-      this.showToast('Mega worm unlocked — 2000 hens!');
-      this.upgradesDirty = true;
-    }
-    if (st.hens >= 5000 && !s.unlocks.steroidWorm) {
-      s.unlocks.steroidWorm = true;
-      this.showToast('Steroid worm unlocked — 5000 hens!');
       this.upgradesDirty = true;
     }
   };
@@ -1496,7 +1521,6 @@
     this.els.hudEggsWrap = document.getElementById('chicken-hud-eggs-wrap');
     this.els.saveExport = document.getElementById('chicken-save-export');
     this.els.saveImport = document.getElementById('chicken-save-import');
-    this.els.prestigeBtn = document.getElementById('chicken-prestige-btn');
     this.els.hofRetired = document.getElementById('chicken-hof-retired');
     this.els.guestName = document.getElementById('chicken-guest-name');
     this.els.guestLb = document.getElementById('chicken-guest-lb');
@@ -1615,9 +1639,6 @@
     if (this.els.saveImport) {
       this.els.saveImport.addEventListener('click', function () { self.importSave(); });
     }
-    if (this.els.prestigeBtn) {
-      this.els.prestigeBtn.addEventListener('click', function () { self.doPrestige(); });
-    }
   };
 
   ChickenClicker.prototype.setMode = function (mode) {
@@ -1661,12 +1682,7 @@
     while (s.goalIndex < GOALS.length && GOALS[s.goalIndex].check(s, st)) {
       var g = GOALS[s.goalIndex];
       this.grantReward(g.reward || {});
-      if (g.final) {
-        s.prestigeUnlocked = true;
-        this.showEndingCard();
-      } else {
-        this.showToast('Goal complete: ' + g.label);
-      }
+      this.showToast('Goal complete: ' + g.label);
       s.goalIndex += 1;
     }
     this.renderGoal();
@@ -1675,30 +1691,12 @@
     this.scheduleSave();
   };
 
-  ChickenClicker.prototype.showEndingCard = function () {
-    var s = this.state;
-    var champ = flockChampion(s.flock);
-    var name = champ ? birdDisplayName(champ) : 'the flock';
-    var self = this;
-    this.showNarrative({
-      eyebrow: 'The coop\'s story',
-      title: 'A yard well kept',
-      body: 'Grains scattered: ' + formatNum(s.lifetimeGrains) + '. Worms dropped: ' + formatNum(s.lifetimeWorms) +
-        '. Birds raised: ' + formatNum(s.flock.length) + '. Champion: ' + name + '. The story is complete — but the yard never really rests.',
-      btn: 'Keep playing',
-      onDismiss: function () {
-        self.showToast('Prestige unlocked — Found a New Farm');
-        if (self.els.prestigeBtn) self.els.prestigeBtn.hidden = false;
-      }
-    });
-  };
-
   ChickenClicker.prototype.renderGoal = function () {
     if (!this.els.goalLabel) return;
     var s = this.state;
     var next = nextFlockMilestone(s);
-    if (!next) {
-      this.els.goalLabel.textContent = 'All flock milestones complete — sandbox mode';
+    if (!next || s.milestones.sandbox) {
+      this.els.goalLabel.textContent = 'Sandbox mode — grow the flock without limits';
       if (this.els.goalFill) this.els.goalFill.style.width = '100%';
       return;
     }
@@ -1735,45 +1733,6 @@
     } catch (e) {
       this.showToast('Invalid save string');
     }
-  };
-
-  ChickenClicker.prototype.doPrestige = function () {
-    if (!this.state.prestigeUnlocked) return;
-    var s = this.state;
-    var earned = 0;
-    var i;
-    for (i = 0; i < s.flock.length; i++) earned += getBirdTier(s.flock[i]);
-    for (i = 0; i < s.flock.length; i++) {
-      var b = s.flock[i];
-      if (b.name) {
-        s.hallOfFame.push({
-          name: b.name,
-          evolution: b.evolution,
-          sex: b.sex,
-          fed: Math.floor(b.fed),
-          farm: s.farmNumber
-        });
-      }
-    }
-    var self = this;
-    this.showNarrative({
-      eyebrow: 'Farm ' + s.farmNumber,
-      title: 'Found a new farm',
-      body: 'The old flock watches from the fence as the truck pulls away. +' + earned + ' Golden Feathers earned. The story continues.',
-      btn: 'Begin again',
-      onDismiss: function () {
-        var fresh = defaultState();
-        fresh.feathers = s.feathers + earned;
-        fresh.farmNumber = s.farmNumber + 1;
-        fresh.hallOfFame = s.hallOfFame;
-        fresh.prestigeUnlocked = true;
-        fresh.lastSeen = Date.now();
-        self.state = fresh;
-        self.recompute();
-        self.render();
-        self.flushSave();
-      }
-    });
   };
 
   ChickenClicker.prototype.setPaused = function (on) {
@@ -2537,7 +2496,6 @@
 
   ChickenClicker.prototype.renderHud = function () {
     this.renderGoal();
-    if (this.els.prestigeBtn) this.els.prestigeBtn.hidden = !this.state.prestigeUnlocked;
     var val = this.clickValue();
     var cache = this._hudCache;
     var grains = formatNum(this.state.grains);
