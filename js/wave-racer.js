@@ -102,10 +102,66 @@
     return false;
   }
 
+  function showGameOverOverlay(a) {
+    var overlay = a.dom.overlay;
+    overlay.hidden = false;
+    while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
+
+    var msg = document.createElement('p');
+    msg.className = 'flappy-game__overlay-msg';
+    msg.textContent = 'Game over — score ' + a.score + '.';
+    overlay.appendChild(msg);
+
+    if (a.lbPrompt) {
+      a.lbPrompt.remove();
+      a.lbPrompt = null;
+    }
+
+    if (window.GuestLeaderboard && a.score > 0) {
+      a.lbPrompt = GuestLeaderboard.promptScoreSubmit({
+        category: 'flappy',
+        score: a.score,
+        container: overlay,
+        compact: true,
+        message: 'Add your name to the guest leaderboard',
+        submitLabel: 'Submit',
+        skipLabel: 'Skip',
+        onSubmit: function () {
+          if (a.lbPrompt) {
+            a.lbPrompt.remove();
+            a.lbPrompt = null;
+          }
+          if (typeof a.onLeaderboardUpdate === 'function') a.onLeaderboardUpdate();
+          showRetryHint(a);
+        },
+        onSkip: function () {
+          if (a.lbPrompt) {
+            a.lbPrompt.remove();
+            a.lbPrompt = null;
+          }
+          showRetryHint(a);
+        }
+      });
+    } else {
+      showRetryHint(a);
+    }
+  }
+
+  function showRetryHint(a) {
+    var overlay = a.dom.overlay;
+    var hint = overlay.querySelector('.flappy-game__overlay-retry');
+    if (!hint) {
+      hint = document.createElement('p');
+      hint.className = 'flappy-game__overlay-retry';
+      overlay.appendChild(hint);
+    }
+    hint.textContent = 'Press space or click to retry.';
+  }
+
   function gameOver(a) {
     a.dead = true;
-    a.dom.overlay.hidden = false;
-    a.dom.overlay.textContent = 'Game over — score ' + a.score + '. Press space to retry.';
+    showGameOverOverlay(a);
+    if (typeof a.onGameOver === 'function') a.onGameOver(a.score);
   }
 
   function resetRound(a) {
@@ -117,6 +173,11 @@
     a.dead = false;
     a.lastSpawnX = a.width;
     a.dom.overlay.hidden = true;
+    while (a.dom.overlay.firstChild) a.dom.overlay.removeChild(a.dom.overlay.firstChild);
+    if (a.lbPrompt) {
+      a.lbPrompt.remove();
+      a.lbPrompt = null;
+    }
     a.dom.hud.textContent = '0';
     spawnPalm(a);
     a.lastSpawnX = a.width - SPAWN_X_GAP * 0.5;
@@ -185,9 +246,10 @@
     flap();
   }
 
-  function init(root) {
+  function init(root, opts) {
     destroy();
     if (!root) return null;
+    opts = opts || {};
 
     var dom = buildDom(root);
     var instance = {
@@ -205,6 +267,9 @@
       bgShift: 0,
       lastTs: 0,
       raf: null,
+      lbPrompt: null,
+      onGameOver: opts.onGameOver || null,
+      onLeaderboardUpdate: opts.onLeaderboardUpdate || null,
       onKeyDown: function (e) {
         if (active && active.dead && (e.code === 'Space' || e.key === ' ')) {
           e.preventDefault();

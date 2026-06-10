@@ -482,7 +482,11 @@
       ctx.fillText('You escaped the backrooms.', w / 2, h * 0.47);
       ctx.font = '500 13px DM Sans, sans-serif';
       ctx.fillStyle = '#5a6b65';
-      ctx.fillText('Press Esc to leave.', w / 2, h * 0.54);
+      var timeLabel = state.escapeTimeMs != null && window.GuestLeaderboard
+        ? 'Time: ' + GuestLeaderboard.formatScore('backrooms', state.escapeTimeMs)
+        : '';
+      if (timeLabel) ctx.fillText(timeLabel, w / 2, h * 0.54);
+      ctx.fillText('Press Esc to leave.', w / 2, h * 0.58);
     }
   }
 
@@ -493,6 +497,10 @@
       state.fadeWhite = Math.min(1, (performance.now() - state.fadeStart) / 1500);
       if (state.fadeWhite >= 1) {
         state.escapePhase = 'done';
+        if (!state.escapePromptShown && typeof state.onEscapeDone === 'function') {
+          state.escapePromptShown = true;
+          state.onEscapeDone(state.escapeTimeMs);
+        }
       }
       render(state);
       state.raf = requestAnimationFrame(function () { tick(state); });
@@ -531,6 +539,10 @@
         state.fadeStart = performance.now();
         state.fadeWhite = 0;
         state.keys = {};
+        state.escapeTimeMs = performance.now() - (state.startTime || performance.now());
+        if (typeof state.onEscape === 'function') {
+          state.onEscape(state.escapeTimeMs);
+        }
       }
     }
 
@@ -545,8 +557,9 @@
     }
   }
 
-  function start(canvas) {
+  function start(canvas, opts) {
     stop();
+    opts = opts || {};
     var ctx = canvas.getContext('2d');
     var resize = function () {
       var rect = canvas.parentElement.getBoundingClientRect();
@@ -567,6 +580,11 @@
       escapePhase: 'play',
       fadeWhite: 0,
       fadeStart: 0,
+      startTime: performance.now(),
+      escapeTimeMs: null,
+      escapePromptShown: false,
+      onEscape: opts.onEscape || null,
+      onEscapeDone: opts.onEscapeDone || null,
       tomatoPhase: 'wait',
       tomatoX: 0,
       tomatoY: 0,

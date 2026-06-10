@@ -1498,6 +1498,8 @@
     this.els.saveImport = document.getElementById('chicken-save-import');
     this.els.prestigeBtn = document.getElementById('chicken-prestige-btn');
     this.els.hofRetired = document.getElementById('chicken-hof-retired');
+    this.els.guestName = document.getElementById('chicken-guest-name');
+    this.els.guestLb = document.getElementById('chicken-guest-lb');
     this.els.boostBanner = document.getElementById('chicken-boost-banner');
     this.els.boostBannerText = document.getElementById('chicken-boost-banner-text');
     this.els.boostBannerTime = document.getElementById('chicken-boost-banner-time');
@@ -2955,6 +2957,44 @@
     this._renderPreview();
   };
 
+  ChickenClicker.prototype.getGuestClickerScore = function () {
+    var s = this.state;
+    if (!window.GuestLeaderboard) return null;
+    return GuestLeaderboard.clickerCompositeScore(s.flock.length, s.grains);
+  };
+
+  ChickenClicker.prototype.renderGuestLeaderboard = function () {
+    if (!window.GuestLeaderboard || !this.els.guestLb) return;
+    GuestLeaderboard.render(this.els.guestLb, 'clicker', {
+      title: 'Top coops',
+      emptyText: 'Set your name and play — scores save when you leave.'
+    });
+  };
+
+  ChickenClicker.prototype.setupGuestNameField = function () {
+    var self = this;
+    if (!window.GuestLeaderboard || !this.els.guestName) return;
+    GuestLeaderboard.mountNameField({
+      category: 'clicker',
+      container: this.els.guestName,
+      message: 'Your name for the guest leaderboard',
+      onNameSet: function () {
+        self.renderGuestLeaderboard();
+      }
+    });
+  };
+
+  ChickenClicker.prototype.submitGuestScore = function () {
+    if (!window.GuestLeaderboard) return false;
+    var score = this.getGuestClickerScore();
+    if (score === null || score <= 0) return false;
+    var name = GuestLeaderboard.getStoredName('clicker');
+    if (!name) return false;
+    var ok = GuestLeaderboard.submitScore('clicker', name, score);
+    if (ok) this.renderGuestLeaderboard();
+    return ok;
+  };
+
   ChickenClicker.prototype.openModal = function () {
     if (!this.modal) return;
     this.modal.hidden = false;
@@ -2968,6 +3008,8 @@
     this.checkGoals();
     this._visualRotateAt = Date.now() + VISUAL_ROTATE_MS;
     this.render();
+    this.setupGuestNameField();
+    this.renderGuestLeaderboard();
     this.startLoops();
     this.scheduleFloatingWorm();
     this.scheduleImposter();
@@ -2976,6 +3018,37 @@
   };
 
   ChickenClicker.prototype.closeModal = function () {
+    if (!this.modal) return;
+    var self = this;
+    var finishClose = function () {
+      self._finishCloseModal();
+    };
+    if (window.GuestLeaderboard && !GuestLeaderboard.getStoredName('clicker')) {
+      var panel = this.modal.querySelector('.chicken-modal-panel');
+      var existing = panel && panel.querySelector('.guest-lb-prompt--exit');
+      if (!existing && panel) {
+        var exitPrompt = GuestLeaderboard.promptName({
+          container: panel,
+          title: 'Guest leaderboard',
+          message: 'Add your name to save your coop score when you leave.',
+          submitLabel: 'Save & leave',
+          skipLabel: 'Leave without saving',
+          onSubmit: function (name) {
+            GuestLeaderboard.setStoredName('clicker', name);
+            self.submitGuestScore();
+            finishClose();
+          },
+          onSkip: finishClose
+        });
+        if (exitPrompt && exitPrompt.el) exitPrompt.el.classList.add('guest-lb-prompt--exit');
+        return;
+      }
+    }
+    this.submitGuestScore();
+    finishClose();
+  };
+
+  ChickenClicker.prototype._finishCloseModal = function () {
     if (!this.modal) return;
     var now = Date.now();
     if (this._awayAt) {
@@ -3003,6 +3076,7 @@
     }
     this.flushSave();
     if (this.hitbox) this.hitbox.focus();
+    if (this.els.guestName) this.els.guestName.innerHTML = '';
   };
 
   ChickenClicker.prototype.init = function () {

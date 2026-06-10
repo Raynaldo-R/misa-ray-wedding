@@ -2342,7 +2342,8 @@ button[type=submit]:disabled {
   border-radius: 4px;
 }
 .wave-intro[hidden],
-.wave-play[hidden] { display: none !important; }
+.wave-play[hidden],
+.wave-play-layout[hidden] { display: none !important; }
 .wave-intro-lead {
   font-family: var(--sans);
   font-size: clamp(.85rem, 2vw, 1rem);
@@ -2371,6 +2372,9 @@ button[type=submit]:disabled {
 }
 .wave-start-btn:hover { background: rgba(94, 200, 232, .3); }
 .wave-modal-panel.is-playing .wave-intro { display: none !important; }
+.wave-modal-panel.is-playing .wave-play-layout {
+  display: grid !important;
+}
 .wave-modal-panel.is-playing .wave-play {
   display: block !important;
   height: clamp(360px, 62vh, 520px);
@@ -2471,13 +2475,256 @@ button[type=submit]:disabled {
   inset: 0;
   z-index: 6;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   padding: 20px;
   text-align: center;
   font: 600 13px/1.45 Tahoma, sans-serif;
   color: #fff;
   background: rgba(8, 40, 58, .45);
+}
+.flappy-game__overlay-msg,
+.flappy-game__overlay-retry { margin: 0; }
+.flappy-game__overlay-retry { font-size: .78rem; font-weight: 500; opacity: .9; }
+/* guest leaderboards — shared mini-game scoreboards */
+.guest-lb { font-family: var(--sans); }
+.guest-lb__title {
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.guest-lb__empty {
+  font-size: .65rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  margin: 0;
+}
+.guest-lb__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.guest-lb__row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: .68rem;
+}
+.guest-lb__row:last-child { border-bottom: none; }
+.guest-lb__rank {
+  flex-shrink: 0;
+  width: 1.2em;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+.guest-lb__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.guest-lb__score {
+  flex-shrink: 0;
+  font-size: .62rem;
+  color: var(--ink-soft);
+}
+.guest-lb-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(100%, 280px);
+  text-align: left;
+}
+.guest-lb-prompt--compact { width: min(100%, 260px); }
+.guest-lb-prompt__title {
+  margin: 0;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.guest-lb-prompt__message {
+  margin: 0;
+  font-size: .68rem;
+  line-height: 1.45;
+  opacity: .92;
+}
+.guest-lb-prompt__label {
+  display: block;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.guest-lb-prompt__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .12);
+  color: inherit;
+  font: inherit;
+}
+.guest-lb-prompt__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.guest-lb-prompt__submit,
+.guest-lb-prompt__skip {
+  border-radius: 3px;
+  padding: 7px 12px;
+  font: 700 .62rem var(--sans);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.guest-lb-prompt__submit {
+  border: 1px solid #5ec8e8;
+  background: rgba(94, 200, 232, .2);
+  color: #fff;
+}
+.guest-lb-prompt__skip {
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  opacity: .75;
+}
+.guest-lb-namebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .5);
+  font-size: .68rem;
+}
+.guest-lb-namebar--set { justify-content: center; }
+.guest-lb-namebar__label { color: var(--ink-soft); }
+.guest-lb-namebar__name { color: var(--ink); }
+.guest-lb-namebar__change {
+  border: none;
+  background: transparent;
+  font: 600 .62rem var(--sans);
+  color: var(--forest);
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: auto;
+}
+.wave-play-layout {
+  display: grid;
+  grid-template-columns: 1fr min(168px, 28%);
+  gap: 12px;
+  align-items: start;
+}
+.wave-guest-lb {
+  padding: 10px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, .22);
+  border: 1px solid rgba(94, 200, 232, .25);
+  max-height: clamp(360px, 62vh, 520px);
+  overflow-y: auto;
+}
+.wave-guest-lb .guest-lb__title { color: #8ec8e8; }
+.wave-guest-lb .guest-lb__row { border-color: rgba(255, 255, 255, .12); }
+.wave-guest-lb .guest-lb__name { color: #e8f8ff; }
+.wave-guest-lb .guest-lb__score { color: #8ec8e8; }
+.wave-guest-lb .guest-lb__empty { color: #8ec8e8; }
+.flappy-game .guest-lb-prompt__input {
+  border-color: rgba(255, 255, 255, .4);
+  background: rgba(0, 0, 0, .25);
+  color: #fff;
+}
+.maze-play {
+  position: relative;
+}
+.maze-guest-lb {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: rgba(250, 249, 246, .06);
+  border: 1px solid rgba(196, 212, 106, .25);
+}
+.maze-guest-lb .guest-lb__title { color: #c4d46a; }
+.maze-guest-lb .guest-lb__name { color: #faf9f6; }
+.maze-guest-lb .guest-lb__score { color: #8aa878; }
+.maze-guest-lb .guest-lb__empty { color: #8aa878; }
+.maze-lb-prompt-host {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 28, 20, .55);
+  pointer-events: none;
+}
+.maze-lb-prompt-host:not(:empty) { pointer-events: auto; }
+.maze-lb-prompt-host .guest-lb-prompt {
+  padding: 16px;
+  border-radius: 6px;
+  background: #faf9f6;
+  color: var(--ink);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .35);
+}
+.maze-lb-prompt-host .guest-lb-prompt__input {
+  border-color: var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.maze-lb-prompt-host .guest-lb-prompt__submit {
+  border-color: var(--forest);
+  background: rgba(74, 107, 95, .12);
+  color: var(--forest);
+}
+.chicken-guest-lb { margin-top: 8px; }
+.chicken-guest-name-wrap { margin-bottom: 6px; }
+.guest-lb-prompt--exit {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(26, 36, 33, .55);
+}
+.guest-lb-prompt--exit .guest-lb-prompt {
+  padding: 20px;
+  border-radius: 6px;
+  background: var(--ivory);
+  color: var(--ink);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .2);
+}
+.guest-lb-prompt--exit .guest-lb-prompt__input {
+  border-color: var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.guest-lb-prompt--exit .guest-lb-prompt__submit {
+  border-color: var(--forest);
+  background: rgba(74, 107, 95, .1);
+  color: var(--forest);
+}
+@media (max-width: 640px) {
+  .wave-play-layout { grid-template-columns: 1fr; }
+  .wave-guest-lb { max-height: none; }
 }
 .fund h3 {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
@@ -3422,8 +3669,13 @@ section:not(.hero) h2::after {
           </div>
           <div id="chicken-hof-retired"></div>
         </div>
+        <div class="chicken-sidebar-section">
+          <div class="chicken-sidebar-title">Guest leaderboard</div>
+          <div id="chicken-guest-lb" class="chicken-guest-lb" aria-label="Guest coop scores"></div>
+        </div>
       </aside>
       <div class="chicken-game-center">
+        <div id="chicken-guest-name" class="chicken-guest-name-wrap" aria-label="Guest name for leaderboard"></div>
         <div class="chicken-game-hud" aria-live="polite">
           <div>Grains<span id="chicken-hud-grains">0</span></div>
           <div>Worms<span id="chicken-hud-worms">0</span></div>
@@ -3523,11 +3775,14 @@ section:not(.hero) h2::after {
     <div class="wave-modal-title" id="wave-modal-title">Honeymoon Vacation — Flappy Chicken</div>
     <div class="wave-intro" id="wave-intro">
       <p class="wave-intro-lead">Flap through the oasis. Dodge the palm trees on your way to paradise.</p>
-      <p class="wave-intro-keys">Space to flap &nbsp;·&nbsp; click to flap</p>
+      <p class="wave-intro-keys">Space to start &nbsp;·&nbsp; space to flap &nbsp;·&nbsp; click to flap</p>
       <button type="button" class="wave-start-btn" id="wave-start-btn">Take flight</button>
     </div>
-    <div class="wave-play" id="wave-play" hidden>
-      <div id="wave-game-root" class="wave-game-root" aria-label="Flappy chicken — press space to flap"></div>
+    <div class="wave-play-layout" id="wave-play-layout" hidden>
+      <div class="wave-play" id="wave-play" hidden>
+        <div id="wave-game-root" class="wave-game-root" aria-label="Flappy chicken — press space to flap"></div>
+      </div>
+      <aside id="wave-guest-lb" class="wave-guest-lb" aria-label="Flappy chicken guest leaderboard"></aside>
     </div>
   </div>
 </div>
@@ -3549,6 +3804,8 @@ section:not(.hero) h2::after {
     </div>
     <div class="maze-play" id="maze-play" hidden>
       <canvas id="maze-canvas" tabindex="0" aria-label="Backrooms maze — use arrow keys"></canvas>
+      <div id="maze-lb-prompt" class="maze-lb-prompt-host" aria-live="polite"></div>
+      <div id="maze-guest-lb" class="maze-guest-lb" aria-label="Backrooms escape times"></div>
     </div>
   </div>
 </div>
@@ -4195,9 +4452,20 @@ section:not(.hero) h2::after {
       var wavePanel = document.getElementById('wave-modal-panel');
       var waveIntro = document.getElementById('wave-intro');
       var wavePlay = document.getElementById('wave-play');
+      var wavePlayLayout = document.getElementById('wave-play-layout');
+      var waveGuestLb = document.getElementById('wave-guest-lb');
       var waveStartBtn = document.getElementById('wave-start-btn');
       var waveGameRoot = document.getElementById('wave-game-root');
       var waveStarted = false;
+
+      function renderWaveGuestLb() {
+        if (window.GuestLeaderboard && waveGuestLb) {
+          GuestLeaderboard.render(waveGuestLb, 'flappy', {
+            title: 'Top flights',
+            emptyText: 'No scores yet — dodge a palm tree!'
+          });
+        }
+      }
 
       function resetWaveIntro() {
         waveStarted = false;
@@ -4205,6 +4473,7 @@ section:not(.hero) h2::after {
         if (wavePanel) wavePanel.classList.remove('is-playing');
         if (waveIntro) waveIntro.hidden = false;
         if (wavePlay) wavePlay.hidden = true;
+        if (wavePlayLayout) wavePlayLayout.hidden = true;
       }
 
       function beginWaveGame() {
@@ -4212,13 +4481,16 @@ section:not(.hero) h2::after {
         waveStarted = true;
         if (wavePanel) wavePanel.classList.add('is-playing');
         if (waveIntro) waveIntro.hidden = true;
+        if (wavePlayLayout) wavePlayLayout.hidden = false;
         if (wavePlay) wavePlay.hidden = false;
-        WaveRacer.init(waveGameRoot);
+        WaveRacer.init(waveGameRoot, { onLeaderboardUpdate: renderWaveGuestLb });
+        renderWaveGuestLb();
       }
 
       function openWaveModal() {
         if (!waveModal) return;
         resetWaveIntro();
+        renderWaveGuestLb();
         waveModal.hidden = false;
         document.body.style.overflow = 'hidden';
         var closeBtn = waveModal.querySelector('.wave-modal-close');
@@ -4240,7 +4512,12 @@ section:not(.hero) h2::after {
           el.addEventListener('click', closeWaveModal);
         });
         document.addEventListener('keydown', function (e) {
-          if (e.key === 'Escape' && waveModal && !waveModal.hidden) closeWaveModal();
+          if (!waveModal || waveModal.hidden) return;
+          if (e.key === 'Escape') closeWaveModal();
+          if (!waveStarted && (e.code === 'Space' || e.key === ' ')) {
+            e.preventDefault();
+            beginWaveGame();
+          }
         });
       }
 
@@ -4253,7 +4530,18 @@ section:not(.hero) h2::after {
       var mazeDoorScene = document.getElementById('maze-door-scene');
       var mazeDoorEnter = document.getElementById('maze-door-enter');
       var mazeCanvas = document.getElementById('maze-canvas');
+      var mazeGuestLb = document.getElementById('maze-guest-lb');
+      var mazeLbPrompt = document.getElementById('maze-lb-prompt');
       var mazeStarted = false;
+
+      function renderMazeGuestLb() {
+        if (window.GuestLeaderboard && mazeGuestLb) {
+          GuestLeaderboard.render(mazeGuestLb, 'backrooms', {
+            title: 'Fastest escapes',
+            emptyText: 'No escapes recorded yet.'
+          });
+        }
+      }
 
       function resetMazeIntro() {
         mazeStarted = false;
@@ -4262,6 +4550,7 @@ section:not(.hero) h2::after {
         if (mazeIntro) mazeIntro.hidden = false;
         if (mazePlay) mazePlay.hidden = true;
         if (mazeDoorScene) mazeDoorScene.classList.remove('is-open');
+        if (mazeLbPrompt) mazeLbPrompt.innerHTML = '';
       }
 
       function beginMazeGame() {
@@ -4270,7 +4559,28 @@ section:not(.hero) h2::after {
         if (mazePanel) mazePanel.classList.add('is-playing');
         if (mazeIntro) mazeIntro.hidden = true;
         if (mazePlay) mazePlay.hidden = false;
-        BackroomsMaze.start(mazeCanvas);
+        if (mazeLbPrompt) mazeLbPrompt.innerHTML = '';
+        BackroomsMaze.start(mazeCanvas, {
+          onEscapeDone: function (timeMs) {
+            if (!window.GuestLeaderboard || !mazeLbPrompt) return;
+            GuestLeaderboard.promptScoreSubmit({
+              category: 'backrooms',
+              score: timeMs,
+              container: mazeLbPrompt,
+              message: 'Escaped in ' + GuestLeaderboard.formatScore('backrooms', timeMs) + ' — save your time?',
+              submitLabel: 'Submit',
+              skipLabel: 'Skip',
+              onSubmit: function () {
+                if (mazeLbPrompt) mazeLbPrompt.innerHTML = '';
+                renderMazeGuestLb();
+              },
+              onSkip: function () {
+                if (mazeLbPrompt) mazeLbPrompt.innerHTML = '';
+              }
+            });
+          }
+        });
+        renderMazeGuestLb();
         mazeCanvas.focus();
       }
 
@@ -4283,6 +4593,7 @@ section:not(.hero) h2::after {
       function openMazeModal() {
         if (!mazeModal) return;
         resetMazeIntro();
+        renderMazeGuestLb();
         mazeModal.hidden = false;
         document.body.style.overflow = 'hidden';
         var closeBtn = mazeModal.querySelector('.maze-modal-close');
@@ -4316,6 +4627,7 @@ section:not(.hero) h2::after {
     }
 
     Promise.all([
+      loadScript('js/leaderboard.js'),
       loadScript('js/maze-raycaster.js'),
       loadScript('js/wave-racer.js'),
       loadScript('js/chicken-clicker.js')
