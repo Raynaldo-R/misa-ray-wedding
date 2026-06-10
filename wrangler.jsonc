@@ -6,6 +6,7 @@
     "exclude": [
       "DEPLOY.txt",
       "RSVP_SHEET_SETUP.txt",
+      "LEADERBOARD_SETUP.txt",
       "google-apps-script.gs"
     ]
   }

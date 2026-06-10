@@ -1,0 +1,37 @@
+Guest leaderboard — shared scores setup
+======================================
+
+WHY: Browser localStorage only shows scores on that one device. For ALL wedding
+guests to see the same top-10 lists, scores are stored in your Google Sheet via
+the same Apps Script web app used for RSVPs.
+
+ONE-TIME SETUP (after pulling latest code)
+------------------------------------------
+1. Open your wedding Google Sheet → Extensions → Apps Script
+2. Replace Code.gs with google-apps-script.gs from this repo → Save
+3. Run setupLeaderboard once (authorize when prompted)
+4. Deploy → Manage deployments → Edit (pencil) → New version → Deploy
+   - Execute as: Me
+   - Who has access: Anyone
+5. Confirm index.html has LEADERBOARD_CONFIG.apiUrl set to the same URL as
+   RSVP_CONFIG.googleScriptUrl
+
+VERIFY
+------
+Open in two different browsers (or incognito + normal):
+  https://wedding.raynaldorusi.com/?...
+Submit a test score in Flappy Chicken or the clicker. The other browser should
+show "All guests · live scores" and the same name within ~30 seconds.
+
+SECURITY (built in)
+-------------------
+- Names stripped of HTML/control chars, max 24 characters
+- Scores validated server-side with per-game min/max
+- One submit per name per game every 15 seconds
+- Leaderboard UI uses textContent only (no HTML injection)
+- Sheet stores Category | Name | Score | Timestamp
+
+FALLBACK
+--------
+If Apps Script is unreachable, the site falls back to local-only scores on that
+device and shows a reconnecting message.

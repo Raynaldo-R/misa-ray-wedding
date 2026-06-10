@@ -3209,15 +3209,26 @@
     });
   };
 
-  ChickenClicker.prototype.submitGuestScore = function () {
-    if (!window.GuestLeaderboard) return false;
+  ChickenClicker.prototype.submitGuestScore = function (callback) {
+    var self = this;
+    if (!window.GuestLeaderboard) {
+      if (callback) callback(false);
+      return;
+    }
     var score = this.getGuestClickerScore();
-    if (score === null || score <= 0) return false;
+    if (score === null || score <= 0) {
+      if (callback) callback(false);
+      return;
+    }
     var name = GuestLeaderboard.getStoredName('clicker');
-    if (!name) return false;
-    var ok = GuestLeaderboard.submitScore('clicker', name, score);
-    if (ok) this.renderGuestLeaderboard();
-    return ok;
+    if (!name) {
+      if (callback) callback(false);
+      return;
+    }
+    GuestLeaderboard.submitScore('clicker', name, score).then(function (ok) {
+      if (ok) self.renderGuestLeaderboard();
+      if (callback) callback(ok);
+    });
   };
 
   ChickenClicker.prototype.openModal = function () {
@@ -3260,8 +3271,7 @@
           skipLabel: 'Leave without saving',
           onSubmit: function (name) {
             GuestLeaderboard.setStoredName('clicker', name);
-            self.submitGuestScore();
-            finishClose();
+            self.submitGuestScore(function () { finishClose(); });
           },
           onSkip: finishClose
         });
@@ -3269,12 +3279,12 @@
         return;
       }
     }
-    this.submitGuestScore();
-    finishClose();
+    this.submitGuestScore(finishClose);
   };
 
   ChickenClicker.prototype._finishCloseModal = function () {
     if (!this.modal) return;
+    if (this.els.guestLb && window.GuestLeaderboard) GuestLeaderboard.stopPolling(this.els.guestLb);
     var now = Date.now();
     if (this._awayAt) {
       this.applyForageCatchup(now - this._awayAt);

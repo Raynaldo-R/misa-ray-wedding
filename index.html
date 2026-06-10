@@ -2498,6 +2498,15 @@ button[type=submit]:disabled {
   color: var(--ink-soft);
   margin-bottom: 8px;
 }
+.guest-lb__status {
+  font-size: .58rem;
+  margin: 0 0 8px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+.guest-lb__status--shared { color: var(--forest); font-weight: 600; }
+.guest-lb__status--offline { color: #9a6b2a; }
+.guest-lb__status--local { color: var(--ink-soft); font-style: italic; }
 .guest-lb__empty {
   font-size: .65rem;
   color: var(--ink-soft);
@@ -4147,6 +4156,11 @@ section:not(.hero) h2::after {
     emailBackup: 'RSVP@raynaldorusi.com'
   };
 
+  /* Shared guest leaderboards — same Apps Script URL; redeploy after updating google-apps-script.gs */
+  var LEADERBOARD_CONFIG = {
+    apiUrl: RSVP_CONFIG.googleScriptUrl
+  };
+
   var rsvpForm = document.getElementById('rsvpForm');
   var rsvpSubmit = document.getElementById('rsvp-submit');
   var rsvpConfirm = document.getElementById('rsvp-confirm');
@@ -4506,6 +4520,7 @@ section:not(.hero) h2::after {
 
       function closeWaveModal() {
         if (!waveModal) return;
+        if (waveGuestLb && window.GuestLeaderboard) GuestLeaderboard.stopPolling(waveGuestLb);
         waveModal.hidden = true;
         document.body.style.overflow = '';
         resetWaveIntro();
@@ -4609,6 +4624,7 @@ section:not(.hero) h2::after {
 
       function closeMazeModal() {
         if (!mazeModal) return;
+        if (mazeGuestLb && window.GuestLeaderboard) GuestLeaderboard.stopPolling(mazeGuestLb);
         mazeModal.hidden = true;
         document.body.style.overflow = '';
         resetMazeIntro();
