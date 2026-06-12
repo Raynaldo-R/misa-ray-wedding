@@ -4576,11 +4576,18 @@ section:not(.hero) h2::after {
         return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 88;
       }
 
+      function sectionScrollAnchor(el) {
+        var prev = el.previousElementSibling;
+        if (prev && prev.classList.contains('wire-divider')) return prev;
+        return el;
+      }
+
       function scrollSectionIntoView(id, behavior) {
         var el = document.getElementById(id);
         if (!el) return;
+        var anchor = sectionScrollAnchor(el);
         var headerH = headerOffset();
-        var top = window.scrollY + el.getBoundingClientRect().top - headerH;
+        var top = window.scrollY + anchor.getBoundingClientRect().top - headerH;
         window.scrollTo({ top: Math.max(0, top), behavior: behavior || 'auto' });
       }
 
