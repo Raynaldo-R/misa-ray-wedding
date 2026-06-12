@@ -1272,6 +1272,15 @@ button[type=submit]:disabled {
   to { transform: translate(calc(-50% + var(--walk-amp, 6px)), -50%) scale(var(--bird-scale, 1)); }
 }
 .chicken-bird--rooster { filter: contrast(1.05); }
+.chicken-bird--blue-crest { filter: hue-rotate(200deg) saturate(1.35) brightness(1.05); }
+.chicken-bird--red-crest { filter: sepia(0.35) saturate(1.6) hue-rotate(-12deg); }
+.chicken-bird--spotted-wing { filter: contrast(1.12) saturate(0.95) brightness(1.04); }
+.chicken-bird--green-talon { filter: hue-rotate(88deg) saturate(1.35) brightness(1.06); }
+.chicken-bird--ringneck { filter: sepia(0.55) saturate(1.75) hue-rotate(8deg); }
+.chicken-bird--patterned { filter: contrast(1.14) hue-rotate(24deg) saturate(1.15); }
+.chicken-bird--iridescent { filter: hue-rotate(258deg) saturate(1.65) brightness(1.1); }
+.chicken-bird--crested { filter: brightness(1.1) saturate(1.22) contrast(1.05); }
+.chicken-bird--silver { filter: grayscale(0.35) saturate(0.7) brightness(1.12) contrast(1.05); }
 .chicken-bird--gold { filter: sepia(1) saturate(2.8) hue-rotate(5deg) brightness(1.1); }
 .chicken-bird--amber { filter: sepia(1) saturate(3) hue-rotate(12deg) brightness(1.08); }
 .chicken-bird--ruby { filter: sepia(1) saturate(3.5) hue-rotate(-25deg) brightness(1.1); }
@@ -2069,7 +2078,10 @@ button[type=submit]:disabled {
   width: 52px;
   height: 52px;
 }
-.chicken-portrait--sm { width: 24px; }
+.chicken-portrait-ring--silver { box-shadow: 0 0 0 2px #a8b0c0; border-radius: 4px; }
+.chicken-portrait-ring--gold { box-shadow: 0 0 0 2px #d4a84a; border-radius: 4px; }
+.chicken-portrait-ring--nuclear { box-shadow: 0 0 0 2px #7fff7a; border-radius: 4px; }
+.chicken-portrait--sm { width: 24px; height: 24px; }
 .chicken-narrative-portrait {
   margin: 0 auto 12px;
   width: 64px;
@@ -2193,6 +2205,35 @@ button[type=submit]:disabled {
 .chicken-upgrade-row.can-afford {
   opacity: 1;
   border-color: var(--sage-light);
+}
+.chicken-upgrade-row--new-unlock {
+  opacity: 1;
+  border-color: #8b3fd6;
+  background: linear-gradient(
+    125deg,
+    rgba(123, 63, 228, 0.16) 0%,
+    rgba(255, 214, 0, 0.24) 45%,
+    rgba(255, 120, 220, 0.14) 72%,
+    rgba(123, 63, 228, 0.18) 100%
+  );
+  box-shadow: 0 0 0 1px rgba(123, 63, 228, 0.32), 0 0 14px rgba(255, 214, 0, 0.28);
+  animation: chicken-new-unlock-glow 2.6s ease-in-out infinite;
+}
+.chicken-upgrade-row--new-unlock .chicken-upgrade-row-cost {
+  color: #6f2fc8;
+}
+.chicken-upgrade-row--new-unlock.can-afford:hover {
+  background: linear-gradient(
+    125deg,
+    rgba(123, 63, 228, 0.22) 0%,
+    rgba(255, 214, 0, 0.3) 45%,
+    rgba(255, 120, 220, 0.18) 72%,
+    rgba(123, 63, 228, 0.24) 100%
+  );
+}
+@keyframes chicken-new-unlock-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.07); }
 }
 .chicken-upgrade-row.can-afford:hover {
   background: rgba(232, 229, 222, .5);
@@ -3725,16 +3766,16 @@ section:not(.hero) h2::after {
               <div class="chicken-widget-stage">
                 <div class="chicken-widget-ground"></div>
                 <div class="chicken-widget-birds" id="chicken-preview-flock">
-                  <img class="chicken-bird" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/6Rstr.GIF" alt="" width="40" height="50">
-                  <img class="chicken-bird" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/7Rstr.GIF" alt="" width="40" height="50" style="display:none">
-                  <img class="chicken-bird" src="https://web.archive.org/web/20090804022413im_/http://geocities.com/SouthBeach/Cabana/7599/1Rstr.GIF" alt="" width="40" height="50" style="display:none">
+                  <img class="chicken-bird" src="assets/game/hen-portrait-a.png" alt="" width="40" height="50">
+                  <img class="chicken-bird" src="assets/game/hen-portrait-b.png" alt="" width="40" height="50" style="display:none">
+                  <img class="chicken-bird" src="assets/game/rooster-portrait.png" alt="" width="40" height="50" style="display:none">
                 </div>
               </div>
             </div>
             <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
           <div class="fund-gif fund-gif--mobile" aria-hidden="true">
-            <img src="assets/game/hen-a.gif" alt="" width="120" height="80">
+            <img src="assets/game/hen-portrait-a.png" alt="" width="120" height="80">
           </div>
           <h3>The Chickens</h3>
           <hr class="fund-rule">
