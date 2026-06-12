@@ -541,7 +541,7 @@
       message: inline ? null : (opts.message || 'Enter your name for the guest leaderboard'),
       placeholder: opts.placeholder || (inline ? 'Your name' : 'Guest name'),
       defaultName: stored || opts.defaultName || '',
-      submitLabel: opts.submitLabel || (inline ? 'Save name' : 'Set name'),
+      submitLabel: opts.submitLabel || (inline ? 'Save' : 'Set name'),
       highlightSubmit: !!opts.highlightSubmit,
       required: inline ? true : false,
       onSubmit: function (name, submitBtn, reenable) {
