@@ -1,4 +1,17 @@
 /* Backrooms-style raycaster maze — arrow keys to move */
+
+/*
+ * ── dev note ──────────────────────────────────────────────────────────────
+ *
+ *   if you're reading the source: something is wrong with the east wall.
+ *   it's been wrong since the build. nobody filed a ticket.
+ *
+ *   the string you need is: "  key: \"__REDACTED__\","
+ *   fill in what belongs there.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
 (function (global) {
   'use strict';
 
@@ -74,6 +87,345 @@
   var FLOOR_BASE = { r: 220, g: 202, b: 142 };
   var GRID_BROWN = { r: 148, g: 128, b: 92 };
   var FOG_COLOR = { r: 168, g: 198, b: 224 };
+
+  // ── SECRET: east-wall clip trigger + CLI overlay ──────────────────────────
+  //
+  // Dead end at map cell (23, 11) — farthest reachable point from spawn.
+  // Sustained east-wall press (~1.2s) launches the CLI overlay on the canvas.
+  //
+  var CLI_SECRET_KEY = 'abyss';
+  var CLI_ACTIVATED = false;
+
+  var _clipCell = { mx: 23, my: 11 };
+  var _clipWallX = 24;
+  var _clipPressMs = 0;
+  var _clipThresholdMs = 1200;
+  var _lastTick = 0;
+
+  var _cliEl = null;
+  var _cliOutput = null;
+  var _cliInput = null;
+  var _nanoMode = false;
+  var _nanoBuffer = '';
+  var _nanoUserVal = '';
+  var _cliHistory = [];
+  var _cliHistIdx = -1;
+
+  var _cfgTemplate = [
+    '[signal]',
+    '  version: 1',
+    '  key: "__FILL_IN__"',
+    '  target: /dev/null',
+    '  status: dormant',
+  ].join('\n');
+
+  var _cfgCurrent = _cfgTemplate;
+
+  var _FS = {
+    'signal.cfg': { content: function () { return _cfgCurrent; } },
+  };
+
+  function _inClipCell(px, py) {
+    return Math.floor(px) === _clipCell.mx && Math.floor(py) === _clipCell.my;
+  }
+
+  function _pressingEastWall(state) {
+    return state.keys.ArrowUp &&
+      Math.cos(state.pa) > 0.7 &&
+      Math.floor(state.px + 0.35) >= _clipWallX - 1;
+  }
+
+  function _checkClipTrigger(state, dt) {
+    if (CLI_ACTIVATED) return;
+    if (!_inClipCell(state.px, state.py)) {
+      _clipPressMs = 0;
+      return;
+    }
+    if (_pressingEastWall(state)) {
+      _clipPressMs += dt;
+      if (_clipPressMs >= _clipThresholdMs) {
+        _clipPressMs = 0;
+        _launchCLI(state);
+      }
+    } else {
+      _clipPressMs = Math.max(0, _clipPressMs - dt * 2);
+    }
+  }
+
+  function _cliPrint(text, color) {
+    var el = document.createElement('span');
+    el.style.display = 'block';
+    if (color) el.style.color = color;
+    el.textContent = text;
+    _cliOutput.appendChild(el);
+    _cliOutput.scrollTop = _cliOutput.scrollHeight;
+  }
+
+  function _runSignal() {
+    var match = _cfgCurrent.match(/key:\s*"([^"]+)"/);
+    var enteredKey = match ? match[1] : '';
+
+    if (enteredKey === '__FILL_IN__' || enteredKey === '') {
+      _cliPrint('./signal: key field is empty. edit signal.cfg first.', '#a63030');
+      return;
+    }
+
+    if (enteredKey !== CLI_SECRET_KEY) {
+      _cliPrint('./signal: authentication failed.', '#a63030');
+      _cliPrint('  key "' + enteredKey + '" is not recognised.', '#556655');
+      _cliPrint('  (keep looking.)', '#556655');
+      return;
+    }
+
+    try { localStorage.setItem('backrooms_signal_sent', '1'); } catch (err) {}
+
+    var lines = [
+      '',
+      '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
+      'SIGNAL RECEIVED.',
+      '',
+      'transmission origin: unknown',
+      'timestamp: ' + new Date().toISOString(),
+      'payload: [redacted]',
+      '',
+      'something is listening now.',
+      "it knows you're here.",
+      '',
+      '// next coordinates will be transmitted separately.',
+      '// check where you haven\'t looked yet.',
+      '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
+      '',
+    ];
+
+    var d = 0;
+    lines.forEach(function (l) {
+      d += 180;
+      setTimeout(function () {
+        _cliPrint(l, l.startsWith('\u2500') || l === 'SIGNAL RECEIVED.' ? '#7ecf8e' : '');
+      }, d);
+    });
+  }
+
+  function _onNanoKey(e) {
+    if (e.key !== 'Enter') return;
+    var raw = _cliInput.value.trim();
+    _cliInput.value = '';
+
+    if (raw === ':q!') {
+      _nanoMode = false;
+      _cliPrint('> :q!', '#7ecf8e');
+      _cliPrint('  cancelled — file unchanged.');
+      _nanoUserVal = '';
+      return;
+    }
+
+    if (raw === ':wq') {
+      _nanoMode = false;
+      _cliPrint('> :wq', '#7ecf8e');
+      _cfgCurrent = _nanoBuffer;
+      _cliPrint('  signal.cfg saved.', '#7ecf8e');
+      _nanoUserVal = '';
+      return;
+    }
+
+    _cliPrint(raw + ': not a nano command. use :wq or :q!', '#a63030');
+  }
+
+  function _enterNano() {
+    _nanoMode = true;
+    _nanoBuffer = _cfgCurrent;
+    _cliInput.value = '';
+
+    _cliPrint('', '');
+    _cliPrint('\u250c\u2500 nano: signal.cfg \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#556655');
+    _nanoBuffer.split('\n').forEach(function (l) { _cliPrint('  ' + l, '#c8c2b4'); });
+    _cliPrint('\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#556655');
+    _cliPrint('  edit the key field. type your value and press Enter.', '#556655');
+    _cliPrint('  :wq to save and exit  |  :q! to cancel', '#556655');
+    _cliPrint('');
+
+    _cliPrint('  key: "', '#9aaa94');
+    var keyInputRow = document.createElement('div');
+    keyInputRow.style.cssText = 'display:flex;align-items:center;padding-left:36px;';
+    var keyInp = document.createElement('input');
+    keyInp.type = 'text';
+    keyInp.placeholder = 'fill in the key...';
+    keyInp.autocomplete = 'off';
+    keyInp.spellcheck = false;
+    keyInp.style.cssText = [
+      'background:transparent;border:none;border-bottom:1px solid #556655',
+      'outline:none;color:#f0ece0;font-family:inherit;font-size:13px',
+      'caret-color:#7ecf8e;width:200px',
+    ].join(';');
+    keyInputRow.appendChild(keyInp);
+    _cliOutput.appendChild(keyInputRow);
+    _cliOutput.scrollTop = _cliOutput.scrollHeight;
+    keyInp.focus();
+
+    keyInp.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var val = keyInp.value.trim();
+        _nanoBuffer = _cfgCurrent.replace('__FILL_IN__', val || '__FILL_IN__');
+        _cliPrint('  "' + val + '"', '#d4c57a');
+        keyInputRow.remove();
+        _cliPrint('  (key set — type :wq to save, :q! to cancel)', '#556655');
+        _nanoUserVal = val;
+        _cliInput.focus();
+      }
+    });
+  }
+
+  function _runCLICommand(raw) {
+    var parts = raw.trim().split(/\s+/);
+    var cmd = parts[0].toLowerCase();
+
+    if (cmd === 'help') {
+      [
+        'commands:',
+        '  ls                 list files',
+        '  cat <file>         print file contents',
+        '  nano <file>        edit a file',
+        '  ./signal           run the signal program',
+        '  clear              clear output',
+        '',
+      ].forEach(function (l) { _cliPrint(l); });
+      return;
+    }
+
+    if (cmd === 'clear') { _cliOutput.innerHTML = ''; return; }
+
+    if (cmd === 'ls') {
+      _cliPrint('signal.cfg', '#d4c57a');
+      _cliPrint('./signal   (executable)', '#7ecf8e');
+      return;
+    }
+
+    if (cmd === 'cat') {
+      var fname = parts[1] || '';
+      if (!_FS[fname]) { _cliPrint('cat: ' + fname + ': no such file', '#a63030'); return; }
+      _cfgCurrent.split('\n').forEach(function (l) { _cliPrint(l, '#9aaa94'); });
+      return;
+    }
+
+    if (cmd === 'nano') {
+      var nfname = parts[1] || '';
+      if (!_FS[nfname]) { _cliPrint('nano: ' + nfname + ': no such file', '#a63030'); return; }
+      _enterNano();
+      return;
+    }
+
+    if (cmd === './signal' || cmd === 'signal') {
+      _runSignal();
+      return;
+    }
+
+    _cliPrint(cmd + ': command not found', '#a63030');
+    _cliPrint("(type 'help')", '#556655');
+  }
+
+  function _onCLIKey(e) {
+    if (_nanoMode) { _onNanoKey(e); return; }
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (_cliHistIdx < _cliHistory.length - 1) _cliHistIdx++;
+      _cliInput.value = _cliHistory[_cliHistory.length - 1 - _cliHistIdx] || '';
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (_cliHistIdx > 0) _cliHistIdx--;
+      _cliInput.value = _cliHistory[_cliHistory.length - 1 - _cliHistIdx] || '';
+      return;
+    }
+    if (e.key !== 'Enter') return;
+
+    var raw = _cliInput.value.trim();
+    _cliInput.value = '';
+    _cliHistIdx = -1;
+    if (!raw) return;
+    _cliHistory.push(raw);
+    _cliPrint('> ' + raw, '#7ecf8e');
+    _runCLICommand(raw);
+  }
+
+  function _launchCLI(state) {
+    CLI_ACTIVATED = true;
+    state.keys = {};
+
+    var overlay = document.createElement('div');
+    overlay.id = 'br-cli-overlay';
+    overlay.style.cssText = [
+      'position:fixed;inset:0;z-index:9999',
+      'background:#0d0d0b',
+      'color:#b8c4b0',
+      'font-family:"Courier New",Courier,monospace',
+      'font-size:13px',
+      'line-height:1.75',
+      'display:flex',
+      'flex-direction:column',
+      'padding:28px 36px 20px',
+      'opacity:0',
+      'transition:opacity 1.8s',
+    ].join(';');
+
+    var out = document.createElement('div');
+    out.style.cssText = 'flex:1;overflow-y:auto;white-space:pre-wrap;word-break:break-word;';
+
+    var inputRow = document.createElement('div');
+    inputRow.style.cssText = [
+      'display:flex;align-items:center;gap:0',
+      'border-top:1px solid #1e1e18',
+      'padding-top:10px;flex-shrink:0',
+    ].join(';');
+
+    var promptLabel = document.createElement('span');
+    promptLabel.textContent = '> ';
+    promptLabel.style.cssText = 'color:#7ecf8e;flex-shrink:0;margin-right:4px;';
+
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.autocomplete = 'off';
+    inp.spellcheck = false;
+    inp.style.cssText = [
+      'flex:1;background:transparent;border:none;outline:none',
+      'color:#f0ece0;font-family:inherit;font-size:13px;caret-color:#7ecf8e',
+    ].join(';');
+
+    inputRow.appendChild(promptLabel);
+    inputRow.appendChild(inp);
+    overlay.appendChild(out);
+    overlay.appendChild(inputRow);
+    document.body.appendChild(overlay);
+
+    _cliEl = overlay;
+    _cliOutput = out;
+    _cliInput = inp;
+
+    setTimeout(function () { overlay.style.opacity = '1'; }, 60);
+
+    var boot = [
+      '\u2500\u2500 SIGNAL OS \u2500\u2500 unauthorised shell \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
+      'filesystem mounted at /mnt/level0',
+      "type 'help' for available commands.",
+      '',
+    ];
+    var delay = 200;
+    boot.forEach(function (line) {
+      delay += 280;
+      setTimeout(function () {
+        _cliPrint(line, line.indexOf('\u2500') === 0 ? '#556655' : '');
+        if (line === '') setTimeout(function () { inp.focus(); }, 80);
+      }, delay);
+    });
+
+    inp.addEventListener('keydown', _onCLIKey);
+
+    state.running = false;
+    if (state.raf) cancelAnimationFrame(state.raf);
+  }
+  // ── end CLI system ────────────────────────────────────────────────────────
 
   function loadImage(src) {
     return new Promise(function (resolve) {
@@ -492,6 +844,9 @@
 
   function tick(state) {
     if (!state.running) return;
+    var now = performance.now();
+    var dt = _lastTick ? Math.min(now - _lastTick, 100) : 16;
+    _lastTick = now;
 
     if (state.escapePhase === 'fade') {
       state.fadeWhite = Math.min(1, (performance.now() - state.fadeStart) / 1500);
@@ -533,6 +888,7 @@
 
       updateTomato(state);
       updateChickenScare(state);
+      _checkClipTrigger(state, dt);
 
       if (cell(state.map, nx, ny) === 2 && state.escapePhase === 'play') {
         state.escapePhase = 'fade';
@@ -613,6 +969,9 @@
     window.addEventListener('keydown', state.onKeyDown);
     window.addEventListener('keyup', state.onKeyUp);
     window.addEventListener('resize', resize);
+
+    _clipPressMs = 0;
+    _lastTick = 0;
 
     active = state;
     tick(state);
