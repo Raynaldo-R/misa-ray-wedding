@@ -1751,7 +1751,10 @@ button[type=submit]:disabled {
 .chicken-game-panel.is-paused .chicken-widget--expanded { pointer-events: none; opacity: .72; }
 .chicken-upgrade-row--evo { border-color: var(--accent-dark); }
 .chicken-upgrade-row--evo.can-afford { background: rgba(196, 167, 106, .1); }
-.chicken-upgrade-row--horizon { opacity: .5; }
+.chicken-upgrade-row--horizon {
+  opacity: .32;
+  filter: saturate(0.85);
+}
 .chicken-shop-head {
   font-family: var(--sans);
   font-size: .58rem;
@@ -2199,15 +2202,30 @@ button[type=submit]:disabled {
   cursor: pointer;
   font: inherit;
   color: inherit;
-  opacity: .72;
-  transition: border-color .15s, opacity .15s, background .15s;
+  opacity: .55;
+  transition: border-color .15s, opacity .15s, background .15s, box-shadow .15s;
+}
+.chicken-upgrade-row:disabled:not(.chicken-upgrade-row--horizon) {
+  opacity: .48;
+}
+.chicken-upgrade-row:disabled .chicken-upgrade-row-main strong,
+.chicken-upgrade-row:disabled .chicken-upgrade-row-cost {
+  color: var(--ink-soft);
 }
 .chicken-upgrade-row.can-afford {
   opacity: 1;
-  border-color: var(--sage-light);
+  border: 2px solid var(--sage);
+  box-shadow: 0 0 0 1px rgba(74, 107, 95, 0.12);
+}
+.chicken-upgrade-row--burst.can-afford {
+  border-color: var(--sage);
+}
+.chicken-upgrade-row--evo.can-afford {
+  border-color: var(--accent-dark);
 }
 .chicken-upgrade-row--new-unlock {
   opacity: 1;
+  border-width: 2px;
   border-color: #8b3fd6;
   background: linear-gradient(
     125deg,
@@ -2880,7 +2898,129 @@ button[type=submit]:disabled {
   color: var(--forest);
 }
 .chicken-guest-lb { margin-top: 8px; }
-.chicken-guest-name-wrap { margin-bottom: 6px; }
+.chicken-guest-name-wrap { margin-bottom: 8px; }
+.chicken-guest-name-inline .guest-lb-prompt {
+  width: 100%;
+  gap: 6px;
+}
+.chicken-guest-name-inline .guest-lb-prompt__form {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 6px;
+}
+.chicken-guest-name-inline .guest-lb-prompt__label,
+.chicken-guest-name-inline .guest-lb-prompt__message,
+.chicken-guest-name-inline .guest-lb-prompt__title {
+  display: none;
+}
+.chicken-guest-name-inline .guest-lb-prompt__input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--ivory);
+  color: var(--ink);
+  font-size: .72rem;
+}
+.chicken-guest-name-inline .guest-lb-prompt__actions {
+  flex-shrink: 0;
+  margin: 0;
+}
+.chicken-guest-name-inline .guest-lb-prompt__submit {
+  height: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--sage-light);
+  background: rgba(74, 107, 95, .08);
+  color: var(--forest);
+  white-space: nowrap;
+}
+.chicken-guest-name-save--new-unlock,
+.chicken-guest-lb-toggle--attention {
+  position: relative;
+  overflow: visible;
+  border-width: 2px !important;
+  border-color: #8b3fd6 !important;
+  background: linear-gradient(
+    125deg,
+    rgba(123, 63, 228, 0.16) 0%,
+    rgba(255, 214, 0, 0.24) 45%,
+    rgba(255, 120, 220, 0.14) 72%,
+    rgba(123, 63, 228, 0.18) 100%
+  ) !important;
+  box-shadow: 0 0 0 1px rgba(123, 63, 228, 0.32), 0 0 14px rgba(255, 214, 0, 0.28);
+  animation: chicken-new-unlock-glow 2.6s ease-in-out infinite;
+  color: #5a2898 !important;
+}
+.chicken-guest-lb-toggle--attention::before,
+.chicken-guest-lb-toggle--attention::after,
+.chicken-guest-name-save--new-unlock::before,
+.chicken-guest-name-save--new-unlock::after {
+  position: absolute;
+  font-size: .55rem;
+  line-height: 1;
+  color: #ffd600;
+  text-shadow: 0 0 4px rgba(255, 214, 0, 0.65);
+  pointer-events: none;
+  animation: chicken-sparkle 1.8s ease-in-out infinite;
+}
+.chicken-guest-lb-toggle--attention::before,
+.chicken-guest-name-save--new-unlock::before {
+  content: '✦';
+  top: -5px;
+  right: 4px;
+}
+.chicken-guest-lb-toggle--attention::after,
+.chicken-guest-name-save--new-unlock::after {
+  content: '✧';
+  bottom: -4px;
+  left: 6px;
+  animation-delay: .9s;
+}
+.chicken-guest-namebar--compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--ivory);
+  font-size: .65rem;
+}
+.chicken-guest-namebar--compact .guest-lb-namebar__name { font-size: .72rem; }
+.chicken-click-hint {
+  position: absolute;
+  top: 14%;
+  left: 50%;
+  z-index: 22;
+  margin: 0;
+  padding: 7px 14px;
+  transform: translateX(-50%);
+  font-family: var(--sans);
+  font-size: clamp(.78rem, 2.2vw, .92rem);
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: var(--ink);
+  text-align: center;
+  white-space: nowrap;
+  background: rgba(250, 249, 246, .94);
+  border: 2px solid var(--sage);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(26, 36, 33, .14);
+  pointer-events: none;
+  animation: chicken-click-hint-bounce 1.15s ease-in-out infinite;
+}
+@keyframes chicken-click-hint-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
+@keyframes chicken-sparkle {
+  0%, 100% { opacity: .45; transform: scale(.85) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(18deg); }
+}
 .guest-lb-prompt--exit {
   position: absolute;
   inset: 0;
@@ -3766,16 +3906,16 @@ section:not(.hero) h2::after {
               <div class="chicken-widget-stage">
                 <div class="chicken-widget-ground"></div>
                 <div class="chicken-widget-birds" id="chicken-preview-flock">
-                  <img class="chicken-bird" src="assets/game/hen-portrait-a.png" alt="" width="40" height="50">
-                  <img class="chicken-bird" src="assets/game/hen-portrait-b.png" alt="" width="40" height="50" style="display:none">
-                  <img class="chicken-bird" src="assets/game/rooster-portrait.png" alt="" width="40" height="50" style="display:none">
+                  <img class="chicken-bird" src="assets/game/hen-a.gif" alt="" width="40" height="50">
+                  <img class="chicken-bird" src="assets/game/hen-b.gif" alt="" width="40" height="50" style="display:none">
+                  <img class="chicken-bird" src="assets/game/rooster.gif" alt="" width="40" height="50" style="display:none">
                 </div>
               </div>
             </div>
             <span class="chicken-expand-hint">Click to play ↗</span>
           </button>
           <div class="fund-gif fund-gif--mobile" aria-hidden="true">
-            <img src="assets/game/hen-portrait-a.png" alt="" width="120" height="80">
+            <img src="assets/game/hen-a.gif" alt="" width="120" height="80">
           </div>
           <h3>The Chickens</h3>
           <hr class="fund-rule">
@@ -3856,6 +3996,7 @@ section:not(.hero) h2::after {
           <div id="chicken-hof-retired"></div>
         </div>
         <div class="chicken-sidebar-footer">
+          <div id="chicken-guest-name" class="chicken-guest-name-wrap" aria-label="Guest name for leaderboard"></div>
           <button type="button" class="chicken-guest-lb-toggle" id="chicken-guest-lb-toggle" aria-expanded="false" aria-controls="chicken-guest-lb-popover">Guest leaderboard</button>
           <div class="chicken-guest-lb-popover" id="chicken-guest-lb-popover" hidden>
             <div id="chicken-guest-lb" class="chicken-guest-lb" aria-label="Guest coop scores"></div>
@@ -3863,7 +4004,6 @@ section:not(.hero) h2::after {
         </div>
       </aside>
       <div class="chicken-game-center">
-        <div id="chicken-guest-name" class="chicken-guest-name-wrap" aria-label="Guest name for leaderboard"></div>
         <div class="chicken-game-hud" aria-live="polite">
           <div>Grains<span id="chicken-hud-grains">0</span></div>
           <div>Worms<span id="chicken-hud-worms">0</span></div>
@@ -3886,6 +4026,7 @@ section:not(.hero) h2::after {
         </div>
         <div class="chicken-game-main">
           <div class="chicken-widget chicken-widget--expanded" id="chicken-click-area" aria-label="Click to feed the flock">
+            <p class="chicken-click-hint" id="chicken-click-hint" hidden>Click that Chicken!</p>
             <div class="chicken-toast" id="chicken-toast" hidden></div>
             <div class="chicken-combo-hud" id="chicken-combo-hud" hidden>
               <span class="chicken-combo-label">GRAIN</span>

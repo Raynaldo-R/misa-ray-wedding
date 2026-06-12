@@ -380,6 +380,7 @@
     if (s.flockMilestoneFlags && s.flockMilestoneFlags.habitat) seen.habitatShop = true;
     if (seen.grainStorm || seen.wormStorm) seen.firstBoost = true;
     if (s.firstQuantumSeen) seen.quantum = true;
+    if ((s.lifetimeGrains || 0) > 0) seen.clickChicken = true;
     var i;
     for (i = 0; i < s.flock.length; i++) {
       if (s.flock[i].paired) {
@@ -942,44 +943,59 @@
     state.seenShopUnlocks[key] = true;
   }
 
-  function isNewShopUnlock(state, key, gateOk) {
-    return !!gateOk && !shopUnlockSeen(state, key);
+  function isNewShopUnlock(state, key, ready) {
+    return !!ready && !shopUnlockSeen(state, key);
   }
 
   function seedSeenShopUnlocks(state) {
     if (!state.seenShopUnlocks) state.seenShopUnlocks = {};
     var s = state;
     var mark = function (key) { state.seenShopUnlocks[key] = true; };
+    var now = Date.now();
     GRAIN_CLICK_UPGRADES.forEach(function (g) {
-      if (s.bought[g.id] || flockGateOk(s, g)) mark('grain:' + g.id);
+      var wc = wormCostForGrain(g.cost);
+      if (s.bought[g.id] || (flockGateOk(s, g) && canPay(s, g.cost, wc))) mark('grain:' + g.id);
     });
     WORM_CLICK_UPGRADES.forEach(function (w) {
-      if (s.bought[w.id] || (s.wormsUnlocked && flockGateOk(s, w))) mark('worm:' + w.id);
+      var wc = w.wormCost || wormCostForGrain(w.cost);
+      if (s.bought[w.id] || (s.wormsUnlocked && flockGateOk(s, w) && canPay(s, w.cost, wc))) mark('worm:' + w.id);
     });
     COOP_UPGRADES.forEach(function (def) {
       if (def.id === 'nest' && !flockMilestoneMet(s, 'nest')) return;
       if (def.id === 'incubator' && !flockMilestoneMet(s, 'incubator')) return;
       var count = s.bought[def.id] || 0;
-      if (count >= (def.max || 999) || flockGateOk(s, def)) mark('coop:' + def.id);
+      var cost = coopUpgradeCost(def, s);
+      var wc = wormCostForGrain(cost);
+      if (count >= (def.max || 999) || (flockGateOk(s, def) && canPay(s, cost, wc))) mark('coop:' + def.id);
     });
-    if (flockMilestoneMet(s, 'habitat')) mark('habitat');
+    if (flockMilestoneMet(s, 'habitat')) {
+      var habTier = s.habitat || 0;
+      if (habTier < HABITAT_TIERS.length - 1) {
+        var nextHab = HABITAT_TIERS[habTier + 1];
+        var minFlock = HABITAT_MIN_FLOCK[nextHab.tier];
+        if (s.grains >= nextHab.cost && habitatTierAvailable(s, nextHab.tier)) mark('habitat');
+        else if (s.flock.length >= minFlock && s.grains >= nextHab.cost) mark('habitat');
+      }
+    }
     BROODING_UPGRADES.forEach(function (def, idx) {
       if (s.broodingBought[def.id]) mark('brood:' + def.id);
-      else if (hasHatchedBird(s) && (!idx || s.broodingBought[BROODING_UPGRADES[idx - 1].id]) && flockGateOk(s, def)) {
+      else if (hasHatchedBird(s) && (!idx || s.broodingBought[BROODING_UPGRADES[idx - 1].id]) &&
+        flockGateOk(s, def) && s.grains >= def.cost) {
         mark('brood:' + def.id);
       }
     });
     if (s.forageUnlocked) {
       AUTO_FEEDER_TIERS.forEach(function (def, idx) {
         if (s.autoFeederBought[def.id]) mark('feeder:' + def.id);
-        else if (def.cost && (!idx || s.autoFeederBought[AUTO_FEEDER_TIERS[idx - 1].id]) && flockGateOk(s, def)) {
+        else if (def.cost && (!idx || s.autoFeederBought[AUTO_FEEDER_TIERS[idx - 1].id]) &&
+          flockGateOk(s, def) && s.grains >= def.cost) {
           mark('feeder:' + def.id);
         }
       });
     }
-    if (s.milestones.grainStorm) mark('burst:grain');
-    if (s.milestones.wormStorm) mark('burst:worm');
-    if (s.milestones.giantWormStorm) mark('burst:giant');
+    if (s.milestones.grainStorm && now >= s.burstGrainCd) mark('burst:grain');
+    if (s.milestones.wormStorm && now >= s.burstWormCd) mark('burst:worm');
+    if (s.milestones.giantWormStorm && now >= s.burstGiantCd) mark('burst:giant');
   }
 
   function flockGateOk(state, def) {
@@ -2264,6 +2280,7 @@
     this.els.hudHatch = document.getElementById('chicken-hud-hatch');
     this.els.hudBoost = document.getElementById('chicken-hud-boost');
     this.els.clickArea = document.getElementById('chicken-click-area');
+    this.els.clickHint = document.getElementById('chicken-click-hint');
     this.els.stage = document.querySelector('#chicken-click-area .chicken-widget-stage');
     this.els.yardStage = this.els.stage;
     this.els.flockLayer = document.getElementById('chicken-flock-layer');
@@ -3317,6 +3334,7 @@
   ChickenClicker.prototype.onClick = function (e) {
     if (this.paused || this._imposter || this._comboCutscene) return;
     if (!e.auto) {
+      this.dismissClickHint();
       this.state.lastClickAt = Date.now();
       this._idleBurstArmed = true;
     }
@@ -4117,8 +4135,8 @@
     for (i = 0; i < imgs.length; i++) {
       var show = i < n;
       imgs[i].style.display = show ? '' : 'none';
-      if (show && i === 0) imgs[i].src = HEN_PORTRAIT_IMGS[0];
-      if (show && i === 1) imgs[i].src = this.stats.roosters ? ROOSTER_PORTRAIT_IMG : HEN_PORTRAIT_IMGS[1];
+      if (show && i === 0) imgs[i].src = HEN_GIFS[0];
+      if (show && i === 1) imgs[i].src = this.stats.roosters ? ROOSTER_GIF : HEN_GIFS[1];
     }
   };
 
@@ -4131,17 +4149,29 @@
       if (buy.indexOf('evo:') === 0) {
         var bird = self.findBird(Number(buy.split(':')[1]));
         var next = bird ? getNextEvolution(bird, s) : null;
-      var afford = next && s.worms >= evoWormCostFor(s, next);
-      btn.disabled = !afford;
-      btn.classList.toggle('can-afford', !!afford);
-      return;
-    }
-    var gc = Number(btn.getAttribute('data-grain-cost'));
+        var afford = next && s.worms >= evoWormCostFor(s, next);
+        btn.disabled = !afford;
+        btn.classList.toggle('can-afford', !!afford);
+        btn.classList.toggle('chicken-upgrade-row--new-unlock', isNewShopUnlock(s, buy, afford));
+        return;
+      }
+      var gc = Number(btn.getAttribute('data-grain-cost'));
       var wc = Number(btn.getAttribute('data-worm-cost'));
       var mf = Number(btn.getAttribute('data-min-flock') || 0);
       var afford = canPay(s, gc, wc) && s.flock.length >= mf;
+      var isHorizon = btn.classList.contains('chicken-upgrade-row--horizon');
       btn.disabled = !afford;
       btn.classList.toggle('can-afford', afford);
+      btn.classList.toggle('chicken-upgrade-row--new-unlock', !isHorizon && isNewShopUnlock(s, buy, afford));
+    });
+    var now = Date.now();
+    this.els.upgradeList.querySelectorAll('[data-burst]').forEach(function (btn) {
+      var burst = btn.getAttribute('data-burst');
+      var ready = burst === 'grain' ? now >= s.burstGrainCd
+        : burst === 'worm' ? now >= s.burstWormCd
+          : burst === 'giant' ? now >= s.burstGiantCd
+            : false;
+      btn.classList.toggle('chicken-upgrade-row--new-unlock', isNewShopUnlock(s, 'burst:' + burst, ready));
     });
   };
 
@@ -4161,21 +4191,21 @@
     if (s.milestones.grainStorm) {
       var gReady = now >= s.burstGrainCd;
       boosts += '<button type="button" class="chicken-upgrade-row chicken-upgrade-row--burst' + (gReady ? ' can-afford' : '') +
-        (isNewShopUnlock(s, 'burst:grain', true) ? ' chicken-upgrade-row--new-unlock' : '') + '" data-burst="grain"' + (gReady ? '' : ' disabled') + '>' +
+        (isNewShopUnlock(s, 'burst:grain', gReady) ? ' chicken-upgrade-row--new-unlock' : '') + '" data-burst="grain"' + (gReady ? '' : ' disabled') + '>' +
         '<span class="chicken-upgrade-row-main"><strong>Grain storm</strong><span>30× grain for 10s</span></span>' +
         '<span class="chicken-upgrade-row-cost">' + (gReady ? 'Go' : 'CD') + '</span></button>';
     }
     if (s.milestones.wormStorm) {
       var wReady = now >= s.burstWormCd;
       boosts += '<button type="button" class="chicken-upgrade-row chicken-upgrade-row--burst' + (wReady ? ' can-afford' : '') +
-        (isNewShopUnlock(s, 'burst:worm', true) ? ' chicken-upgrade-row--new-unlock' : '') + '" data-burst="worm"' + (wReady ? '' : ' disabled') + '>' +
+        (isNewShopUnlock(s, 'burst:worm', wReady) ? ' chicken-upgrade-row--new-unlock' : '') + '" data-burst="worm"' + (wReady ? '' : ' disabled') + '>' +
         '<span class="chicken-upgrade-row-main"><strong>Worm rain</strong><span>10× worms for 10s</span></span>' +
         '<span class="chicken-upgrade-row-cost">' + (wReady ? 'Go' : 'CD') + '</span></button>';
     }
     if (s.milestones.giantWormStorm) {
       var giReady = now >= s.burstGiantCd;
       boosts += '<button type="button" class="chicken-upgrade-row chicken-upgrade-row--burst' + (giReady ? ' can-afford' : '') +
-        (isNewShopUnlock(s, 'burst:giant', true) ? ' chicken-upgrade-row--new-unlock' : '') + '" data-burst="giant"' + (giReady ? '' : ' disabled') + '>' +
+        (isNewShopUnlock(s, 'burst:giant', giReady) ? ' chicken-upgrade-row--new-unlock' : '') + '" data-burst="giant"' + (giReady ? '' : ' disabled') + '>' +
         '<span class="chicken-upgrade-row-main"><strong>Giant worm storm</strong><span>2× giant worms for 15s</span></span>' +
         '<span class="chicken-upgrade-row-cost">' + (giReady ? 'Go' : 'CD') + '</span></button>';
     }
@@ -4189,8 +4219,9 @@
         if (def.cost === 0) return;
         var fOk = flockGateOk(s, def);
         var fDesc = def.desc + (fOk ? '' : ' · need ' + formatNum(def.minFlock) + ' birds');
-        feeder += upgradeRow(def.label, fDesc, def.cost, 0, fOk && s.grains >= def.cost, 'feeder:' + def.id, false, def.minFlock,
-          isNewShopUnlock(s, 'feeder:' + def.id, fOk));
+        var fAfford = fOk && s.grains >= def.cost;
+        feeder += upgradeRow(def.label, fDesc, def.cost, 0, fAfford, 'feeder:' + def.id, false, def.minFlock,
+          isNewShopUnlock(s, 'feeder:' + def.id, fAfford));
       });
       if (feeder) html += '<h4 class="chicken-shop-head">Auto feeder</h4>' + feeder;
     }
@@ -4200,15 +4231,17 @@
       var gwc = wormCostForGrain(g.cost);
       var gOk = flockGateOk(s, g);
       var gDesc = g.desc + (gOk ? '' : ' · need ' + formatNum(g.minFlock) + ' birds');
-      clicking += upgradeRow(g.label, gDesc, g.cost, gwc, gOk && canPay(s, g.cost, gwc), 'grain:' + g.id, idx > 0, g.minFlock,
-        !idx && isNewShopUnlock(s, 'grain:' + g.id, gOk));
+      var gAfford = gOk && canPay(s, g.cost, gwc);
+      clicking += upgradeRow(g.label, gDesc, g.cost, gwc, gAfford, 'grain:' + g.id, idx > 0, g.minFlock,
+        !idx && isNewShopUnlock(s, 'grain:' + g.id, gAfford));
     });
     nextWormUpgrades(s, 2).forEach(function (w, idx) {
       var wwc = w.wormCost || wormCostForGrain(w.cost);
       var wOk = flockGateOk(s, w);
       var wDesc = w.desc + (wOk ? '' : ' · need ' + formatNum(w.minFlock) + ' birds');
-      clicking += upgradeRow(w.label, wDesc, w.cost, wwc, wOk && canPay(s, w.cost, wwc), 'worm:' + w.id, idx > 0, w.minFlock,
-        !idx && isNewShopUnlock(s, 'worm:' + w.id, wOk));
+      var wAfford = wOk && canPay(s, w.cost, wwc);
+      clicking += upgradeRow(w.label, wDesc, w.cost, wwc, wAfford, 'worm:' + w.id, idx > 0, w.minFlock,
+        !idx && isNewShopUnlock(s, 'worm:' + w.id, wAfford));
     });
     if (clicking) html += '<h4 class="chicken-shop-head">Clicking</h4>' + clicking;
 
@@ -4224,8 +4257,9 @@
       var desc = def.desc;
       if (count) desc += ' (' + count + (def.max ? '/' + def.max : '') + ')';
       if (!cOk) desc += ' · need ' + formatNum(def.minFlock) + ' birds';
-      coop += upgradeRow(def.label, desc, cost, wc, cOk && canPay(s, cost, wc), 'coop:' + def.id, false, def.minFlock,
-        isNewShopUnlock(s, 'coop:' + def.id, cOk));
+      var cAfford = cOk && canPay(s, cost, wc);
+      coop += upgradeRow(def.label, desc, cost, wc, cAfford, 'coop:' + def.id, false, def.minFlock,
+        isNewShopUnlock(s, 'coop:' + def.id, cAfford));
     });
     if (flockMilestoneMet(s, 'habitat')) {
       var habTier = s.habitat || 0;
@@ -4242,7 +4276,7 @@
         if (minFlock > 0 && s.flock.length < minFlock) habDesc += ' · need ' + formatNum(minFlock) + ' birds';
         var canHab = s.grains >= nextHab.cost && habitatTierAvailable(s, nextHab.tier);
         coop += upgradeRow('Upgrade habitat', habDesc, nextHab.cost, wormCostForGrain(nextHab.cost), canHab, 'habitat', false, minFlock,
-          isNewShopUnlock(s, 'habitat', canHab || s.flock.length >= minFlock));
+          isNewShopUnlock(s, 'habitat', canHab));
       }
     }
     if (coop) html += '<h4 class="chicken-shop-head">Coop</h4>' + coop;
@@ -4254,8 +4288,9 @@
         if (idx > 0 && !s.broodingBought[BROODING_UPGRADES[idx - 1].id]) return;
         var bOk = flockGateOk(s, def);
         var bDesc = def.desc + (bOk ? '' : ' · need ' + formatNum(def.minFlock) + ' birds');
-        brood += upgradeRow(def.label, bDesc, def.cost, wormCostForGrain(def.cost), bOk && s.grains >= def.cost, 'brood:' + def.id, false, def.minFlock,
-          isNewShopUnlock(s, 'brood:' + def.id, bOk));
+        var bAfford = bOk && s.grains >= def.cost;
+        brood += upgradeRow(def.label, bDesc, def.cost, wormCostForGrain(def.cost), bAfford, 'brood:' + def.id, false, def.minFlock,
+          isNewShopUnlock(s, 'brood:' + def.id, bAfford));
       });
       if (brood) html += '<h4 class="chicken-shop-head">Brooding</h4>' + brood;
     }
@@ -4366,26 +4401,53 @@
     });
   };
 
+  ChickenClicker.prototype.syncClickHint = function () {
+    if (!this.els.clickHint) return;
+    var seen = ensureStoriesSeen(this.state);
+    var show = !seen.clickChicken && (this.state.lifetimeGrains || 0) === 0;
+    this.els.clickHint.hidden = !show;
+  };
+
+  ChickenClicker.prototype.dismissClickHint = function () {
+    var seen = ensureStoriesSeen(this.state);
+    if (seen.clickChicken) return;
+    seen.clickChicken = true;
+    if (this.els.clickHint) this.els.clickHint.hidden = true;
+    this.scheduleSave();
+  };
+
+  ChickenClicker.prototype.updateGuestLbAttention = function () {
+    if (!window.GuestLeaderboard) return;
+    var hasName = !!GuestLeaderboard.getStoredName('clicker');
+    if (this.els.guestLbToggle) {
+      this.els.guestLbToggle.classList.toggle('chicken-guest-lb-toggle--attention', !hasName);
+    }
+    if (!this.els.guestName) return;
+    var submit = this.els.guestName.querySelector('.guest-lb-prompt__submit');
+    if (submit) submit.classList.toggle('chicken-guest-name-save--new-unlock', !hasName);
+  };
+
   ChickenClicker.prototype.setupGuestNameField = function () {
     var self = this;
     if (!window.GuestLeaderboard || !this.els.guestName) return;
     var stored = GuestLeaderboard.getStoredName('clicker');
-    if (stored && this.els.guestName.querySelector('.guest-lb-namebar--set')) return;
-    this.els.guestName.hidden = false;
+    if (stored && this.els.guestName.querySelector('.guest-lb-namebar--set')) {
+      this.updateGuestLbAttention();
+      return;
+    }
     GuestLeaderboard.mountNameField({
       category: 'clicker',
       container: this.els.guestName,
-      message: 'Your name for the guest leaderboard',
+      inline: true,
+      highlightSubmit: !stored,
       onNameSet: function () {
-        self.els.guestName.hidden = false;
+        self.updateGuestLbAttention();
         self.renderGuestLeaderboard();
         self.startGuestLbSync();
         self.submitGuestScore(null, { toast: true });
-      },
-      onSkip: function () {
-        self.els.guestName.hidden = true;
       }
     });
+    this.updateGuestLbAttention();
   };
 
   ChickenClicker.prototype.submitGuestScore = function (callback, opts) {
@@ -4449,6 +4511,7 @@
     this._visualRotateAt = Date.now() + VISUAL_ROTATE_MS;
     this.render();
     this.setupGuestNameField();
+    this.syncClickHint();
     this.renderGuestLeaderboard();
     this.startGuestLbSync();
     this.startLoops();

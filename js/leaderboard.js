@@ -391,9 +391,12 @@
     var wrap = document.createElement('div');
     wrap.className = 'guest-lb-prompt';
     if (opts.compact) wrap.classList.add('guest-lb-prompt--compact');
+    if (opts.inline) wrap.classList.add('guest-lb-prompt--inline');
 
-    if (opts.title) textEl('p', 'guest-lb-prompt__title', wrap, opts.title);
-    if (opts.message) textEl('p', 'guest-lb-prompt__message', wrap, opts.message);
+    if (!opts.inline) {
+      if (opts.title) textEl('p', 'guest-lb-prompt__title', wrap, opts.title);
+      if (opts.message) textEl('p', 'guest-lb-prompt__message', wrap, opts.message);
+    }
 
     var form = document.createElement('form');
     form.className = 'guest-lb-prompt__form';
@@ -421,6 +424,7 @@
     var submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
     submitBtn.className = 'guest-lb-prompt__submit';
+    if (opts.highlightSubmit) submitBtn.classList.add('chicken-guest-name-save--new-unlock');
     submitBtn.textContent = opts.submitLabel || 'Save score';
     actions.appendChild(submitBtn);
 
@@ -509,12 +513,15 @@
     if (!container) return null;
 
     var stored = getStoredName(opts.category);
+    var inline = !!opts.inline;
 
     clearEl(container);
-    container.className = 'guest-lb-namebar';
+    container.className = inline ? 'chicken-guest-name-wrap' : 'guest-lb-namebar';
 
     if (stored && opts.showStored !== false) {
-      container.className = 'guest-lb-namebar guest-lb-namebar--set';
+      container.className = inline
+        ? 'chicken-guest-name-wrap chicken-guest-namebar--compact guest-lb-namebar--set'
+        : 'guest-lb-namebar guest-lb-namebar--set';
       textEl('span', 'guest-lb-namebar__label', container, 'Playing as');
       textEl('strong', 'guest-lb-namebar__name', container, stored);
       var change = document.createElement('button');
@@ -530,22 +537,26 @@
 
     var built = buildPromptForm({
       compact: true,
-      message: opts.message || 'Enter your name for the guest leaderboard',
+      inline: inline,
+      message: inline ? null : (opts.message || 'Enter your name for the guest leaderboard'),
+      placeholder: opts.placeholder || (inline ? 'Your name' : 'Guest name'),
       defaultName: stored || opts.defaultName || '',
-      submitLabel: opts.submitLabel || 'Set name',
-      required: false,
+      submitLabel: opts.submitLabel || (inline ? 'Save name' : 'Set name'),
+      highlightSubmit: !!opts.highlightSubmit,
+      required: inline ? true : false,
       onSubmit: function (name, submitBtn, reenable) {
         setStoredName(opts.category, name);
-        mountNameField(Object.assign({}, opts, { showStored: true }));
+        mountNameField(Object.assign({}, opts, { showStored: true, highlightSubmit: false }));
         if (typeof opts.onNameSet === 'function') opts.onNameSet(name);
         if (reenable) reenable();
       },
-      onSkip: function () {
+      onSkip: inline ? undefined : function () {
         mountNameField(Object.assign({}, opts, { showStored: !!getStoredName(opts.category) }));
         if (typeof opts.onSkip === 'function') opts.onSkip();
       }
     });
 
+    if (inline) container.classList.add('chicken-guest-name-inline');
     container.appendChild(built.wrap);
     return { el: container, input: built.input };
   }
