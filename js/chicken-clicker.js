@@ -29,6 +29,36 @@
   var DEATH_TOP_N = 50;
   var WORM_IMG = ASSET + 'worm.png';
   var IMPOSTER_GIF = ASSET + 'imposter.gif';
+
+  function createGrubWormParticle(opts) {
+    opts = opts || {};
+    var el = document.createElement('span');
+    el.className = 'chicken-widget-worm chicken-widget-giant-worm';
+    if (opts.variant === 'mega') el.classList.add('chicken-widget-giant-worm--mega');
+    else if (opts.variant === 'steroid') el.classList.add('chicken-widget-giant-worm--steroid');
+
+    var eyeL = document.createElement('span');
+    eyeL.className = 'chicken-grub-eye chicken-grub-eye--l';
+    eyeL.setAttribute('aria-hidden', 'true');
+    var eyeR = document.createElement('span');
+    eyeR.className = 'chicken-grub-eye chicken-grub-eye--r';
+    eyeR.setAttribute('aria-hidden', 'true');
+    el.appendChild(eyeL);
+    el.appendChild(eyeR);
+
+    if (opts.variant === 'mega' || opts.variant === 'steroid') {
+      var stinger = document.createElement('span');
+      stinger.className = 'chicken-grub-stinger';
+      stinger.setAttribute('aria-hidden', 'true');
+      el.appendChild(stinger);
+    }
+
+    if (opts.width) {
+      el.style.width = opts.width + 'px';
+      el.style.height = Math.max(6, Math.round(opts.width * 0.48)) + 'px';
+    }
+    return el;
+  }
   var ROOSTER_GIF = ASSET + 'rooster.gif';
   var IMPOSTER_QTE_MS = 20000;
   var IDLE_AUTO_BURST_MS = 10000;
@@ -825,8 +855,12 @@
       '.chicken-worm-combo-special{pointer-events:auto;font-size:.65rem;padding:3px 8px;border:1px solid #8a9fd4;border-radius:3px;cursor:pointer;background:#2a3a5a;color:#fff}',
       '.chicken-leaderboard-row[data-bird-id]{cursor:pointer}',
       '.chicken-leaderboard-row[data-bird-id]:hover{background:rgba(255,255,255,.06)}',
-      '.chicken-widget-giant-worm--mega{width:22px!important;height:10px!important}',
-      '.chicken-widget-giant-worm--steroid{filter:drop-shadow(0 0 6px #39ff14) hue-rotate(70deg) saturate(2.5);width:28px!important;height:12px!important}',
+      '.chicken-widget-giant-worm--mega{background:linear-gradient(145deg,#c5eef5 0%,#5eb8d4 50%,#3a9cb8 100%)!important}',
+      '.chicken-widget-giant-worm--steroid{background:linear-gradient(145deg,#d4f8c8 0%,#6fdc4a 45%,#39b818 100%)!important;filter:drop-shadow(0 0 6px #39ff14)}',
+      '.chicken-grub-eye{position:absolute;top:38%;width:3px;height:3px;border-radius:50%;background:#2a2218}',
+      '.chicken-grub-eye--l{left:28%}',
+      '.chicken-grub-eye--r{right:28%}',
+      '.chicken-grub-stinger{position:absolute;right:-3px;top:50%;width:5px;height:3px;transform:translateY(-50%);background:#c62828;border-radius:0 50% 50% 0;box-shadow:1px 0 0 rgba(0,0,0,.12)}',
       '.chicken-combo-hud{position:absolute;top:8px;left:8px;right:8px;z-index:25;display:flex;align-items:center;gap:8px;pointer-events:none}',
       '.chicken-combo-hud[hidden]{display:none!important}',
       '.chicken-combo-label{font-family:Impact,Haettenschweiler,sans-serif;font-size:.72rem;letter-spacing:.12em;color:#ffec8b;text-shadow:0 1px 0 #8b4513,0 0 8px rgba(255,200,80,.6)}',
@@ -3263,16 +3297,13 @@
       var el;
       var size;
       if (val.giant) {
-        el = document.createElement('img');
-        el.className = 'chicken-widget-worm chicken-widget-giant-worm'
-          + (val.steroid ? ' chicken-widget-giant-worm--steroid' : val.mega ? ' chicken-widget-giant-worm--mega' : '');
-        el.src = WORM_IMG;
-        el.alt = '';
         if (val.steroid) size = 28 + Math.random() * 10;
         else if (val.mega) size = 22 + Math.random() * 8;
         else size = 16 + Math.random() * 8;
-        el.style.width = size + 'px';
-        el.style.height = 'auto';
+        el = createGrubWormParticle({
+          variant: val.steroid ? 'steroid' : val.mega ? 'mega' : 'giant',
+          width: size
+        });
       } else if (val.type === 'worm') {
         el = document.createElement('img');
         el.className = 'chicken-widget-worm';

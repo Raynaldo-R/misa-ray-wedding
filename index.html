@@ -110,7 +110,19 @@ nav a {
 nav a:hover { color: var(--accent); }
 nav a.is-active {
   color: var(--accent-dark);
-  transform: scale(1.1);
+  transform: none;
+}
+nav a.is-active::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ink);
+}
+nav a[href^="#"] {
+  position: relative;
 }
 nav a.nav-photos {
   color: var(--accent-dark);
@@ -199,7 +211,7 @@ section {
 }
 .snap-section {
   min-height: calc(100svh - var(--header-h));
-  scroll-margin-top: var(--header-h);
+  scroll-margin-top: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -238,9 +250,14 @@ section {
 }
 #funds .section-note { margin-bottom: clamp(12px, 2vh, 18px); }
 #travel.snap-section,
-#stay.snap-section,
-#rsvp.snap-section {
+#stay.snap-section {
   justify-content: flex-start;
+  overflow-y: auto;
+  padding-top: clamp(18px, 3vh, 32px);
+}
+#rsvp.snap-section,
+#funds.snap-section {
+  justify-content: center;
   overflow-y: auto;
   padding-top: clamp(18px, 3vh, 32px);
 }
@@ -2058,13 +2075,20 @@ button[type=submit]:disabled {
 .chicken-widget-giant-worm {
   position: absolute;
   display: block;
+  width: 18px;
+  height: 9px;
   border-radius: 50% 45% 50% 45% / 55% 50% 55% 50%;
   background: linear-gradient(145deg, #e8dcc0 0%, #c9b896 55%, #b8a480 100%);
   box-shadow: inset -1px -2px 0 rgba(0,0,0,.12);
 }
-.chicken-widget-giant-worm::before,
-.chicken-widget-giant-worm::after {
-  content: '';
+.chicken-widget-giant-worm--mega {
+  background: linear-gradient(145deg, #c5eef5 0%, #5eb8d4 50%, #3a9cb8 100%);
+}
+.chicken-widget-giant-worm--steroid {
+  background: linear-gradient(145deg, #d4f8c8 0%, #6fdc4a 45%, #39b818 100%);
+  filter: drop-shadow(0 0 6px #39ff14);
+}
+.chicken-grub-eye {
   position: absolute;
   top: 38%;
   width: 3px;
@@ -2072,8 +2096,19 @@ button[type=submit]:disabled {
   border-radius: 50%;
   background: #2a2218;
 }
-.chicken-widget-giant-worm::before { left: 28%; }
-.chicken-widget-giant-worm::after { right: 28%; }
+.chicken-grub-eye--l { left: 28%; }
+.chicken-grub-eye--r { right: 28%; }
+.chicken-grub-stinger {
+  position: absolute;
+  right: -3px;
+  top: 50%;
+  width: 5px;
+  height: 3px;
+  transform: translateY(-50%);
+  background: #c62828;
+  border-radius: 0 50% 50% 0;
+  box-shadow: 1px 0 0 rgba(0,0,0,.12);
+}
 .chicken-bird-slot { transition: --bird-scale 1s ease; }
 @media (max-width: 820px) {
   .chicken-game-layout {
@@ -3574,7 +3609,7 @@ section:not(.hero) h2::after {
   <div class="wire-divider" aria-hidden="true"><div class="wire-divider-track"></div></div>
 
   <!-- RSVP -->
-  <section id="rsvp" class="alt snap-section">
+  <section id="rsvp" class="snap-section">
     <div class="wrap">
       <h2>RSVP</h2>
       <p class="section-note">Kindly reply by January 20, 2027</p>
@@ -4528,17 +4563,8 @@ section:not(.hero) h2::after {
     }
   }
 
-  if (!isMobileView()) {
-    if (camToggle) {
-      camToggle.addEventListener('click', function () {
-        setChickenCam(!camOn);
-      });
-      window.addEventListener('resize', syncCamToggleVisibility);
-      syncCamToggleVisibility();
-    }
-
-    /* nav — highlight section in view while scrolling */
-    (function () {
+  /* nav — section scroll + active link (all viewports) */
+  (function () {
       var sectionIds = ['couple', 'details', 'travel', 'stay', 'rsvp', 'funds'];
       var navById = {};
       sectionIds.forEach(function (id) {
@@ -4548,6 +4574,14 @@ section:not(.hero) h2::after {
 
       function headerOffset() {
         return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 88;
+      }
+
+      function scrollSectionIntoView(id, behavior) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var headerH = headerOffset();
+        var top = window.scrollY + el.getBoundingClientRect().top - headerH;
+        window.scrollTo({ top: Math.max(0, top), behavior: behavior || 'auto' });
       }
 
       function updateNavActive() {
@@ -4562,10 +4596,74 @@ section:not(.hero) h2::after {
         });
       }
 
+      function goToSection(id, behavior) {
+        if (!id || id === 'top') {
+          window.scrollTo({ top: 0, behavior: behavior || 'auto' });
+          Object.keys(navById).forEach(function (sid) {
+            navById[sid].classList.remove('is-active');
+          });
+          return;
+        }
+        if (sectionIds.indexOf(id) === -1) return;
+        scrollSectionIntoView(id, behavior);
+        requestAnimationFrame(updateNavActive);
+      }
+
+      document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          var id = (link.getAttribute('href') || '').slice(1);
+          if (!id) return;
+          if (id === 'top') {
+            e.preventDefault();
+            history.pushState(null, '', '#top');
+            goToSection('top', 'smooth');
+            return;
+          }
+          if (sectionIds.indexOf(id) === -1) return;
+          e.preventDefault();
+          if (location.hash !== '#' + id) {
+            history.pushState(null, '', '#' + id);
+          }
+          goToSection(id, 'smooth');
+        });
+      });
+
+      window.addEventListener('hashchange', function () {
+        var id = (location.hash || '').slice(1);
+        goToSection(id, 'smooth');
+      });
+
       window.addEventListener('scroll', updateNavActive, { passive: true });
-      window.addEventListener('resize', updateNavActive);
-      updateNavActive();
-    })();
+      window.addEventListener('resize', function () {
+        var id = (location.hash || '').slice(1);
+        if (id && sectionIds.indexOf(id) !== -1) {
+          scrollSectionIntoView(id, 'auto');
+        }
+        updateNavActive();
+      });
+
+      function bootHash() {
+        var id = (location.hash || '').slice(1);
+        requestAnimationFrame(function () {
+          if (id && sectionIds.indexOf(id) !== -1) {
+            scrollSectionIntoView(id, 'auto');
+          }
+          updateNavActive();
+        });
+      }
+
+    bootHash();
+    window.addEventListener('load', bootHash);
+  })();
+
+  if (!isMobileView()) {
+    if (camToggle) {
+      camToggle.addEventListener('click', function () {
+        setChickenCam(!camOn);
+      });
+      window.addEventListener('resize', syncCamToggleVisibility);
+      syncCamToggleVisibility();
+    }
 
     function initMiniGames() {
       /* chicken fund — cookie-clicker flock sim */
