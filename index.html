@@ -65,10 +65,10 @@ header {
   max-width: none;
   margin: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: clamp(12px, 2vw, 24px);
-  padding: clamp(10px, 1.5vh, 16px) clamp(16px, 3vw, 28px) clamp(10px, 1.5vh, 16px) clamp(6px, 1.2vw, 14px);
+  padding: 8px clamp(16px, 3vw, 28px) 10px clamp(6px, 1.2vw, 14px);
 }
 .brand {
   font-family: var(--display);
@@ -78,16 +78,23 @@ header {
   color: var(--ink);
   text-decoration: none;
   white-space: nowrap;
-  line-height: 0.9;
-  margin: 0;
+  line-height: 0.86;
+  margin: 0 0 -0.44em;
   flex-shrink: 0;
   position: relative;
   z-index: 2;
-  transform-origin: left center;
+  transform-origin: left bottom;
 }
 @media (max-width: 1180px) and (min-width: 769px) {
+  .nav-inner {
+    align-items: center;
+    padding: clamp(10px, 1.5vh, 16px) clamp(16px, 3vw, 28px) clamp(10px, 1.5vh, 16px) clamp(6px, 1.2vw, 14px);
+  }
   .brand {
     font-size: clamp(2.1rem, 5.8vw, 3.85rem);
+    line-height: 0.9;
+    margin: 0;
+    transform-origin: left center;
   }
 }
 .brand .amp { color: var(--ink-soft); }
