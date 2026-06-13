@@ -3,8 +3,8 @@
 /*
  * ── dev note ──────────────────────────────────────────────────────────────
  *
- *   if you're reading the source: something is wrong with the east wall.
- *   it's been wrong since the build. nobody filed a ticket.
+ *   if you're reading the source: something is wrong with the threshold.
+ *   blue tape. north hall. nobody filed a ticket.
  *
  *   the string you need is: "  key: \"__REDACTED__\","
  *   fill in what belongs there.
@@ -15,7 +15,7 @@
 (function (global) {
   'use strict';
 
-  var MAP = [
+  var BASE_MAP = [
     '1111111111111111111111111',
     '1000000010000000000000001',
     '1011111010111111101111101',
@@ -41,10 +41,47 @@
     '1111111111111111111111111'
   ];
 
+  var MAP_W = 25;
+  var CORRIDOR_INSERT_AT = 7;
+  var CORRIDOR_RUN_ROWS = 37;
+  var CORRIDOR_X0 = 13;
+  var CORRIDOR_X1 = 15;
+  var MAP_Y_OFF = CORRIDOR_RUN_ROWS + 1;
+
+  function repeatChar(ch, n) {
+    var s = '';
+    while (n--) s += ch;
+    return s;
+  }
+
+  function buildNorthCorridorRows() {
+    var rows = [];
+    var i;
+    var tape = repeatChar('1', MAP_W).split('');
+    for (i = CORRIDOR_X0; i <= CORRIDOR_X1; i++) tape[i] = '3';
+    rows.push(tape.join(''));
+    for (i = 0; i < CORRIDOR_RUN_ROWS; i++) {
+      var walk = repeatChar('1', MAP_W).split('');
+      var x;
+      for (x = CORRIDOR_X0; x <= CORRIDOR_X1; x++) walk[x] = '0';
+      rows.push(walk.join(''));
+    }
+    return rows;
+  }
+
+  function buildMap() {
+    var rows = BASE_MAP.slice();
+    var corridor = buildNorthCorridorRows();
+    rows = rows.slice(0, CORRIDOR_INSERT_AT).concat(corridor, rows.slice(CORRIDOR_INSERT_AT));
+    return rows;
+  }
+
+  var MAP = buildMap();
+
   var FOV = Math.PI / 3;
   var MOVE_SPEED = 0.055;
   var ROT_SPEED = 0.045;
-  var MAX_DIST = 28;
+  var MAX_DIST = 36;
   var WALL_TEX = null;
   var TOMATO_IMG = null;
   var CHICKEN_IMG = null;
@@ -53,22 +90,22 @@
   var CORRIDOR_EVENTS = [
     {
       id: 'hub-east',
-      minX: 9, maxX: 16.5, minY: 9.4, maxY: 12.6,
-      spawnX: 17.55, spawnY: 10.6,
+      minX: 9, maxX: 16.5, minY: 9.4 + MAP_Y_OFF, maxY: 12.6 + MAP_Y_OFF,
+      spawnX: 17.55, spawnY: 10.6 + MAP_Y_OFF,
       fleeAngle: 0,
       minDist: 3.5, maxDist: 12
     },
     {
       id: 'hub-west',
-      minX: 9, maxX: 16.5, minY: 9.4, maxY: 12.6,
-      spawnX: 7.45, spawnY: 11.4,
+      minX: 9, maxX: 16.5, minY: 9.4 + MAP_Y_OFF, maxY: 12.6 + MAP_Y_OFF,
+      spawnX: 7.45, spawnY: 11.4 + MAP_Y_OFF,
       fleeAngle: Math.PI,
       minDist: 3.5, maxDist: 12
     },
     {
       id: 'lower-east',
-      minX: 6, maxX: 20, minY: 18.6, maxY: 20.4,
-      spawnX: 22.4, spawnY: 19.5,
+      minX: 6, maxX: 20, minY: 18.6 + MAP_Y_OFF, maxY: 20.4 + MAP_Y_OFF,
+      spawnX: 22.4, spawnY: 19.5 + MAP_Y_OFF,
       fleeAngle: 0,
       minDist: 4, maxDist: 14
     }
@@ -76,30 +113,31 @@
 
   /* Chicken dash scare zones — cross-axis sprint, cannot catch player */
   var SCARE_ZONES = [
-    { minX: 7.5, maxX: 18.5, minY: 9, maxY: 13, axis: 'x', fixed: 10.8, from: 7.6, to: 18.4 },
-    { minX: 7.5, maxX: 18.5, minY: 9, maxY: 13, axis: 'x', fixed: 11.6, from: 18.4, to: 7.6 },
+    { minX: 7.5, maxX: 18.5, minY: 9 + MAP_Y_OFF, maxY: 13 + MAP_Y_OFF, axis: 'x', fixed: 10.8 + MAP_Y_OFF, from: 7.6, to: 18.4 },
+    { minX: 7.5, maxX: 18.5, minY: 9 + MAP_Y_OFF, maxY: 13 + MAP_Y_OFF, axis: 'x', fixed: 11.6 + MAP_Y_OFF, from: 18.4, to: 7.6 },
     { minX: 0.5, maxX: 7, minY: 1, maxY: 5.5, axis: 'y', fixed: 3.2, from: 1.2, to: 5.2 },
-    { minX: 17.5, maxX: 24, minY: 14, maxY: 19, axis: 'y', fixed: 20.5, from: 14.2, to: 18.8 },
-    { minX: 8, maxX: 16, minY: 17, maxY: 20.5, axis: 'x', fixed: 18.5, from: 8.2, to: 15.8 }
+    { minX: 17.5, maxX: 24, minY: 14 + MAP_Y_OFF, maxY: 19 + MAP_Y_OFF, axis: 'y', fixed: 20.5 + MAP_Y_OFF, from: 14.2 + MAP_Y_OFF, to: 18.8 + MAP_Y_OFF },
+    { minX: 8, maxX: 16, minY: 17 + MAP_Y_OFF, maxY: 20.5 + MAP_Y_OFF, axis: 'x', fixed: 18.5 + MAP_Y_OFF, from: 8.2, to: 15.8 }
   ];
 
-  var CEIL_BASE = { r: 232, g: 218, b: 168 };
-  var FLOOR_BASE = { r: 220, g: 202, b: 142 };
-  var GRID_BROWN = { r: 148, g: 128, b: 92 };
-  var FOG_COLOR = { r: 168, g: 198, b: 224 };
+  var CEIL_BASE = { r: 228, g: 210, b: 158 };
+  var FLOOR_BASE = { r: 158, g: 138, b: 96 };
+  var GRID_BROWN = { r: 168, g: 150, b: 108 };
+  var FOG_COLOR = { r: 198, g: 178, b: 128 };
+  var WALL_BASE = { r: 214, g: 192, b: 132 };
+  var WALL_SHADE = { r: 186, g: 164, b: 110 };
 
-  // ── SECRET: east-wall clip trigger + CLI overlay ──────────────────────────
+  // ── SECRET: taped threshold clip + CLI overlay ───────────────────────────
   //
-  // Dead end at map cell (23, 11) — farthest reachable point from spawn.
-  // Sustained east-wall press (~1.2s) launches the CLI overlay on the canvas.
+  // North hall from the hub — ~11s at default speed. Blue-tape wall at the end.
+  // Sustained forward press into the threshold launches the CLI overlay.
   //
   var CLI_SECRET_KEY = 'abyss';
   var CLI_ACTIVATED = false;
 
-  var _clipCell = { mx: 23, my: 11 };
-  var _clipWallX = 24;
+  var _clipApproachRow = CORRIDOR_INSERT_AT + 1;
   var _clipPressMs = 0;
-  var _clipThresholdMs = 1200;
+  var _clipThresholdMs = 1100;
   var _lastTick = 0;
 
   var _cliEl = null;
@@ -126,13 +164,15 @@
   };
 
   function _inClipCell(px, py) {
-    return Math.floor(px) === _clipCell.mx && Math.floor(py) === _clipCell.my;
+    var mx = Math.floor(px);
+    var my = Math.floor(py);
+    return my === _clipApproachRow && mx >= CORRIDOR_X0 && mx <= CORRIDOR_X1;
   }
 
-  function _pressingEastWall(state) {
+  function _pressingTapeWall(state) {
     return state.keys.ArrowUp &&
-      Math.cos(state.pa) > 0.7 &&
-      Math.floor(state.px + 0.35) >= _clipWallX - 1;
+      Math.sin(state.pa) < -0.65 &&
+      Math.floor(state.py - 0.3) <= _clipApproachRow;
   }
 
   function _checkClipTrigger(state, dt) {
@@ -141,7 +181,7 @@
       _clipPressMs = 0;
       return;
     }
-    if (_pressingEastWall(state)) {
+    if (_pressingTapeWall(state)) {
       _clipPressMs += dt;
       if (_clipPressMs >= _clipThresholdMs) {
         _clipPressMs = 0;
@@ -522,8 +562,43 @@
 
   function atmosphere(dist) {
     var t = Math.min(1, dist / MAX_DIST);
-    var bright = Math.max(0.14, 1 - t * 0.88);
+    var bright = Math.max(0.1, 1 - t * 0.9);
     return { t: t, bright: bright };
+  }
+
+  function clamp8(n) {
+    return Math.max(0, Math.min(255, Math.round(n)));
+  }
+
+  function wallPaperRgb(texU, fog, sideShade) {
+    var wave = Math.sin(texU * Math.PI * 14) * 0.04;
+    var shade = fog.bright * sideShade * (0.92 + wave);
+    return {
+      r: clamp8(WALL_BASE.r * shade),
+      g: clamp8(WALL_BASE.g * shade),
+      b: clamp8(WALL_BASE.b * shade * 0.92)
+    };
+  }
+
+  function drawTapeMarkings(ctx, x, colW, y0, wallH) {
+    var padX = colW * 0.14;
+    var padY = wallH * 0.12;
+    var left = x + padX;
+    var top = y0 + padY;
+    var ww = colW - padX * 2;
+    var hh = wallH - padY * 2;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(42, 108, 220, 0.95)';
+    ctx.lineWidth = Math.max(2, colW * 0.22);
+    ctx.lineJoin = 'miter';
+    ctx.strokeRect(left, top, ww, hh);
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left + ww, top + hh);
+    ctx.moveTo(left + ww, top);
+    ctx.lineTo(left, top + hh);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function mixFog(r, g, b, fog) {
@@ -540,12 +615,12 @@
     var ty = Math.floor(wy);
     var fx = wx - tx;
     var fy = wy - ty;
-    var edge = 0.045;
+    var edge = 0.05;
     var onGrid = fx < edge || fy < edge || fx > 1 - edge || fy > 1 - edge;
 
     var checker = ((tx + ty) % 2) === 0;
-    var lightPad = 0.22;
-    var glowPad = 0.38;
+    var lightPad = 0.18;
+    var glowPad = 0.42;
     var inCore = checker
       && fx > 0.5 - lightPad && fx < 0.5 + lightPad
       && fy > 0.5 - lightPad && fy < 0.5 + lightPad;
@@ -554,8 +629,12 @@
       && fy > 0.5 - glowPad && fy < 0.5 + glowPad;
 
     if (inCore) {
-      var coreB = Math.round(255 * (1 - fog.t * 0.35));
-      return { r: coreB, g: coreB, b: coreB };
+      var bloom = 1 - fog.t * 0.22;
+      return {
+        r: clamp8(252 * bloom),
+        g: clamp8(246 * bloom),
+        b: clamp8(214 * bloom)
+      };
     }
     if (inGlow) {
       var gx = Math.max(fx, 1 - fx, 0.5) - 0.5;
@@ -566,9 +645,9 @@
       var baseG = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
       var baseB = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
       return mixFog(
-        Math.round(baseR + (255 - baseR) * (1 - t) * 0.9),
-        Math.round(baseG + (255 - baseG) * (1 - t) * 0.9),
-        Math.round(baseB + (255 - baseB) * (1 - t) * 0.9),
+        clamp8(baseR + (255 - baseR) * (1 - t) * 0.95),
+        clamp8(baseG + (248 - baseG) * (1 - t) * 0.95),
+        clamp8(baseB + (220 - baseB) * (1 - t) * 0.9),
         fog
       );
     }
@@ -580,8 +659,8 @@
   }
 
   function floorRgb(wx, wy, fog) {
-    var n = ((Math.floor(wx * 8) + Math.floor(wy * 8)) % 5) * 3;
-    return mixFog(FLOOR_BASE.r - n, FLOOR_BASE.g - n, FLOOR_BASE.b - n, fog);
+    var n = ((Math.floor(wx * 9) + Math.floor(wy * 9)) % 6) * 2;
+    return mixFog(FLOOR_BASE.r - n, FLOOR_BASE.g - n - 1, FLOOR_BASE.b - n - 2, fog);
   }
 
   function setPx(buf, w, x, y, c) {
@@ -592,30 +671,71 @@
     buf[i + 3] = 255;
   }
 
-  function drawWallColumn(ctx, x, colW, y0, wallH, texU, fog, isExit, sideShade) {
+  function drawWallColumn(ctx, x, colW, y0, wallH, texU, fog, cellType, sideShade) {
     var shade = fog.bright * sideShade;
-    var alpha = shade * (1 - fog.t * 0.4);
-    if (isExit) {
+    var alpha = shade * (1 - fog.t * 0.35);
+    if (cellType === 2) {
       ctx.fillStyle = 'rgb('
-        + Math.round(140 * shade) + ','
-        + Math.round(230 * shade) + ','
-        + Math.round(150 * shade) + ')';
+        + clamp8(140 * shade) + ','
+        + clamp8(230 * shade) + ','
+        + clamp8(150 * shade) + ')';
       ctx.fillRect(x, y0, colW + 1, wallH);
       return;
     }
-    if (!WALL_TEX) {
-      ctx.fillStyle = 'rgb('
-        + Math.round(196 * shade) + ','
-        + Math.round(212 * shade) + ','
-        + Math.round(106 * shade) + ')';
+    var paper = wallPaperRgb(texU, fog, sideShade);
+    if (WALL_TEX) {
+      var tw = WALL_TEX.width;
+      var sx = Math.floor(texU * tw) % tw;
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(WALL_TEX, sx, 0, 1, WALL_TEX.height, x, y0, colW + 1, wallH);
+      ctx.globalAlpha = alpha * 0.55;
+      ctx.fillStyle = 'rgb(' + paper.r + ',' + paper.g + ',' + paper.b + ')';
       ctx.fillRect(x, y0, colW + 1, wallH);
-      return;
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = 'rgb(' + paper.r + ',' + paper.g + ',' + paper.b + ')';
+      ctx.fillRect(x, y0, colW + 1, wallH);
     }
-    var tw = WALL_TEX.width;
-    var sx = Math.floor(texU * tw) % tw;
-    ctx.globalAlpha = alpha;
-    ctx.drawImage(WALL_TEX, sx, 0, 1, WALL_TEX.height, x, y0, colW + 1, wallH);
-    ctx.globalAlpha = 1;
+    if (cellType === 3) drawTapeMarkings(ctx, x, colW, y0, wallH);
+  }
+
+  function applyVhsPost(ctx, w, h, state) {
+    if (!state.postFrame || state.postFrame.width !== w || state.postFrame.height !== h) {
+      state.postFrame = ctx.createImageData(w, h);
+    }
+    var src = ctx.getImageData(0, 0, w, h);
+    var dst = state.postFrame.data;
+    var d = src.data;
+    var i;
+    var flicker = (Math.random() - 0.5) * 0.018;
+    for (i = 0; i < d.length; i += 4) {
+      var r = d[i];
+      var g = d[i + 1];
+      var b = d[i + 2];
+      r = r * 1.04 + 10;
+      g = g * 1.01 + 6;
+      b = b * 0.86 + 2;
+      var y = 0.299 * r + 0.587 * g + 0.114 * b;
+      r = r * 0.82 + y * 0.2;
+      g = g * 0.82 + y * 0.16;
+      b = b * 0.78 + y * 0.08;
+      var n = (Math.random() - 0.5) * 26;
+      r += n + flicker * 255;
+      g += n * 0.92 + flicker * 240;
+      b += n * 0.75 + flicker * 210;
+      dst[i] = clamp8(r);
+      dst[i + 1] = clamp8(g);
+      dst[i + 2] = clamp8(b);
+      dst[i + 3] = 255;
+    }
+    ctx.putImageData(state.postFrame, 0, 0);
+    ctx.fillStyle = 'rgba(18, 14, 8, 0.14)';
+    ctx.fillRect(0, 0, w, h);
+    var vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, h * 0.78);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.28)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, w, h);
   }
 
   function drawBillboard(ctx, state, sx, sy, img, alpha, flipX) {
@@ -746,9 +866,9 @@
     if (state.escapePhase !== 'play') return;
     var ctx = state.ctx;
 
-    ctx.fillStyle = 'rgba(26,36,33,0.55)';
-    ctx.fillRect(8, 8, 210, 44);
-    ctx.fillStyle = '#faf9f6';
+    ctx.fillStyle = 'rgba(24, 20, 12, 0.45)';
+    ctx.fillRect(8, 8, 220, 44);
+    ctx.fillStyle = 'rgba(248, 236, 200, 0.92)';
     ctx.font = '500 11px DM Sans, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText('Arrow keys — move & turn', 16, 26);
@@ -807,7 +927,7 @@
       var drawH = Math.min(h - top, wallH);
       var fogWall = atmosphere(dist);
       var sideShade = hit.side === 'x' ? 0.82 : 1;
-      drawWallColumn(ctx, j * colW, colW, top, drawH, hit.texU, fogWall, hit.cell === 2, sideShade);
+      drawWallColumn(ctx, j * colW, colW, top, drawH, hit.texU, fogWall, hit.cell, sideShade);
     }
 
     if (TOMATO_IMG && (state.tomatoPhase === 'peek' || state.tomatoPhase === 'scurry')) {
@@ -819,6 +939,10 @@
     }
 
     drawHud(state, w, h);
+
+    if (state.escapePhase !== 'fade' && state.escapePhase !== 'done') {
+      applyVhsPost(ctx, w, h, state);
+    }
 
     if (state.escapePhase === 'fade' || state.escapePhase === 'done') {
       ctx.fillStyle = 'rgba(255,255,255,' + state.fadeWhite + ')';
@@ -958,6 +1082,7 @@
       chickenScareZone: null,
       chickenScareCooldown: 90,
       frame: null,
+      postFrame: null,
       resize: resize,
       onKeyDown: null,
       onKeyUp: null,
