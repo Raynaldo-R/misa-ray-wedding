@@ -500,56 +500,21 @@
     };
   }
 
-  function drawTapeMarkings(ctx, x, colW, y0, wallH, mapX) {
-    if (mapX == null || mapX < CORRIDOR_X0 || mapX > CORRIDOR_X1) return;
-
-    var span = CORRIDOR_X1 - CORRIDOR_X0 + 1;
-    var u0 = (mapX - CORRIDOR_X0) / span;
-    var u1 = (mapX - CORRIDOR_X0 + 1) / span;
-    var doorL = 0.26;
-    var doorR = 0.74;
-    var doorT = 0.14;
-    var doorB = 0.86;
-    var lineW = Math.max(1.25, colW * 0.055);
-
-    function xAt(u) {
-      return x + ((u - u0) / (u1 - u0)) * colW;
-    }
-
-    var topY = y0 + wallH * doorT;
-    var botY = y0 + wallH * doorB;
+  function drawTapeDoor(ctx, x, wallW, y0, wallH) {
+    var padX = wallW * 0.22;
+    var padY = wallH * 0.12;
+    var left = x + padX;
+    var top = y0 + padY;
+    var ww = wallW - padX * 2;
+    var hh = wallH - padY * 2;
+    var lineW = Math.max(1.25, wallW * 0.018);
 
     ctx.save();
     ctx.strokeStyle = 'rgba(42, 108, 220, 0.94)';
     ctx.lineWidth = lineW;
     ctx.lineCap = 'butt';
     ctx.lineJoin = 'miter';
-
-    if (doorL >= u0 && doorL <= u1) {
-      ctx.beginPath();
-      ctx.moveTo(xAt(doorL), topY);
-      ctx.lineTo(xAt(doorL), botY);
-      ctx.stroke();
-    }
-    if (doorR >= u0 && doorR <= u1) {
-      ctx.beginPath();
-      ctx.moveTo(xAt(doorR), topY);
-      ctx.lineTo(xAt(doorR), botY);
-      ctx.stroke();
-    }
-
-    var hStart = Math.max(doorL, u0);
-    var hEnd = Math.min(doorR, u1);
-    if (hStart < hEnd) {
-      ctx.beginPath();
-      ctx.moveTo(xAt(hStart), topY);
-      ctx.lineTo(xAt(hEnd), topY);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(xAt(hStart), botY);
-      ctx.lineTo(xAt(hEnd), botY);
-      ctx.stroke();
-    }
+    ctx.strokeRect(left, top, ww, hh);
     ctx.restore();
   }
 
@@ -617,7 +582,7 @@
     buf[i + 3] = 255;
   }
 
-  function drawWallColumn(ctx, x, colW, y0, wallH, fog, cellType, sideShade, mapX) {
+  function drawWallColumn(ctx, x, colW, y0, wallH, fog, cellType, sideShade) {
     if (cellType === 2) {
       var exit = flatRgb({ r: 140, g: 230, b: 150 }, fog, sideShade);
       ctx.fillStyle = 'rgb(' + exit.r + ',' + exit.g + ',' + exit.b + ')';
@@ -627,7 +592,6 @@
     var wall = flatRgb(WALL_BASE, fog, sideShade);
     ctx.fillStyle = 'rgb(' + wall.r + ',' + wall.g + ',' + wall.b + ')';
     ctx.fillRect(x, y0, colW + 1, wallH);
-    if (cellType === 3) drawTapeMarkings(ctx, x, colW, y0, wallH, mapX);
   }
 
   function applyCliGlitch(ctx, w, h, state, t) {
@@ -757,6 +721,8 @@
 
     ctx.putImageData(state.frame, 0, 0);
 
+    var tapeDoor = null;
+
     for (var j = 0; j < numRays; j++) {
       var ang = pa - halfFov + (j / numRays) * FOV;
       var hit = castRay(map, px, py, ang, MAX_DIST);
@@ -767,8 +733,18 @@
       var drawH = Math.min(h - top, wallH);
       var fogWall = atmosphere(dist);
       var sideShade = hit.side === 'x' ? 0.82 : 1;
-      drawWallColumn(ctx, j * colW, colW, top, drawH, fogWall, hit.cell, sideShade, hit.mapX);
+      var colX = j * colW;
+      drawWallColumn(ctx, colX, colW, top, drawH, fogWall, hit.cell, sideShade);
+      if (hit.cell === 3) {
+        if (!tapeDoor) {
+          tapeDoor = { x: colX, w: colW, top: top, h: drawH };
+        } else {
+          tapeDoor.w = colX + colW - tapeDoor.x;
+        }
+      }
     }
+
+    if (tapeDoor) drawTapeDoor(ctx, tapeDoor.x, tapeDoor.w, tapeDoor.top, tapeDoor.h);
 
     drawHud(state, w, h);
 
