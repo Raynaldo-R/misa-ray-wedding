@@ -48,10 +48,10 @@
   var CORRIDOR_X1 = 15;
   // Rows inserted above BASE_MAP row CORRIDOR_INSERT_AT (tape row + corridor run).
   var MAP_Y_OFF = CORRIDOR_RUN_ROWS + 1;
-  // Hub row after corridor splice; spawn is several rows south, west of the north hall mouth.
-  var SPAWN_X = 4.5;
+  // Hub row after corridor splice; spawn west wing, south of the hub mouth.
+  var SPAWN_X = 3.5;
   var SPAWN_Y = CORRIDOR_INSERT_AT + MAP_Y_OFF + 6.5;
-  var SPAWN_PA = 0;
+  var SPAWN_PA = Math.PI / 2;
 
   function repeatChar(ch, n) {
     var s = '';
