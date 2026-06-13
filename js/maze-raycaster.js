@@ -81,8 +81,11 @@
   var FOV = Math.PI / 3;
   var MOVE_SPEED = 0.055;
   var ROT_SPEED = 0.045;
-  var MAX_DIST = 36;
-  var WALL_TEX = null;
+  var MAX_DIST = 32;
+  var MAX_CANVAS_W = 480;
+  var MAX_CANVAS_H = 360;
+  var MAX_WALL_RAYS = 176;
+  var MAX_ENV_RAYS = 88;
   var TOMATO_IMG = null;
   var CHICKEN_IMG = null;
   var active = null;
@@ -122,10 +125,8 @@
 
   var CEIL_BASE = { r: 228, g: 210, b: 158 };
   var FLOOR_BASE = { r: 158, g: 138, b: 96 };
-  var GRID_BROWN = { r: 168, g: 150, b: 108 };
   var FOG_COLOR = { r: 198, g: 178, b: 128 };
   var WALL_BASE = { r: 214, g: 192, b: 132 };
-  var WALL_SHADE = { r: 186, g: 164, b: 110 };
 
   // ── SECRET: taped threshold clip + CLI overlay ───────────────────────────
   //
@@ -476,20 +477,6 @@
     });
   }
 
-  function loadTexture(src) {
-    return loadImage(src).then(function (img) {
-      if (!img) return null;
-      var c = document.createElement('canvas');
-      c.width = img.height;
-      c.height = img.width;
-      var g = c.getContext('2d');
-      g.translate(c.width, 0);
-      g.rotate(Math.PI / 2);
-      g.drawImage(img, 0, 0);
-      return c;
-    });
-  }
-
   function cell(map, x, y) {
     var mx = Math.floor(x);
     var my = Math.floor(y);
@@ -531,33 +518,45 @@
   function castRay(map, px, py, angle, maxDist) {
     var sin = Math.sin(angle);
     var cos = Math.cos(angle);
+    var mapX = Math.floor(px);
+    var mapY = Math.floor(py);
+    var stepX = cos < 0 ? -1 : 1;
+    var stepY = sin < 0 ? -1 : 1;
+    var deltaDistX = Math.abs(1 / (cos || 1e-6));
+    var deltaDistY = Math.abs(1 / (sin || 1e-6));
+    var sideDistX;
+    var sideDistY;
+    if (cos < 0) sideDistX = (px - mapX) * deltaDistX;
+    else sideDistX = (mapX + 1.0 - px) * deltaDistX;
+    if (sin < 0) sideDistY = (py - mapY) * deltaDistY;
+    else sideDistY = (mapY + 1.0 - py) * deltaDistY;
     var dist = 0;
-    var step = 0.02;
-    var prevX = px;
-    var prevY = py;
+    var side = 'x';
+    var c = 0;
+
     while (dist < maxDist) {
-      dist += step;
-      var x = px + cos * dist;
-      var y = py + sin * dist;
-      var c = cell(map, x, y);
-      if (c > 0) {
-        var side = Math.abs(x - prevX) > Math.abs(y - prevY) ? 'x' : 'y';
-        var texU = side === 'x'
-          ? ((y % 1) + 1) % 1
-          : ((x % 1) + 1) % 1;
-        return { dist: dist, cell: c, x: x, y: y, side: side, texU: texU };
+      if (sideDistX < sideDistY) {
+        dist = sideDistX;
+        sideDistX += deltaDistX;
+        mapX += stepX;
+        side = 'x';
+      } else {
+        dist = sideDistY;
+        sideDistY += deltaDistY;
+        mapY += stepY;
+        side = 'y';
       }
-      prevX = x;
-      prevY = y;
+      if (mapY < 0 || mapY >= map.length || mapX < 0 || mapX >= map[0].length) {
+        return { dist: maxDist, cell: 1, side: side, texU: 0 };
+      }
+      c = map[mapY].charCodeAt(mapX) - 48;
+      if (c > 0) {
+        var texU = side === 'x' ? (py + dist * sin) % 1 : (px + dist * cos) % 1;
+        if (texU < 0) texU += 1;
+        return { dist: Math.max(0.001, dist), cell: c, side: side, texU: texU };
+      }
     }
-    return {
-      dist: maxDist,
-      cell: 0,
-      x: px + cos * maxDist,
-      y: py + sin * maxDist,
-      side: 'x',
-      texU: 0
-    };
+    return { dist: maxDist, cell: 0, side: 'x', texU: 0 };
   }
 
   function atmosphere(dist) {
@@ -611,22 +610,19 @@
   }
 
   function ceilingRgb(wx, wy, fog) {
+    if (fog.t > 0.72) {
+      return mixFog(CEIL_BASE.r, CEIL_BASE.g, CEIL_BASE.b, fog);
+    }
     var tx = Math.floor(wx);
     var ty = Math.floor(wy);
     var fx = wx - tx;
     var fy = wy - ty;
-    var edge = 0.05;
-    var onGrid = fx < edge || fy < edge || fx > 1 - edge || fy > 1 - edge;
-
-    var checker = ((tx + ty) % 2) === 0;
+    var checker = ((tx + ty) & 1) === 0;
     var lightPad = 0.18;
     var glowPad = 0.42;
     var inCore = checker
       && fx > 0.5 - lightPad && fx < 0.5 + lightPad
       && fy > 0.5 - lightPad && fy < 0.5 + lightPad;
-    var inGlow = checker
-      && fx > 0.5 - glowPad && fx < 0.5 + glowPad
-      && fy > 0.5 - glowPad && fy < 0.5 + glowPad;
 
     if (inCore) {
       var bloom = 1 - fog.t * 0.22;
@@ -636,14 +632,18 @@
         b: clamp8(214 * bloom)
       };
     }
+
+    var inGlow = checker
+      && fx > 0.5 - glowPad && fx < 0.5 + glowPad
+      && fy > 0.5 - glowPad && fy < 0.5 + glowPad;
     if (inGlow) {
       var gx = Math.max(fx, 1 - fx, 0.5) - 0.5;
       var gy = Math.max(fy, 1 - fy, 0.5) - 0.5;
       var edgeDist = Math.max(gx / glowPad, gy / glowPad);
-      var t = Math.min(1, edgeDist);
-      var baseR = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
-      var baseG = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
-      var baseB = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
+      var t = edgeDist > 1 ? 1 : edgeDist;
+      var baseR = CEIL_BASE.r;
+      var baseG = CEIL_BASE.g;
+      var baseB = CEIL_BASE.b;
       return mixFog(
         clamp8(baseR + (255 - baseR) * (1 - t) * 0.95),
         clamp8(baseG + (248 - baseG) * (1 - t) * 0.95),
@@ -652,10 +652,7 @@
       );
     }
 
-    var r = onGrid ? GRID_BROWN.r : CEIL_BASE.r;
-    var g = onGrid ? GRID_BROWN.g : CEIL_BASE.g;
-    var b = onGrid ? GRID_BROWN.b : CEIL_BASE.b;
-    return mixFog(r, g, b, fog);
+    return mixFog(CEIL_BASE.r, CEIL_BASE.g, CEIL_BASE.b, fog);
   }
 
   function floorRgb(wx, wy, fog) {
@@ -673,7 +670,6 @@
 
   function drawWallColumn(ctx, x, colW, y0, wallH, texU, fog, cellType, sideShade) {
     var shade = fog.bright * sideShade;
-    var alpha = shade * (1 - fog.t * 0.35);
     if (cellType === 2) {
       ctx.fillStyle = 'rgb('
         + clamp8(140 * shade) + ','
@@ -683,59 +679,58 @@
       return;
     }
     var paper = wallPaperRgb(texU, fog, sideShade);
-    if (WALL_TEX) {
-      var tw = WALL_TEX.width;
-      var sx = Math.floor(texU * tw) % tw;
-      ctx.globalAlpha = alpha;
-      ctx.drawImage(WALL_TEX, sx, 0, 1, WALL_TEX.height, x, y0, colW + 1, wallH);
-      ctx.globalAlpha = alpha * 0.55;
-      ctx.fillStyle = 'rgb(' + paper.r + ',' + paper.g + ',' + paper.b + ')';
-      ctx.fillRect(x, y0, colW + 1, wallH);
-      ctx.globalAlpha = 1;
-    } else {
-      ctx.fillStyle = 'rgb(' + paper.r + ',' + paper.g + ',' + paper.b + ')';
-      ctx.fillRect(x, y0, colW + 1, wallH);
-    }
+    ctx.fillStyle = 'rgb(' + paper.r + ',' + paper.g + ',' + paper.b + ')';
+    ctx.fillRect(x, y0, colW + 1, wallH);
     if (cellType === 3) drawTapeMarkings(ctx, x, colW, y0, wallH);
   }
 
-  function applyVhsPost(ctx, w, h, state) {
-    if (!state.postFrame || state.postFrame.width !== w || state.postFrame.height !== h) {
-      state.postFrame = ctx.createImageData(w, h);
-    }
-    var src = ctx.getImageData(0, 0, w, h);
-    var dst = state.postFrame.data;
-    var d = src.data;
+  var _grainCanvas = null;
+  var _grainKey = '';
+
+  function ensureGrainCanvas(w, h) {
+    var key = w + 'x' + h;
+    if (_grainCanvas && _grainKey === key) return _grainCanvas;
+    var smallW = Math.max(128, (w / 2) | 0);
+    var smallH = Math.max(96, (h / 2) | 0);
+    var c = document.createElement('canvas');
+    c.width = smallW;
+    c.height = smallH;
+    var g = c.getContext('2d');
+    var img = g.createImageData(smallW, smallH);
+    var d = img.data;
     var i;
-    var flicker = (Math.random() - 0.5) * 0.018;
     for (i = 0; i < d.length; i += 4) {
-      var r = d[i];
-      var g = d[i + 1];
-      var b = d[i + 2];
-      r = r * 1.04 + 10;
-      g = g * 1.01 + 6;
-      b = b * 0.86 + 2;
-      var y = 0.299 * r + 0.587 * g + 0.114 * b;
-      r = r * 0.82 + y * 0.2;
-      g = g * 0.82 + y * 0.16;
-      b = b * 0.78 + y * 0.08;
-      var n = (Math.random() - 0.5) * 26;
-      r += n + flicker * 255;
-      g += n * 0.92 + flicker * 240;
-      b += n * 0.75 + flicker * 210;
-      dst[i] = clamp8(r);
-      dst[i + 1] = clamp8(g);
-      dst[i + 2] = clamp8(b);
-      dst[i + 3] = 255;
+      var n = (Math.random() * 255) | 0;
+      d[i] = d[i + 1] = d[i + 2] = n;
+      d[i + 3] = 16 + ((Math.random() * 12) | 0);
     }
-    ctx.putImageData(state.postFrame, 0, 0);
-    ctx.fillStyle = 'rgba(18, 14, 8, 0.14)';
+    g.putImageData(img, 0, 0);
+    _grainCanvas = c;
+    _grainKey = key;
+    return c;
+  }
+
+  function applyVhsPost(ctx, w, h, state) {
+    state._fxFrame = (state._fxFrame || 0) + 1;
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(238, 214, 155, 0.16)';
     ctx.fillRect(0, 0, w, h);
-    var vig = ctx.createRadialGradient(w / 2, h / 2, h * 0.2, w / 2, h / 2, h * 0.78);
-    vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(1, 'rgba(0,0,0,0.28)');
-    ctx.fillStyle = vig;
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = 0.2 + (state._fxFrame % 6 === 0 ? (Math.random() - 0.5) * 0.035 : 0);
+    ctx.drawImage(ensureGrainCanvas(w, h), 0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    if (!state.vigGrad || state.vigGradW !== w || state.vigGradH !== h) {
+      state.vigGrad = ctx.createRadialGradient(w / 2, h / 2, h * 0.18, w / 2, h / 2, h * 0.82);
+      state.vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      state.vigGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+      state.vigGradW = w;
+      state.vigGradH = h;
+    }
+    ctx.fillStyle = state.vigGrad;
     ctx.fillRect(0, 0, w, h);
+    ctx.restore();
   }
 
   function drawBillboard(ctx, state, sx, sy, img, alpha, flipX) {
@@ -884,8 +879,10 @@
     var py = state.py;
     var pa = state.pa;
     var halfH = h / 2;
-    var numRays = Math.max(100, Math.floor(w / 2));
+    var numRays = Math.min(MAX_WALL_RAYS, Math.max(72, (w / 2.5) | 0));
+    var envRays = Math.min(MAX_ENV_RAYS, numRays);
     var colW = Math.max(1, Math.ceil(w / numRays));
+    var envColW = Math.max(1, Math.ceil(w / envRays));
     var halfFov = FOV / 2;
 
     if (!state.frame || state.frame.width !== w || state.frame.height !== h) {
@@ -901,12 +898,12 @@
       var isCeil = y < halfH;
       var x0 = 0;
       var i;
-      for (i = 0; i < numRays; i++) {
-        var rayAngle = pa - halfFov + (i / numRays) * FOV;
+      for (i = 0; i < envRays; i++) {
+        var rayAngle = pa - halfFov + (i / envRays) * FOV;
         var wx = px + Math.cos(rayAngle) * rowDist;
         var wy = py + Math.sin(rayAngle) * rowDist;
         var c = isCeil ? ceilingRgb(wx, wy, fog) : floorRgb(wx, wy, fog);
-        var x1 = Math.min(w, Math.round((i + 1) * colW));
+        var x1 = Math.min(w, Math.round((i + 1) * envColW));
         var xi;
         for (xi = x0; xi < x1; xi++) {
           setPx(buf, w, xi, y, c);
@@ -968,6 +965,10 @@
 
   function tick(state) {
     if (!state.running) return;
+    if (document.hidden) {
+      state.raf = requestAnimationFrame(function () { tick(state); });
+      return;
+    }
     var now = performance.now();
     var dt = _lastTick ? Math.min(now - _lastTick, 100) : 16;
     _lastTick = now;
@@ -1026,7 +1027,27 @@
       }
     }
 
-    render(state);
+    if (state.escapePhase === 'done') {
+      if (!state._doneRendered) {
+        render(state);
+        state._doneRendered = true;
+      }
+      state.raf = requestAnimationFrame(function () { tick(state); });
+      return;
+    }
+
+    var keys = state.keys;
+    var moving = !!(keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight);
+    var animating = (state.tomatoPhase !== 'wait' && state.tomatoPhase !== 'done')
+      || state.chickenScarePhase === 'run'
+      || state.escapePhase === 'fade';
+    if (moving) state._needsRender = true;
+    if (animating) state._needsRender = true;
+
+    if (state._needsRender) {
+      render(state);
+      state._needsRender = moving || animating;
+    }
     state.raf = requestAnimationFrame(function () { tick(state); });
   }
 
@@ -1034,6 +1055,7 @@
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       state.keys[e.key] = down;
+      if (down) state._needsRender = true;
     }
   }
 
@@ -1043,8 +1065,9 @@
     var ctx = canvas.getContext('2d');
     var resize = function () {
       var rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = Math.floor(rect.width);
-      canvas.height = Math.floor(rect.height);
+      canvas.width = Math.min(MAX_CANVAS_W, Math.max(1, Math.floor(rect.width)));
+      canvas.height = Math.min(MAX_CANVAS_H, Math.max(1, Math.floor(rect.height)));
+      if (active) active._needsRender = true;
     };
     resize();
 
@@ -1082,7 +1105,8 @@
       chickenScareZone: null,
       chickenScareCooldown: 90,
       frame: null,
-      postFrame: null,
+      _needsRender: true,
+      _doneRendered: false,
       resize: resize,
       onKeyDown: null,
       onKeyUp: null,
@@ -1113,9 +1137,6 @@
     active = null;
   }
 
-  loadTexture('images/maze/wall.png').then(function (img) {
-    WALL_TEX = img;
-  });
   loadImage('images/maze/tomato.png').then(function (img) {
     TOMATO_IMG = img;
   });
