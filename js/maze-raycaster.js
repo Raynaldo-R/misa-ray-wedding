@@ -48,6 +48,10 @@
   var CORRIDOR_X1 = 15;
   // Rows inserted above BASE_MAP row CORRIDOR_INSERT_AT (tape row + corridor run).
   var MAP_Y_OFF = CORRIDOR_RUN_ROWS + 1;
+  // Hub row after corridor splice; spawn is several rows south, west of the north hall mouth.
+  var SPAWN_X = 4.5;
+  var SPAWN_Y = CORRIDOR_INSERT_AT + MAP_Y_OFF + 6.5;
+  var SPAWN_PA = 0;
 
   function repeatChar(ch, n) {
     var s = '';
@@ -96,15 +100,13 @@
 
   // ── SECRET: taped threshold clip + CLI overlay ───────────────────────────
   //
-  // North hall from the hub — ~11s at default speed. Blue-tape wall at the end.
-  // Sustained forward press into the threshold launches the CLI overlay.
+  // North hall from the hub — blue-tape door at the end. Press into the threshold to glitch into CLI.
   //
   var CLI_SECRET_KEY = 'abyss';
   var CLI_ACTIVATED = false;
 
   var _clipApproachRow = CORRIDOR_INSERT_AT + 1;
-  var _clipPressMs = 0;
-  var _clipThresholdMs = 1100;
+  var _cliGlitchMs = 1000;
   var _lastTick = 0;
 
   var _cliEl = null;
@@ -142,21 +144,17 @@
       Math.floor(state.py - 0.3) <= _clipApproachRow;
   }
 
-  function _checkClipTrigger(state, dt) {
-    if (CLI_ACTIVATED) return;
-    if (!_inClipCell(state.px, state.py)) {
-      _clipPressMs = 0;
-      return;
-    }
-    if (_pressingTapeWall(state)) {
-      _clipPressMs += dt;
-      if (_clipPressMs >= _clipThresholdMs) {
-        _clipPressMs = 0;
-        _launchCLI(state);
-      }
-    } else {
-      _clipPressMs = Math.max(0, _clipPressMs - dt * 2);
-    }
+  function _startCliGlitch(state) {
+    if (CLI_ACTIVATED || state.cliGlitch) return;
+    state.cliGlitch = { start: performance.now(), duration: _cliGlitchMs };
+    state.keys = {};
+    state._needsRender = true;
+  }
+
+  function _checkClipTrigger(state) {
+    if (CLI_ACTIVATED || state.cliGlitch) return;
+    if (!_inClipCell(state.px, state.py)) return;
+    if (_pressingTapeWall(state)) _startCliGlitch(state);
   }
 
   function _cliPrint(text, color) {
@@ -374,7 +372,7 @@
       'flex-direction:column',
       'padding:28px 36px 20px',
       'opacity:0',
-      'transition:opacity 1.8s',
+      'transition:opacity 0.35s',
     ].join(';');
 
     var out = document.createElement('div');
@@ -473,14 +471,14 @@
         side = 'y';
       }
       if (mapY < 0 || mapY >= map.length || mapX < 0 || mapX >= map[0].length) {
-        return { dist: maxDist, cell: 1, side: side };
+        return { dist: maxDist, cell: 1, side: side, mapX: mapX, mapY: mapY };
       }
       c = map[mapY].charCodeAt(mapX) - 48;
       if (c > 0) {
-        return { dist: Math.max(0.001, dist), cell: c, side: side };
+        return { dist: Math.max(0.001, dist), cell: c, side: side, mapX: mapX, mapY: mapY };
       }
     }
-    return { dist: maxDist, cell: 0, side: 'x' };
+    return { dist: maxDist, cell: 0, side: 'x', mapX: mapX, mapY: mapY };
   }
 
   function atmosphere(dist) {
@@ -502,24 +500,56 @@
     };
   }
 
-  function drawTapeMarkings(ctx, x, colW, y0, wallH) {
-    var padX = colW * 0.14;
-    var padY = wallH * 0.12;
-    var left = x + padX;
-    var top = y0 + padY;
-    var ww = colW - padX * 2;
-    var hh = wallH - padY * 2;
+  function drawTapeMarkings(ctx, x, colW, y0, wallH, mapX) {
+    if (mapX == null || mapX < CORRIDOR_X0 || mapX > CORRIDOR_X1) return;
+
+    var span = CORRIDOR_X1 - CORRIDOR_X0 + 1;
+    var u0 = (mapX - CORRIDOR_X0) / span;
+    var u1 = (mapX - CORRIDOR_X0 + 1) / span;
+    var doorL = 0.26;
+    var doorR = 0.74;
+    var doorT = 0.14;
+    var doorB = 0.86;
+    var lineW = Math.max(1.25, colW * 0.055);
+
+    function xAt(u) {
+      return x + ((u - u0) / (u1 - u0)) * colW;
+    }
+
+    var topY = y0 + wallH * doorT;
+    var botY = y0 + wallH * doorB;
+
     ctx.save();
-    ctx.strokeStyle = 'rgba(42, 108, 220, 0.95)';
-    ctx.lineWidth = Math.max(2, colW * 0.22);
+    ctx.strokeStyle = 'rgba(42, 108, 220, 0.94)';
+    ctx.lineWidth = lineW;
+    ctx.lineCap = 'butt';
     ctx.lineJoin = 'miter';
-    ctx.strokeRect(left, top, ww, hh);
-    ctx.beginPath();
-    ctx.moveTo(left, top);
-    ctx.lineTo(left + ww, top + hh);
-    ctx.moveTo(left + ww, top);
-    ctx.lineTo(left, top + hh);
-    ctx.stroke();
+
+    if (doorL >= u0 && doorL <= u1) {
+      ctx.beginPath();
+      ctx.moveTo(xAt(doorL), topY);
+      ctx.lineTo(xAt(doorL), botY);
+      ctx.stroke();
+    }
+    if (doorR >= u0 && doorR <= u1) {
+      ctx.beginPath();
+      ctx.moveTo(xAt(doorR), topY);
+      ctx.lineTo(xAt(doorR), botY);
+      ctx.stroke();
+    }
+
+    var hStart = Math.max(doorL, u0);
+    var hEnd = Math.min(doorR, u1);
+    if (hStart < hEnd) {
+      ctx.beginPath();
+      ctx.moveTo(xAt(hStart), topY);
+      ctx.lineTo(xAt(hEnd), topY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(xAt(hStart), botY);
+      ctx.lineTo(xAt(hEnd), botY);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -587,7 +617,7 @@
     buf[i + 3] = 255;
   }
 
-  function drawWallColumn(ctx, x, colW, y0, wallH, fog, cellType, sideShade) {
+  function drawWallColumn(ctx, x, colW, y0, wallH, fog, cellType, sideShade, mapX) {
     if (cellType === 2) {
       var exit = flatRgb({ r: 140, g: 230, b: 150 }, fog, sideShade);
       ctx.fillStyle = 'rgb(' + exit.r + ',' + exit.g + ',' + exit.b + ')';
@@ -597,7 +627,59 @@
     var wall = flatRgb(WALL_BASE, fog, sideShade);
     ctx.fillStyle = 'rgb(' + wall.r + ',' + wall.g + ',' + wall.b + ')';
     ctx.fillRect(x, y0, colW + 1, wallH);
-    if (cellType === 3) drawTapeMarkings(ctx, x, colW, y0, wallH);
+    if (cellType === 3) drawTapeMarkings(ctx, x, colW, y0, wallH, mapX);
+  }
+
+  function applyCliGlitch(ctx, w, h, state, t) {
+    if (!state._glitchSnap) {
+      state._glitchSnap = document.createElement('canvas');
+    }
+    var snap = state._glitchSnap;
+    if (snap.width !== w || snap.height !== h) {
+      snap.width = w;
+      snap.height = h;
+    }
+    var sctx = snap.getContext('2d');
+    sctx.drawImage(ctx.canvas, 0, 0);
+
+    var intensity = t < 0.78 ? t / 0.78 : 1;
+    var slices = 5 + (intensity * 16 | 0);
+    var i;
+    var sy;
+    var sh;
+    var off;
+
+    ctx.drawImage(snap, 0, 0);
+    for (i = 0; i < slices; i++) {
+      sy = (Math.random() * h) | 0;
+      sh = (2 + Math.random() * 16 * intensity) | 0;
+      off = ((Math.random() - 0.5) * 44 * intensity) | 0;
+      if (sy + sh > h) sh = h - sy;
+      if (sh > 0) ctx.drawImage(snap, 0, sy, w, sh, off, sy, w, sh);
+    }
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.28 * intensity;
+    ctx.drawImage(snap, 4 * intensity, 0);
+    ctx.globalAlpha = 0.2 * intensity;
+    ctx.drawImage(snap, -4 * intensity, 0);
+    ctx.restore();
+
+    if (intensity > 0.25) {
+      ctx.fillStyle = Math.random() > 0.55
+        ? 'rgba(42, 108, 220, ' + (0.1 + Math.random() * 0.12) + ')'
+        : 'rgba(255, 255, 255, ' + (0.06 + Math.random() * 0.1) + ')';
+      ctx.fillRect((Math.random() * w) | 0, (Math.random() * h) | 0, (Math.random() * w * 0.35) | 0, 2 + (Math.random() * 6) | 0);
+    }
+
+    ctx.fillStyle = 'rgba(0, 0, 0, ' + (0.06 * intensity) + ')';
+    for (sy = 0; sy < h; sy += 3) ctx.fillRect(0, sy, w, 1);
+
+    if (t > 0.68) {
+      ctx.fillStyle = 'rgba(0, 0, 0, ' + ((t - 0.68) / 0.32) + ')';
+      ctx.fillRect(0, 0, w, h);
+    }
   }
 
   function applyVhsPost(ctx, w, h, state) {
@@ -619,7 +701,7 @@
   }
 
   function drawHud(state, w, h) {
-    if (state.escapePhase !== 'play') return;
+    if (state.escapePhase !== 'play' || state.cliGlitch) return;
     var ctx = state.ctx;
 
     ctx.fillStyle = 'rgba(24, 20, 12, 0.45)';
@@ -685,13 +767,18 @@
       var drawH = Math.min(h - top, wallH);
       var fogWall = atmosphere(dist);
       var sideShade = hit.side === 'x' ? 0.82 : 1;
-      drawWallColumn(ctx, j * colW, colW, top, drawH, fogWall, hit.cell, sideShade);
+      drawWallColumn(ctx, j * colW, colW, top, drawH, fogWall, hit.cell, sideShade, hit.mapX);
     }
 
     drawHud(state, w, h);
 
-    if (state.escapePhase !== 'fade' && state.escapePhase !== 'done') {
+    if (state.escapePhase !== 'fade' && state.escapePhase !== 'done' && !state.cliGlitch) {
       applyVhsPost(ctx, w, h, state);
+    }
+
+    if (state.cliGlitch) {
+      var glitchT = Math.min(1, (performance.now() - state.cliGlitch.start) / state.cliGlitch.duration);
+      applyCliGlitch(ctx, w, h, state, glitchT);
     }
 
     if (state.escapePhase === 'fade' || state.escapePhase === 'done') {
@@ -725,6 +812,18 @@
     var now = performance.now();
     var dt = _lastTick ? Math.min(now - _lastTick, 100) : 16;
     _lastTick = now;
+
+    if (state.cliGlitch) {
+      var glitchElapsed = now - state.cliGlitch.start;
+      render(state);
+      if (glitchElapsed >= state.cliGlitch.duration) {
+        state.cliGlitch = null;
+        _launchCLI(state);
+        return;
+      }
+      state.raf = requestAnimationFrame(function () { tick(state); });
+      return;
+    }
 
     if (state.escapePhase === 'fade') {
       state.fadeWhite = Math.min(1, (performance.now() - state.fadeStart) / 1500);
@@ -764,7 +863,7 @@
       state.py = ny;
       state.pa = pa;
 
-      _checkClipTrigger(state, dt);
+      _checkClipTrigger(state);
 
       if (cell(state.map, nx, ny) === 2 && state.escapePhase === 'play') {
         state.escapePhase = 'fade';
@@ -822,9 +921,10 @@
       canvas: canvas,
       ctx: ctx,
       map: MAP,
-      px: 14.5,
-      py: CORRIDOR_INSERT_AT + MAP_Y_OFF + 0.5,
-      pa: -Math.PI / 2,
+      px: SPAWN_X,
+      py: SPAWN_Y,
+      pa: SPAWN_PA,
+      cliGlitch: null,
       keys: {},
       running: true,
       escapePhase: 'play',
@@ -850,7 +950,6 @@
     window.addEventListener('keyup', state.onKeyUp);
     window.addEventListener('resize', resize);
 
-    _clipPressMs = 0;
     _lastTick = 0;
 
     active = state;
