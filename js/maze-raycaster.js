@@ -46,6 +46,8 @@
   var CORRIDOR_RUN_ROWS = 37;
   var CORRIDOR_X0 = 13;
   var CORRIDOR_X1 = 15;
+  // Rows inserted above BASE_MAP row CORRIDOR_INSERT_AT (tape row + corridor run).
+  var MAP_Y_OFF = CORRIDOR_RUN_ROWS + 1;
 
   function repeatChar(ch, n) {
     var s = '';
@@ -531,6 +533,45 @@
   }
 
   function ceilingRgb(wx, wy, fog) {
+    if (fog.t > 0.72) {
+      return mixFog(CEIL_BASE.r, CEIL_BASE.g, CEIL_BASE.b, fog);
+    }
+    var tx = Math.floor(wx);
+    var ty = Math.floor(wy);
+    var fx = wx - tx;
+    var fy = wy - ty;
+    var checker = ((tx + ty) & 1) === 0;
+    var lightPad = 0.18;
+    var glowPad = 0.42;
+    var inCore = checker
+      && fx > 0.5 - lightPad && fx < 0.5 + lightPad
+      && fy > 0.5 - lightPad && fy < 0.5 + lightPad;
+
+    if (inCore) {
+      var bloom = 1 - fog.t * 0.22;
+      return {
+        r: clamp8(252 * bloom),
+        g: clamp8(246 * bloom),
+        b: clamp8(214 * bloom)
+      };
+    }
+
+    var inGlow = checker
+      && fx > 0.5 - glowPad && fx < 0.5 + glowPad
+      && fy > 0.5 - glowPad && fy < 0.5 + glowPad;
+    if (inGlow) {
+      var gx = Math.max(fx, 1 - fx, 0.5) - 0.5;
+      var gy = Math.max(fy, 1 - fy, 0.5) - 0.5;
+      var edgeDist = Math.max(gx / glowPad, gy / glowPad);
+      var t = edgeDist > 1 ? 1 : edgeDist;
+      return mixFog(
+        clamp8(CEIL_BASE.r + (255 - CEIL_BASE.r) * (1 - t) * 0.95),
+        clamp8(CEIL_BASE.g + (248 - CEIL_BASE.g) * (1 - t) * 0.95),
+        clamp8(CEIL_BASE.b + (220 - CEIL_BASE.b) * (1 - t) * 0.9),
+        fog
+      );
+    }
+
     return mixFog(CEIL_BASE.r, CEIL_BASE.g, CEIL_BASE.b, fog);
   }
 
@@ -781,9 +822,9 @@
       canvas: canvas,
       ctx: ctx,
       map: MAP,
-      px: 1.5,
-      py: 1.5,
-      pa: 0,
+      px: 14.5,
+      py: CORRIDOR_INSERT_AT + MAP_Y_OFF + 0.5,
+      pa: -Math.PI / 2,
       keys: {},
       running: true,
       escapePhase: 'play',
