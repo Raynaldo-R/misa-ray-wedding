@@ -46,7 +46,6 @@
   var CORRIDOR_RUN_ROWS = 37;
   var CORRIDOR_X0 = 13;
   var CORRIDOR_X1 = 15;
-  var MAP_Y_OFF = CORRIDOR_RUN_ROWS + 1;
 
   function repeatChar(ch, n) {
     var s = '';
@@ -86,42 +85,7 @@
   var MAX_CANVAS_H = 360;
   var MAX_WALL_RAYS = 176;
   var MAX_ENV_RAYS = 88;
-  var TOMATO_IMG = null;
-  var CHICKEN_IMG = null;
   var active = null;
-
-  var CORRIDOR_EVENTS = [
-    {
-      id: 'hub-east',
-      minX: 9, maxX: 16.5, minY: 9.4 + MAP_Y_OFF, maxY: 12.6 + MAP_Y_OFF,
-      spawnX: 17.55, spawnY: 10.6 + MAP_Y_OFF,
-      fleeAngle: 0,
-      minDist: 3.5, maxDist: 12
-    },
-    {
-      id: 'hub-west',
-      minX: 9, maxX: 16.5, minY: 9.4 + MAP_Y_OFF, maxY: 12.6 + MAP_Y_OFF,
-      spawnX: 7.45, spawnY: 11.4 + MAP_Y_OFF,
-      fleeAngle: Math.PI,
-      minDist: 3.5, maxDist: 12
-    },
-    {
-      id: 'lower-east',
-      minX: 6, maxX: 20, minY: 18.6 + MAP_Y_OFF, maxY: 20.4 + MAP_Y_OFF,
-      spawnX: 22.4, spawnY: 19.5 + MAP_Y_OFF,
-      fleeAngle: 0,
-      minDist: 4, maxDist: 14
-    }
-  ];
-
-  /* Chicken dash scare zones — cross-axis sprint, cannot catch player */
-  var SCARE_ZONES = [
-    { minX: 7.5, maxX: 18.5, minY: 9 + MAP_Y_OFF, maxY: 13 + MAP_Y_OFF, axis: 'x', fixed: 10.8 + MAP_Y_OFF, from: 7.6, to: 18.4 },
-    { minX: 7.5, maxX: 18.5, minY: 9 + MAP_Y_OFF, maxY: 13 + MAP_Y_OFF, axis: 'x', fixed: 11.6 + MAP_Y_OFF, from: 18.4, to: 7.6 },
-    { minX: 0.5, maxX: 7, minY: 1, maxY: 5.5, axis: 'y', fixed: 3.2, from: 1.2, to: 5.2 },
-    { minX: 17.5, maxX: 24, minY: 14 + MAP_Y_OFF, maxY: 19 + MAP_Y_OFF, axis: 'y', fixed: 20.5 + MAP_Y_OFF, from: 14.2 + MAP_Y_OFF, to: 18.8 + MAP_Y_OFF },
-    { minX: 8, maxX: 16, minY: 17 + MAP_Y_OFF, maxY: 20.5 + MAP_Y_OFF, axis: 'x', fixed: 18.5 + MAP_Y_OFF, from: 8.2, to: 15.8 }
-  ];
 
   var CEIL_BASE = { r: 228, g: 210, b: 158 };
   var FLOOR_BASE = { r: 158, g: 138, b: 96 };
@@ -468,51 +432,11 @@
   }
   // ── end CLI system ────────────────────────────────────────────────────────
 
-  function loadImage(src) {
-    return new Promise(function (resolve) {
-      var img = new Image();
-      img.onload = function () { resolve(img); };
-      img.onerror = function () { resolve(null); };
-      img.src = src;
-    });
-  }
-
   function cell(map, x, y) {
     var mx = Math.floor(x);
     var my = Math.floor(y);
     if (my < 0 || my >= map.length || mx < 0 || mx >= map[0].length) return 1;
     return map[my].charCodeAt(mx) - 48;
-  }
-
-  function distTo(px, py, tx, ty) {
-    var dx = tx - px;
-    var dy = ty - py;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
-
-  function findCorridorTrigger(px, py) {
-    var best = null;
-    var bestDist = Infinity;
-    var i;
-    for (i = 0; i < CORRIDOR_EVENTS.length; i++) {
-      var c = CORRIDOR_EVENTS[i];
-      if (px < c.minX || px > c.maxX || py < c.minY || py > c.maxY) continue;
-      var d = distTo(px, py, c.spawnX, c.spawnY);
-      if (d >= c.minDist && d <= c.maxDist && d < bestDist) {
-        best = c;
-        bestDist = d;
-      }
-    }
-    return best;
-  }
-
-  function findScareZone(px, py) {
-    var i;
-    for (i = 0; i < SCARE_ZONES.length; i++) {
-      var z = SCARE_ZONES[i];
-      if (px >= z.minX && px <= z.maxX && py >= z.minY && py <= z.maxY) return z;
-    }
-    return null;
   }
 
   function castRay(map, px, py, angle, maxDist) {
@@ -547,16 +471,14 @@
         side = 'y';
       }
       if (mapY < 0 || mapY >= map.length || mapX < 0 || mapX >= map[0].length) {
-        return { dist: maxDist, cell: 1, side: side, texU: 0 };
+        return { dist: maxDist, cell: 1, side: side };
       }
       c = map[mapY].charCodeAt(mapX) - 48;
       if (c > 0) {
-        var texU = side === 'x' ? (py + dist * sin) % 1 : (px + dist * cos) % 1;
-        if (texU < 0) texU += 1;
-        return { dist: Math.max(0.001, dist), cell: c, side: side, texU: texU };
+        return { dist: Math.max(0.001, dist), cell: c, side: side };
       }
     }
-    return { dist: maxDist, cell: 0, side: 'x', texU: 0 };
+    return { dist: maxDist, cell: 0, side: 'x' };
   }
 
   function atmosphere(dist) {
@@ -569,13 +491,12 @@
     return Math.max(0, Math.min(255, Math.round(n)));
   }
 
-  function wallPaperRgb(texU, fog, sideShade) {
-    var wave = Math.sin(texU * Math.PI * 14) * 0.04;
-    var shade = fog.bright * sideShade * (0.92 + wave);
+  function flatRgb(base, fog, sideShade) {
+    var shade = fog.bright * (sideShade || 1);
     return {
-      r: clamp8(WALL_BASE.r * shade),
-      g: clamp8(WALL_BASE.g * shade),
-      b: clamp8(WALL_BASE.b * shade * 0.92)
+      r: clamp8(base.r * shade),
+      g: clamp8(base.g * shade),
+      b: clamp8(base.b * shade)
     };
   }
 
@@ -610,54 +531,11 @@
   }
 
   function ceilingRgb(wx, wy, fog) {
-    if (fog.t > 0.72) {
-      return mixFog(CEIL_BASE.r, CEIL_BASE.g, CEIL_BASE.b, fog);
-    }
-    var tx = Math.floor(wx);
-    var ty = Math.floor(wy);
-    var fx = wx - tx;
-    var fy = wy - ty;
-    var checker = ((tx + ty) & 1) === 0;
-    var lightPad = 0.18;
-    var glowPad = 0.42;
-    var inCore = checker
-      && fx > 0.5 - lightPad && fx < 0.5 + lightPad
-      && fy > 0.5 - lightPad && fy < 0.5 + lightPad;
-
-    if (inCore) {
-      var bloom = 1 - fog.t * 0.22;
-      return {
-        r: clamp8(252 * bloom),
-        g: clamp8(246 * bloom),
-        b: clamp8(214 * bloom)
-      };
-    }
-
-    var inGlow = checker
-      && fx > 0.5 - glowPad && fx < 0.5 + glowPad
-      && fy > 0.5 - glowPad && fy < 0.5 + glowPad;
-    if (inGlow) {
-      var gx = Math.max(fx, 1 - fx, 0.5) - 0.5;
-      var gy = Math.max(fy, 1 - fy, 0.5) - 0.5;
-      var edgeDist = Math.max(gx / glowPad, gy / glowPad);
-      var t = edgeDist > 1 ? 1 : edgeDist;
-      var baseR = CEIL_BASE.r;
-      var baseG = CEIL_BASE.g;
-      var baseB = CEIL_BASE.b;
-      return mixFog(
-        clamp8(baseR + (255 - baseR) * (1 - t) * 0.95),
-        clamp8(baseG + (248 - baseG) * (1 - t) * 0.95),
-        clamp8(baseB + (220 - baseB) * (1 - t) * 0.9),
-        fog
-      );
-    }
-
     return mixFog(CEIL_BASE.r, CEIL_BASE.g, CEIL_BASE.b, fog);
   }
 
   function floorRgb(wx, wy, fog) {
-    var n = ((Math.floor(wx * 9) + Math.floor(wy * 9)) % 6) * 2;
-    return mixFog(FLOOR_BASE.r - n, FLOOR_BASE.g - n - 1, FLOOR_BASE.b - n - 2, fog);
+    return mixFog(FLOOR_BASE.r, FLOOR_BASE.g, FLOOR_BASE.b, fog);
   }
 
   function setPx(buf, w, x, y, c) {
@@ -668,193 +546,35 @@
     buf[i + 3] = 255;
   }
 
-  function drawWallColumn(ctx, x, colW, y0, wallH, texU, fog, cellType, sideShade) {
-    var shade = fog.bright * sideShade;
+  function drawWallColumn(ctx, x, colW, y0, wallH, fog, cellType, sideShade) {
     if (cellType === 2) {
-      ctx.fillStyle = 'rgb('
-        + clamp8(140 * shade) + ','
-        + clamp8(230 * shade) + ','
-        + clamp8(150 * shade) + ')';
+      var exit = flatRgb({ r: 140, g: 230, b: 150 }, fog, sideShade);
+      ctx.fillStyle = 'rgb(' + exit.r + ',' + exit.g + ',' + exit.b + ')';
       ctx.fillRect(x, y0, colW + 1, wallH);
       return;
     }
-    var paper = wallPaperRgb(texU, fog, sideShade);
-    ctx.fillStyle = 'rgb(' + paper.r + ',' + paper.g + ',' + paper.b + ')';
+    var wall = flatRgb(WALL_BASE, fog, sideShade);
+    ctx.fillStyle = 'rgb(' + wall.r + ',' + wall.g + ',' + wall.b + ')';
     ctx.fillRect(x, y0, colW + 1, wallH);
     if (cellType === 3) drawTapeMarkings(ctx, x, colW, y0, wallH);
   }
 
-  var _grainCanvas = null;
-  var _grainKey = '';
-
-  function ensureGrainCanvas(w, h) {
-    var key = w + 'x' + h;
-    if (_grainCanvas && _grainKey === key) return _grainCanvas;
-    var smallW = Math.max(128, (w / 2) | 0);
-    var smallH = Math.max(96, (h / 2) | 0);
-    var c = document.createElement('canvas');
-    c.width = smallW;
-    c.height = smallH;
-    var g = c.getContext('2d');
-    var img = g.createImageData(smallW, smallH);
-    var d = img.data;
-    var i;
-    for (i = 0; i < d.length; i += 4) {
-      var n = (Math.random() * 255) | 0;
-      d[i] = d[i + 1] = d[i + 2] = n;
-      d[i + 3] = 16 + ((Math.random() * 12) | 0);
-    }
-    g.putImageData(img, 0, 0);
-    _grainCanvas = c;
-    _grainKey = key;
-    return c;
-  }
-
   function applyVhsPost(ctx, w, h, state) {
-    state._fxFrame = (state._fxFrame || 0) + 1;
-    ctx.save();
-    ctx.globalCompositeOperation = 'multiply';
-    ctx.fillStyle = 'rgba(238, 214, 155, 0.16)';
-    ctx.fillRect(0, 0, w, h);
-    ctx.globalCompositeOperation = 'overlay';
-    ctx.globalAlpha = 0.2 + (state._fxFrame % 6 === 0 ? (Math.random() - 0.5) * 0.035 : 0);
-    ctx.drawImage(ensureGrainCanvas(w, h), 0, 0, w, h);
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 1;
     if (!state.vigGrad || state.vigGradW !== w || state.vigGradH !== h) {
       state.vigGrad = ctx.createRadialGradient(w / 2, h / 2, h * 0.18, w / 2, h / 2, h * 0.82);
       state.vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
-      state.vigGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+      state.vigGrad.addColorStop(1, 'rgba(0,0,0,0.26)');
       state.vigGradW = w;
       state.vigGradH = h;
     }
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.fillStyle = 'rgba(236, 214, 158, 0.14)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = state.vigGrad;
     ctx.fillRect(0, 0, w, h);
     ctx.restore();
-  }
-
-  function drawBillboard(ctx, state, sx, sy, img, alpha, flipX) {
-    if (!img || alpha <= 0.01) return;
-    var w = ctx.canvas.width;
-    var h = ctx.canvas.height;
-    var halfH = h / 2;
-    var dx = sx - state.px;
-    var dy = sy - state.py;
-    var dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < 0.5 || dist > MAX_DIST) return;
-    var angle = Math.atan2(dy, dx) - state.pa;
-    while (angle > Math.PI) angle -= Math.PI * 2;
-    while (angle < -Math.PI) angle += Math.PI * 2;
-    if (Math.abs(angle) > FOV * 0.62) return;
-    var screenX = (0.5 + angle / FOV) * w;
-    var spriteH = Math.min(h * 0.45, (h / dist) * 0.26);
-    var spriteW = spriteH * (img.width / img.height);
-    var fog = atmosphere(dist);
-    var a = alpha * fog.bright * (1 - fog.t * 0.55);
-    var footY = halfH + spriteH * 0.08;
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, Math.min(1, a));
-    ctx.translate(screenX, footY - spriteH);
-    if (flipX) ctx.scale(-1, 1);
-    ctx.drawImage(img, -spriteW / 2, 0, spriteW, spriteH);
-    ctx.restore();
-    ctx.globalAlpha = 1;
-  }
-
-  function startTomatoEvent(state, corridor) {
-    state.tomatoPhase = 'peek';
-    state.tomatoX = corridor.spawnX;
-    state.tomatoY = corridor.spawnY;
-    state.tomatoFleeAngle = corridor.fleeAngle;
-    state.tomatoFlip = Math.cos(corridor.fleeAngle) < 0;
-    state.tomatoAlpha = 0;
-    state.tomatoTimer = 0;
-    state.tomatoCorridorId = corridor.id;
-  }
-
-  function updateTomato(state) {
-    if (state.tomatoPhase === 'done') return;
-
-    if (state.tomatoPhase === 'wait') {
-      var corridor = findCorridorTrigger(state.px, state.py);
-      if (corridor) startTomatoEvent(state, corridor);
-      return;
-    }
-
-    if (state.tomatoPhase === 'peek') {
-      state.tomatoTimer += 1;
-      if (state.tomatoTimer <= 8) {
-        state.tomatoAlpha = state.tomatoTimer / 8;
-      } else if (state.tomatoTimer <= 28) {
-        state.tomatoAlpha = 1;
-      } else {
-        state.tomatoPhase = 'scurry';
-        state.tomatoTimer = 0;
-      }
-      return;
-    }
-
-    if (state.tomatoPhase === 'scurry') {
-      state.tomatoTimer += 1;
-      var speed = 0.042;
-      state.tomatoX += Math.cos(state.tomatoFleeAngle) * speed;
-      state.tomatoY += Math.sin(state.tomatoFleeAngle) * speed;
-      state.tomatoAlpha = Math.max(0, 1 - state.tomatoTimer / 72);
-      if (state.tomatoTimer >= 72 || state.tomatoAlpha <= 0) {
-        state.tomatoPhase = 'done';
-        state.tomatoAlpha = 0;
-      }
-    }
-  }
-
-  function startChickenScare(state, zone) {
-    state.chickenScarePhase = 'run';
-    state.chickenScareZone = zone;
-    state.chickenScareTimer = 0;
-    state.chickenScareAlpha = 1;
-    state.chickenScareFlip = zone.from > zone.to;
-    if (zone.axis === 'x') {
-      state.chickenScareX = zone.from;
-      state.chickenScareY = zone.fixed;
-    } else {
-      state.chickenScareX = zone.fixed;
-      state.chickenScareY = zone.from;
-    }
-    state.chickenScareCooldown = 180 + Math.floor(Math.random() * 200);
-  }
-
-  function updateChickenScare(state) {
-    if (state.chickenScareCooldown > 0) state.chickenScareCooldown -= 1;
-
-    if (state.chickenScarePhase === 'done' || state.chickenScarePhase === 'idle') {
-      if (state.chickenScareCooldown > 0 || state.escapePhase !== 'play') return;
-      if (Math.random() > 0.014) return;
-      var zone = findScareZone(state.px, state.py);
-      if (zone && CHICKEN_IMG) startChickenScare(state, zone);
-      return;
-    }
-
-    if (state.chickenScarePhase === 'run') {
-      var zone = state.chickenScareZone;
-      var speed = 0.11;
-      state.chickenScareTimer += 1;
-      var t = state.chickenScareTimer / 28;
-      if (zone.axis === 'x') {
-        state.chickenScareX = zone.from + (zone.to - zone.from) * Math.min(1, t);
-        state.chickenScareY = zone.fixed;
-      } else {
-        state.chickenScareY = zone.from + (zone.to - zone.from) * Math.min(1, t);
-        state.chickenScareX = zone.fixed;
-      }
-      if (t >= 1) {
-        state.chickenScareAlpha = Math.max(0, 1 - (state.chickenScareTimer - 28) / 12);
-        if (state.chickenScareTimer >= 40) {
-          state.chickenScarePhase = 'done';
-          state.chickenScareAlpha = 0;
-          state.chickenScareCooldown = 200 + Math.floor(Math.random() * 240);
-        }
-      }
-    }
   }
 
   function drawHud(state, w, h) {
@@ -924,15 +644,7 @@
       var drawH = Math.min(h - top, wallH);
       var fogWall = atmosphere(dist);
       var sideShade = hit.side === 'x' ? 0.82 : 1;
-      drawWallColumn(ctx, j * colW, colW, top, drawH, hit.texU, fogWall, hit.cell, sideShade);
-    }
-
-    if (TOMATO_IMG && (state.tomatoPhase === 'peek' || state.tomatoPhase === 'scurry')) {
-      drawBillboard(ctx, state, state.tomatoX, state.tomatoY, TOMATO_IMG, state.tomatoAlpha, state.tomatoFlip);
-    }
-
-    if (CHICKEN_IMG && state.chickenScarePhase === 'run' && state.chickenScareAlpha > 0) {
-      drawBillboard(ctx, state, state.chickenScareX, state.chickenScareY, CHICKEN_IMG, state.chickenScareAlpha, state.chickenScareFlip);
+      drawWallColumn(ctx, j * colW, colW, top, drawH, fogWall, hit.cell, sideShade);
     }
 
     drawHud(state, w, h);
@@ -1011,8 +723,6 @@
       state.py = ny;
       state.pa = pa;
 
-      updateTomato(state);
-      updateChickenScare(state);
       _checkClipTrigger(state, dt);
 
       if (cell(state.map, nx, ny) === 2 && state.escapePhase === 'play') {
@@ -1038,15 +748,11 @@
 
     var keys = state.keys;
     var moving = !!(keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight);
-    var animating = (state.tomatoPhase !== 'wait' && state.tomatoPhase !== 'done')
-      || state.chickenScarePhase === 'run'
-      || state.escapePhase === 'fade';
     if (moving) state._needsRender = true;
-    if (animating) state._needsRender = true;
 
     if (state._needsRender) {
       render(state);
-      state._needsRender = moving || animating;
+      state._needsRender = moving;
     }
     state.raf = requestAnimationFrame(function () { tick(state); });
   }
@@ -1088,22 +794,6 @@
       escapePromptShown: false,
       onEscape: opts.onEscape || null,
       onEscapeDone: opts.onEscapeDone || null,
-      tomatoPhase: 'wait',
-      tomatoX: 0,
-      tomatoY: 0,
-      tomatoFleeAngle: 0,
-      tomatoFlip: false,
-      tomatoAlpha: 0,
-      tomatoTimer: 0,
-      tomatoCorridorId: null,
-      chickenScarePhase: 'idle',
-      chickenScareX: 0,
-      chickenScareY: 0,
-      chickenScareAlpha: 0,
-      chickenScareTimer: 0,
-      chickenScareFlip: false,
-      chickenScareZone: null,
-      chickenScareCooldown: 90,
       frame: null,
       _needsRender: true,
       _doneRendered: false,
@@ -1136,13 +826,6 @@
     window.removeEventListener('resize', active.resize);
     active = null;
   }
-
-  loadImage('images/maze/tomato.png').then(function (img) {
-    TOMATO_IMG = img;
-  });
-  loadImage('assets/game/rooster.gif').then(function (img) {
-    CHICKEN_IMG = img;
-  });
 
   global.BackroomsMaze = { start: start, stop: stop };
 })(window);
