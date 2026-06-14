@@ -124,8 +124,8 @@
     _root.className = 'signal-feed-block';
     _root.style.cssText = [
       'margin:12px 0 16px',
-      'width:100%',
-      'max-width:100%',
+      'display:inline-block',
+      'width:auto',
       'border:1px solid #2f3a2c',
       'background:#000',
       'font-family:"Courier New",Courier,monospace',
@@ -133,21 +133,22 @@
       'line-height:1.4',
       'overflow:hidden',
       'box-sizing:border-box',
+      'vertical-align:top',
     ].join(';');
 
     var top = document.createElement('div');
     top.style.cssText = [
       'display:flex',
       'align-items:center',
-      'gap:10px',
-      'padding:6px 10px',
-      'font-size:10px',
-      'letter-spacing:0.06em',
+      'gap:8px',
+      'padding:5px 8px',
+      'font-size:9px',
+      'letter-spacing:0.05em',
       'text-transform:uppercase',
       'color:#8a9a84',
       'border-bottom:1px solid #1e261c',
       'background:#0a0c08',
-      'flex-wrap:wrap',
+      'box-sizing:border-box',
     ].join(';');
 
     var rec = document.createElement('span');
@@ -190,12 +191,9 @@
     var view = document.createElement('div');
     view.style.cssText = [
       'position:relative',
-      'padding:8px',
       'background:#000',
       'overflow:hidden',
-      'display:flex',
-      'justify-content:center',
-      'align-items:center',
+      'line-height:0',
     ].join(';');
 
     var scan = document.createElement('div');
@@ -213,21 +211,23 @@
 
     var bottom = document.createElement('div');
     bottom.style.cssText = [
-      'padding:5px 10px',
-      'font-size:10px',
-      'letter-spacing:0.05em',
+      'padding:4px 8px',
+      'font-size:9px',
+      'letter-spacing:0.04em',
       'color:#7a8478',
       'border-top:1px solid #1e261c',
       'background:#0a0c08',
       'display:flex',
       'justify-content:space-between',
-      'gap:12px',
-      'flex-wrap:wrap',
+      'align-items:center',
+      'gap:8px',
+      'box-sizing:border-box',
+      'white-space:nowrap',
     ].join(';');
 
     var ts = document.createElement('span');
     var hint = document.createElement('span');
-    hint.textContent = '[1] [2] switch feed';
+    hint.textContent = '[1][2]';
     hint.style.color = '#5a6458';
 
     var sig = document.createElement('span');
@@ -249,12 +249,20 @@
     var ctx = canvas.getContext('2d');
 
     function resizeCanvas() {
-      var maxW = Math.max(280, view.clientWidth - 16);
-      var cell = Math.max(2, Math.min(6, Math.floor(maxW / w)));
-      canvas.width = w * cell;
-      canvas.height = h * cell;
-      canvas.style.width = canvas.width + 'px';
-      canvas.style.height = canvas.height + 'px';
+      var bounds = outputEl.clientWidth || window.innerWidth;
+      var maxW = Math.max(280, Math.min(bounds - 64, w * 6));
+      cell = Math.max(2, Math.min(6, Math.floor(maxW / w)));
+      var cw = w * cell;
+      var ch = h * cell;
+      canvas.width = cw;
+      canvas.height = ch;
+      canvas.style.width = cw + 'px';
+      canvas.style.height = ch + 'px';
+      view.style.width = cw + 'px';
+      view.style.height = ch + 'px';
+      top.style.width = cw + 'px';
+      bottom.style.width = cw + 'px';
+      _root.style.width = cw + 'px';
     }
 
     function paint() {
