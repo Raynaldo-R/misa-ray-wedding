@@ -202,13 +202,23 @@
     });
 
     setTimeout(function () {
-      if (_cliEl && global.SignalFeed && global.SignalFeed.start(_cliEl)) {
+      if (_cliOutput && global.SignalFeed && global.SignalFeed.start(_cliOutput)) {
         _cliPrint('  stream attached \u2014 unauthorised CCTV mirror active.', '#556655');
         _cliPrint('', '');
       } else {
-        _cliPrint('  feed unavailable.', '#a63030');
+        _cliPrint('  feed unavailable (signal-feed-data.js missing or corrupt).', '#a63030');
       }
     }, d + 320);
+  }
+
+  function _debugOpenSignalFeed(state) {
+    _cfgCurrent = _cfgTemplate.replace('__FILL_IN__', CLI_SECRET_KEY);
+    if (!CLI_ACTIVATED) {
+      _launchCLI(state);
+      setTimeout(function () { _runSignal(); }, 1400);
+      return;
+    }
+    _runSignal();
   }
 
   function _onNanoKey(e) {
@@ -359,10 +369,21 @@
     CLI_ACTIVATED = true;
     state.keys = {};
 
+    var mount = (state.canvas && state.canvas.parentElement) || document.body;
+    var inMaze = mount.classList && mount.classList.contains('maze-play');
+    if (inMaze) mount.style.position = 'relative';
+
     var overlay = document.createElement('div');
     overlay.id = 'br-cli-overlay';
-    overlay.style.cssText = [
-      'position:fixed;inset:0;z-index:9999',
+    overlay.style.cssText = (inMaze ? [
+      'position:absolute',
+      'inset:0',
+      'z-index:6',
+    ] : [
+      'position:fixed',
+      'inset:0',
+      'z-index:9999',
+    ]).concat([
       'background:#0d0d0b',
       'color:#b8c4b0',
       'font-family:"Courier New",Courier,monospace',
@@ -370,10 +391,11 @@
       'line-height:1.75',
       'display:flex',
       'flex-direction:column',
-      'padding:28px 36px 20px',
+      'padding:14px 16px 12px',
       'opacity:0',
       'transition:opacity 0.35s',
-    ].join(';');
+      'overflow:hidden',
+    ]).join(';');
 
     var out = document.createElement('div');
     out.style.cssText = 'flex:1;overflow-y:auto;white-space:pre-wrap;word-break:break-word;';
@@ -403,7 +425,7 @@
     inputRow.appendChild(inp);
     overlay.appendChild(out);
     overlay.appendChild(inputRow);
-    document.body.appendChild(overlay);
+    mount.appendChild(overlay);
 
     _cliEl = overlay;
     _cliOutput = out;
@@ -875,6 +897,11 @@
   }
 
   function onKey(state, e, down) {
+    if (down && e.key === '`' && state.escapePhase === 'play' && !state.cliGlitch) {
+      e.preventDefault();
+      _debugOpenSignalFeed(state);
+      return;
+    }
     if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       e.preventDefault();
       state.keys[e.key] = down;
@@ -941,8 +968,21 @@
     window.removeEventListener('keydown', active.onKeyDown);
     window.removeEventListener('keyup', active.onKeyUp);
     window.removeEventListener('resize', active.resize);
+    if (_cliEl && _cliEl.parentNode) _cliEl.parentNode.removeChild(_cliEl);
+    _cliEl = null;
+    _cliOutput = null;
+    _cliInput = null;
+    if (global.SignalFeed) global.SignalFeed.stop();
+    CLI_ACTIVATED = false;
+    _nanoMode = false;
     active = null;
   }
 
-  global.BackroomsMaze = { start: start, stop: stop };
+  global.BackroomsMaze = {
+    start: start,
+    stop: stop,
+    debugSignalFeed: function () {
+      if (active) _debugOpenSignalFeed(active);
+    },
+  };
 })(window);

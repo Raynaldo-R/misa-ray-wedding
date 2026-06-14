@@ -2417,6 +2417,7 @@ button[type=submit]:disabled {
 }
 .maze-modal-panel.is-playing .maze-play {
   display: block !important;
+  position: relative;
   height: clamp(360px, 62vh, 520px);
 }
 .maze-door-scene {
@@ -5079,10 +5080,14 @@ section:not(.hero) h2::after {
       }
     }
 
+    function loadScriptOptional(src) {
+      return loadScript(src).catch(function () {});
+    }
+
     Promise.all([
       loadScript('js/leaderboard.js'),
-      loadScript('js/signal-feed-data.js'),
-      loadScript('js/signal-feed.js'),
+      loadScriptOptional('js/signal-feed-data.js'),
+      loadScriptOptional('js/signal-feed.js'),
       loadScript('js/maze-raycaster.js'),
       loadScript('js/wave-racer.js'),
       loadScript('js/chicken-clicker.js')
