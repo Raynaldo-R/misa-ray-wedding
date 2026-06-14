@@ -1,24 +1,33 @@
 #!/usr/bin/env python3
-"""Build colored ASCII CCTV feed data from source MOVs for ./signal."""
+"""Build colored pixel-grid CCTV feeds from source MOVs for ./signal."""
 
 import base64
 import json
 import subprocess
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "js" / "signal-feed-data.js"
 
-SOURCES = [
-    {"path": Path("/Users/raynaldorusi/Downloads/IMG_2634.MOV"), "start": 1.0, "duration": 4.0},
-    {"path": Path("/Users/raynaldorusi/Downloads/IMG_2635.MOV"), "start": 0.8, "duration": 4.0},
-]
+# ASCILINE-style density: wide grid, pixel blocks (rgb per cell, no glyph ramp).
+WIDTH = 168
+HEIGHT = 47
+FPS = 10
 
-WIDTH = 80
-HEIGHT = 24
-FPS = 8
-CHARS = " .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+CAMS = [
+    {
+        "id": "IPcam_1",
+        "path": Path("/Users/raynaldorusi/Downloads/IMG_2634.MOV"),
+        "start": 1.0,
+        "duration": 4.0,
+    },
+    {
+        "id": "IPcam_2",
+        "path": Path("/Users/raynaldorusi/Downloads/IMG_2635.MOV"),
+        "start": 0.8,
+        "duration": 4.0,
+    },
+]
 
 
 def extract_frames(source):
@@ -54,30 +63,23 @@ def extract_frames(source):
     frames = []
     for i in range(0, len(raw), frame_size):
         chunk = raw[i : i + frame_size]
-        cells = []
-        for y in range(HEIGHT):
-            row_start = y * WIDTH * 3
-            for x in range(WIDTH):
-                j = row_start + x * 3
-                r, g, b = chunk[j], chunk[j + 1], chunk[j + 2]
-                lum = 0.299 * r + 0.587 * g + 0.114 * b
-                ci = int(lum / 255 * (len(CHARS) - 1))
-                cells.append(CHARS[ci])
-                cells.append(f"{r:02x}{g:02x}{b:02x}")
-        frames.append(base64.b64encode("".join(cells).encode("ascii")).decode("ascii"))
+        frames.append(base64.b64encode(chunk).decode("ascii"))
     return frames
 
 
 def main():
-    all_frames = []
-    for source in SOURCES:
-        all_frames.extend(extract_frames(source))
+    cams = []
+    for cam in CAMS:
+        frames = extract_frames(cam)
+        cams.append({"id": cam["id"], "frames": frames})
+        print(f"  {cam['id']}: {len(frames)} frames from {cam['path'].name}")
 
     payload = {
         "w": WIDTH,
         "h": HEIGHT,
         "fps": FPS,
-        "frames": all_frames,
+        "mode": "pixel",
+        "cams": cams,
     }
 
     OUT.write_text(
@@ -89,7 +91,7 @@ def main():
         "})(window);\n",
         encoding="utf-8",
     )
-    print(f"wrote {OUT} ({len(all_frames)} frames, {OUT.stat().st_size // 1024} KB)")
+    print(f"wrote {OUT} ({OUT.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":

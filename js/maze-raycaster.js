@@ -204,6 +204,7 @@
     setTimeout(function () {
       if (_cliOutput && global.SignalFeed && global.SignalFeed.start(_cliOutput)) {
         _cliPrint('  stream attached \u2014 unauthorised CCTV mirror active.', '#556655');
+        _cliPrint('  press [1] or [2] to switch IPcam feeds.', '#556655');
         _cliPrint('', '');
       } else {
         _cliPrint('  feed unavailable (signal-feed-data.js missing or corrupt).', '#a63030');
