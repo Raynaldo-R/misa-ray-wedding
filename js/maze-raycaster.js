@@ -188,27 +188,27 @@
       '',
       '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
       'SIGNAL RECEIVED.',
-      '',
-      'transmission origin: unknown',
-      'timestamp: ' + new Date().toISOString(),
-      'payload: [redacted]',
-      '',
-      'something is listening now.',
-      "it knows you're here.",
-      '',
-      '// next coordinates will be transmitted separately.',
-      '// check where you haven\'t looked yet.',
+      'routing payload to external feed...',
       '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500',
       '',
     ];
 
     var d = 0;
     lines.forEach(function (l) {
-      d += 180;
+      d += 160;
       setTimeout(function () {
-        _cliPrint(l, l.startsWith('\u2500') || l === 'SIGNAL RECEIVED.' ? '#7ecf8e' : '');
+        _cliPrint(l, l.indexOf('\u2500') === 0 || l === 'SIGNAL RECEIVED.' ? '#7ecf8e' : '');
       }, d);
     });
+
+    setTimeout(function () {
+      if (_cliEl && global.SignalFeed && global.SignalFeed.start(_cliEl)) {
+        _cliPrint('  stream attached \u2014 unauthorised CCTV mirror active.', '#556655');
+        _cliPrint('', '');
+      } else {
+        _cliPrint('  feed unavailable.', '#a63030');
+      }
+    }, d + 320);
   }
 
   function _onNanoKey(e) {
@@ -384,6 +384,7 @@
       'border-top:1px solid #1e1e18',
       'padding-top:10px;flex-shrink:0',
     ].join(';');
+    inputRow.setAttribute('data-cli-input-row', '1');
 
     var promptLabel = document.createElement('span');
     promptLabel.textContent = '> ';
