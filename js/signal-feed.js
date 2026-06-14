@@ -123,7 +123,8 @@
     _root = document.createElement('div');
     _root.className = 'signal-feed-block';
     _root.style.cssText = [
-      'margin:10px 0 14px',
+      'margin:12px 0 16px',
+      'width:100%',
       'max-width:100%',
       'border:1px solid #2f3a2c',
       'background:#000',
@@ -131,6 +132,7 @@
       'font-size:11px',
       'line-height:1.4',
       'overflow:hidden',
+      'box-sizing:border-box',
     ].join(';');
 
     var top = document.createElement('div');
@@ -162,9 +164,6 @@
     var camBtns = document.createElement('span');
     camBtns.style.cssText = 'display:inline-flex;gap:6px;margin-left:auto;';
 
-    var camLabel = document.createElement('span');
-    camLabel.style.cssText = 'color:#7ecf8e;font-size:9px;min-width:72px;text-align:right;';
-
     var btnEls = _decodedCams.map(function (cam, idx) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -187,14 +186,16 @@
     top.appendChild(rec);
     top.appendChild(live);
     top.appendChild(camBtns);
-    top.appendChild(camLabel);
 
     var view = document.createElement('div');
     view.style.cssText = [
       'position:relative',
-      'padding:6px',
+      'padding:8px',
       'background:#000',
-      'overflow:auto',
+      'overflow:hidden',
+      'display:flex',
+      'justify-content:center',
+      'align-items:center',
     ].join(';');
 
     var scan = document.createElement('div');
@@ -248,8 +249,8 @@
     var ctx = canvas.getContext('2d');
 
     function resizeCanvas() {
-      var maxW = Math.max(200, view.clientWidth - 12);
-      cell = Math.max(2, Math.min(5, Math.floor(maxW / w)));
+      var maxW = Math.max(280, view.clientWidth - 16);
+      var cell = Math.max(2, Math.min(6, Math.floor(maxW / w)));
       canvas.width = w * cell;
       canvas.height = h * cell;
       canvas.style.width = canvas.width + 'px';
@@ -273,7 +274,6 @@
           b.style.color = '#8a9a84';
         }
       });
-      camLabel.textContent = _decodedCams[_activeCam].id;
     }
 
     function switchCam(idx) {

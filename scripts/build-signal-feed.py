@@ -9,9 +9,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "js" / "signal-feed-data.js"
 
-# ASCILINE-style density: wide grid, pixel blocks (rgb per cell, no glyph ramp).
-WIDTH = 168
-HEIGHT = 47
+# ASCILINE-style density: 16:9 pixel grid (square display cells).
+WIDTH = 144
+HEIGHT = 81
 FPS = 10
 
 CAMS = [

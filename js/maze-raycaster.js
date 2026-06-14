@@ -370,36 +370,38 @@
     CLI_ACTIVATED = true;
     state.keys = {};
 
-    var mount = (state.canvas && state.canvas.parentElement) || document.body;
-    var inMaze = mount.classList && mount.classList.contains('maze-play');
-    if (inMaze) mount.style.position = 'relative';
+    document.body.classList.add('br-cli-active');
+    document.body.style.overflow = 'hidden';
 
     var overlay = document.createElement('div');
     overlay.id = 'br-cli-overlay';
-    overlay.style.cssText = (inMaze ? [
-      'position:absolute',
-      'inset:0',
-      'z-index:6',
-    ] : [
+    overlay.style.cssText = [
       'position:fixed',
       'inset:0',
-      'z-index:9999',
-    ]).concat([
-      'background:#0d0d0b',
+      'z-index:10050',
+      'background:#080807',
       'color:#b8c4b0',
       'font-family:"Courier New",Courier,monospace',
-      'font-size:13px',
-      'line-height:1.75',
+      'font-size:14px',
+      'line-height:1.65',
       'display:flex',
       'flex-direction:column',
-      'padding:14px 16px 12px',
+      'padding:20px 28px 16px',
       'opacity:0',
       'transition:opacity 0.35s',
       'overflow:hidden',
-    ]).join(';');
+      'box-sizing:border-box',
+    ].join(';');
 
     var out = document.createElement('div');
-    out.style.cssText = 'flex:1;overflow-y:auto;white-space:pre-wrap;word-break:break-word;';
+    out.style.cssText = [
+      'flex:1',
+      'overflow-y:auto',
+      'overflow-x:hidden',
+      'white-space:pre-wrap',
+      'word-break:break-word',
+      'min-height:0',
+    ].join(';');
 
     var inputRow = document.createElement('div');
     inputRow.style.cssText = [
@@ -426,7 +428,7 @@
     inputRow.appendChild(inp);
     overlay.appendChild(out);
     overlay.appendChild(inputRow);
-    mount.appendChild(overlay);
+    document.body.appendChild(overlay);
 
     _cliEl = overlay;
     _cliOutput = out;
@@ -973,6 +975,8 @@
     _cliEl = null;
     _cliOutput = null;
     _cliInput = null;
+    document.body.classList.remove('br-cli-active');
+    document.body.style.overflow = '';
     if (global.SignalFeed) global.SignalFeed.stop();
     CLI_ACTIVATED = false;
     _nanoMode = false;
